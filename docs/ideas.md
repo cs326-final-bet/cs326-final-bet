@@ -5,11 +5,11 @@ Bet
 Fitness.io
 
 # Team Overview
-Name:     Github:
-
-Patrick Goss    : pgoss
-Noah Huppert    : Noah-Huppert
-Dylan Toothaker : DTooth
+| Name            | GitHub       |
+| --------------- | ------------ |
+| Patrick Goss    | pgoss        |
+| Noah Huppert    | Noah-Huppert |
+| Dylan Toothaker | DTooth       |
 
 # Inovative Idea
 Our innovative idea is a fitness tracker applicaiton that will track a person runing or biking and allow them to claim the area they are running or biking in by connecting their path to create a closed loop. This application is unique compared to traditional fitness tracker apps because of the game aspect of claiming territory while running or biking. This will incentivize people to work out in new places and to work out longer in order to claim more territory and get a higher score. This application will also take a spin on the popular .io genre of online games (slither.io, paper.io, ... etc.) by having the similar functionality of claiming territory by closing loops but adding in a real life aspect. 
