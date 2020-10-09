@@ -2,7 +2,7 @@
 Bet
 
 # Application Name
-Runner.io
+Fitness.io
 
 # Team Overview
 Name:     Github:
