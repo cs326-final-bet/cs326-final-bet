@@ -14,9 +14,9 @@ Notes: The create user and login pages were both completed by Patrick Goss
 because these pages are similar. 
 
 ## Data
-TODO: List types of data
-TODO: Describe each type of data (Mock out a JSON object and describe each field)
-TODO: Describe user interactions with each piece of data
+TODO: List types of data  
+TODO: Describe each type of data (Mock out a JSON object and describe each field)  
+TODO: Describe user interactions with each piece of data  
 
 ### Example Data Type
 This data type is named example data type. It has the purpose of demonstrating 
@@ -32,21 +32,21 @@ The data type will have the following fields:
 
 # Pages
 ## Create User 
-TODO: Quick description of purpose of page
-TODO: Upload wireframe picture
-TODO: Link to completed HTML page
+TODO: Quick description of purpose of page  
+TODO: Upload wireframe picture  
+TODO: Link to completed HTML page  
 
 ## Login
-TODO: Quick description of purpose of page
-TODO: Upload wireframe picture
-TODO: Link to completed HTML page
+TODO: Quick description of purpose of page  
+TODO: Upload wireframe picture  
+TODO: Link to completed HTML page  
 
 ## Profile
-TODO: Quick description of purpose of page
-TODO: Upload wireframe picture
-TODO: Link to completed HTML page
+TODO: Quick description of purpose of page  
+TODO: Upload wireframe picture  
+TODO: Link to completed HTML page  
 
 ## Tracks
-TODO: Quick description of purpose of page
-TODO: Upload wireframe picture
-TODO: Link to completed HTML page
+TODO: Quick description of purpose of page  
+TODO: Upload wireframe picture  
+TODO: Link to completed HTML page  
