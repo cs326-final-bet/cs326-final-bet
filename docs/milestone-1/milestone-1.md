@@ -44,7 +44,7 @@ TODO: Link to completed HTML page
 ## Profile 
 This page shows a users profile which includes the users map, and stats 
 as well as a way to compare the users stats to your own.
-TODO: Upload wireframe picture  
+https://github.com/cs326-final-bet/cs326-final-bet/blob/main/docs/milestone-1/Profile%20page%20wirefram.PNG
 
 TODO: Link to completed HTML page  
 
