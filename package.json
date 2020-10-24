@@ -5,9 +5,9 @@
     "main": "index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "build": "parcel *.html",
+        "build": "parcel build *.html",
         "watch": "parcel watch *.html & parcel serve *.html",
-	   "production": "parcel serve --port $PORT *html"
+        "production": "http-server ./dist --port $PORT *html"
     },
     "author": "",
     "license": "MIT",
@@ -16,6 +16,7 @@
         "ol": "^6.4.3"
     },
     "devDependencies": {
+        "http-server": "^0.12.3",
         "parcel-bundler": "^1.12.4",
         "sass": "^1.27.0"
     }
