@@ -7,7 +7,7 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "build": "parcel build *.html",
         "watch": "parcel watch *.html & parcel serve *.html",
-        "production": "http-server ./dist --port $PORT *html"
+        "production": "http-server ./dist --port $PORT"
     },
     "author": "",
     "license": "MIT",
