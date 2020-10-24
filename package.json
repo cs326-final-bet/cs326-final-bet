@@ -1,0 +1,23 @@
+{
+    "name": "milestone-1",
+    "version": "0.1.0",
+    "description": "Final project milestone 1",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "parcel build *.html",
+        "watch": "parcel watch *.html & parcel serve *.html",
+        "production": "http-server ./dist --port $PORT"
+    },
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+	   "http-server": "^0.12.3"
+    },
+    "devDependencies": {
+        "parcel-bundler": "^1.12.4",
+        "sass": "^1.27.0",
+	   "bootstrap": "^4.5.3",
+        "ol": "^6.4.3"
+    }
+}

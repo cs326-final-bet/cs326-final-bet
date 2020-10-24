@@ -1,0 +1,61 @@
+.page{
+    background-color: #444444;
+    color: white;
+}
+#header{
+    font-size: 50px;
+}
+#tabs{
+    display: flex;
+    padding: 5px;
+    outline: black solid;
+    gap: 2px;
+    position: absolute;
+    text-align: center;
+}
+
+#map{
+    color: white;
+    background-color: #444444;
+    font-size: 25px;
+    outline: black solid;
+}#userMap{
+    width: 400px;
+    height: 300px;
+    outline: black solid;
+}
+
+.buttons{
+    background-color: #AF51F5;
+    padding: 5px;
+}#editProfile{
+    padding: 5px;
+    margin-bottom: 2px;
+    background-color: #777777;
+}#followUser{
+    padding: 5px;
+    background-color: #777777;
+}#homeButton{
+    padding: 5px;
+    background-color: #777777;
+}#compareStats{
+    padding: 5px;
+    background-color: #777777;
+}#compareMap{
+    padding: 5px;
+    background-color: #777777;
+}
+
+#stats{
+    color: white;
+    background-color: #444444;
+    font-size: 25px;
+    outline: black solid;
+}#userStats{
+    color: white;
+    font-size: 15px;
+    outline: black solid;
+    height: 300px;
+    font-size: 20px;
+}
+
