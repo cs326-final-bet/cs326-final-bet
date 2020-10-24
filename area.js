@@ -13,7 +13,14 @@ import Projection from 'ol/proj/Projection';
 const PROJ = 'EPSG:4326';
 
 // Set map to window's height b/c we must
-document.getElementById('mapbox').style.height = `${window.innerHeight}px`;
+const headerEl = document.getElementById('header');
+const mapEl = document.getElementById('mapbox');
+
+const resizeMap = () => {
+    mapEl.style.height = `${window.innerHeight - headerEl.offsetHeight}px`;
+};
+resizeMap();
+window.onresize = resizeMap;
 
 // Show map
 let map = new Map({
