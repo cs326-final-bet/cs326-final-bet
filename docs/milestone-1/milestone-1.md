@@ -41,9 +41,11 @@ TODO: Quick description of purpose of page
 TODO: Upload wireframe picture  
 TODO: Link to completed HTML page  
 
-## Profile
-TODO: Quick description of purpose of page  
+## Profile 
+This page shows a users profile which includes the users map, and stats 
+as well as a way to compare the users stats to your own.
 TODO: Upload wireframe picture  
+
 TODO: Link to completed HTML page  
 
 ## Area
