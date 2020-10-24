@@ -25,14 +25,14 @@ window.onresize = resizeMap;
 // Show map
 let map = new Map({
     layers: [
-	   new TileLayer({
-		  source: new OSM()
-	   }),
+        new TileLayer({
+            source: new OSM()
+        }),
     ],
     target: 'mapbox',
     view: new View({
-	   center: [-71, 42],
-	   projection: PROJ,
-	   zoom: 13,
+        center: [-71, 42],
+        projection: PROJ,
+        zoom: 13,
     }),
 });
