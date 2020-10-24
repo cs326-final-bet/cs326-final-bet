@@ -46,7 +46,9 @@ TODO: Quick description of purpose of page
 TODO: Upload wireframe picture  
 TODO: Link to completed HTML page  
 
-## Tracks
-TODO: Quick description of purpose of page  
-TODO: Upload wireframe picture  
-TODO: Link to completed HTML page  
+## Area
+The page shows areas claimed by exercises.
+
+![Wireframe of area page](./area-wireframe.jpg)  
+
+[HTML implementation of wireframe](../../area.html)
