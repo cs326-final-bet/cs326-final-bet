@@ -22,6 +22,25 @@ before instituting any new processes or utilizing any new technologies.
 
 ## Data
 TODO: List types of data  
+User Data. Contains the data for each individual user.
+User Data JSON: 
+{
+  userId : 1,
+  userName : 'DToothaker',
+  userPassword : 'password',
+  userStats : {
+      currentDistance : 12,
+      totalDistance: 22,
+      currentTime: 1456,
+      totalTime: 2087
+  },
+  email : 'dtoothaker@umass.edu'
+  friendsList : {
+     friendID : [1, 5, 27]
+  }
+}
+Each user will have a unique ID to identify them. Each user will have a username and passowrd to log into our application. Each user will have an email to register with.
+We will also keep track of the users stats and friends list.
 TODO: Describe each type of data (Mock out a JSON object and describe each field)  
 TODO: Describe user interactions with each piece of data  
 
