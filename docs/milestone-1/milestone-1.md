@@ -1,5 +1,6 @@
 # Milestone 1
-## Division Of Labor
+## Teamwork
+### Division Of Labor
 The division of labor in phase 1 is as follows:
 
 - Data (Descriptions and user interactions)
@@ -12,6 +13,12 @@ The division of labor in phase 1 is as follows:
   
 Notes: The create user and login pages were both completed by Patrick Goss 
 because these pages are similar. 
+
+### Communication
+The team held 2 virtual meetings over Zoom to directly coordinate work for this 
+milestone. A private student only Slack channel was also used to communicate 
+daily about milestone 1 details. The team made sure to come to an agreement 
+before instituting any new processes or utilizing any new technologies.
 
 ## Data
 TODO: List types of data  
