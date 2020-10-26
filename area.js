@@ -12,12 +12,7 @@ import {
 import { Polygon } from 'ol/geom';
 import {Fill, Stroke, Style} from 'ol/style';
 
-
-/**
- * The geographical projection used in this project. What us laymen usually
- * refer to as "normal" or latitude longitude.
- */
-const PROJ = 'EPSG:4326';
+import { PROJ } from './mapping.js';
 
 // Set map to window's height b/c we must
 const headerEl = document.getElementById('header');
