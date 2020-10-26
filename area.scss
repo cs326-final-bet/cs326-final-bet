@@ -1,3 +1,26 @@
+@import "./bootstrap.scss";
+
 #mapbox {
     width: 100%;
+}
+
+#info-panel {
+    display: fixed;
+    position: absolute;
+    top: $header-height + 10px;
+    right: 20px;
+    padding-top: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+
+    .info-group {
+	   margin-left: 20px;
+	   font-size: 20px;
+	   
+	   b {
+		  width: 70px;
+		  display: inline-block;
+	   }
+    }
 }

@@ -5,7 +5,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <title>Area</title>
 
-        <link rel="stylesheet" href="./styles.scss">
         <link rel="stylesheet" href="./area.scss">
     </head>
     <body>
@@ -14,8 +13,30 @@
         </nav>
 
         <div class="map" id="mapbox">
-
         </div>
+
+	   <div class="card" id="info-panel">
+		  <div class="card-body">
+			 <h2 class="card-title">Area Details</h2>
+
+			 <div class="info-group">
+				<b>User</b>
+				<span>
+				    <a href="/profile.html">Noah</a>
+				</span>
+			 </div>
+
+			 <div class="info-group">
+				<b>Score</b>
+				<span>5678</span>
+			 </div>
+
+			 <div class="info-group">
+				<b>Area</b>
+				<span>2 mi <sup>2</sup></span>
+			 </div>
+		  </div>
+	   </div>
 
         <script src="./area.js"></script>
     </body>
