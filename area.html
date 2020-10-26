@@ -10,30 +10,43 @@
     <body>
         <nav id="header" class="navbar navbar-dark bg-primary">
             <a class="navbar-brand" href="#">BET</a>
+
+		  <i>Click on a purple area to see details</i>
         </nav>
 
         <div class="map" id="mapbox">
         </div>
 
-	   <div class="card" id="info-panel">
+	   <div class="card info-panel-hidden" id="info-panel">
 		  <div class="card-body">
 			 <h2 class="card-title">Area Details</h2>
 
 			 <div class="info-group">
 				<b>User</b>
 				<span>
-				    <a href="/profile.html">Noah</a>
+				    <a id="info-user" href="/profile.html">VALUE HERE</a>
 				</span>
 			 </div>
 
 			 <div class="info-group">
 				<b>Score</b>
-				<span>5678</span>
+				<span id="info-score">VALUE HERE</span>
 			 </div>
 
 			 <div class="info-group">
 				<b>Area</b>
-				<span>2 mi <sup>2</sup></span>
+				<span><span id="info-area">VALUE HERE</span> mi <sup>2</sup></span>
+			 </div>
+
+			 <div id="info-comments">
+				<textarea class="form-control" placeholder="Leave a comment"></textarea>
+				
+				<button class="btn-dark" id="info-leave-comment">
+				    Comment
+				</button>
+
+				<div id="info-existing-comments">
+				</div>
 			 </div>
 		  </div>
 	   </div>
