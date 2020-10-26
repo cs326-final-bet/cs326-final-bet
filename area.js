@@ -50,18 +50,18 @@ function showAreaFeatureDetails(areaFeat) {
     }
 
     areaFeat.attributes.comments.forEach(comment => {
-	   const container = document.createElement('div');
-	   
-	   const user = document.createElement('b');
-	   user.appendChild(document.createTextNode(comment.user));
+        const container = document.createElement('div');
+        
+        const user = document.createElement('b');
+        user.appendChild(document.createTextNode(comment.user));
 
-	   const value = document.createElement('span');
-	   value.appendChild(document.createTextNode(comment.value));
+        const value = document.createElement('span');
+        value.appendChild(document.createTextNode(comment.value));
 
-	   container.appendChild(user);
-	   container.appendChild(value);
+        container.appendChild(user);
+        container.appendChild(value);
 
-	   panelCommentsEl.appendChild(container);
+        panelCommentsEl.appendChild(container);
     });
 
     panelEl.classList.remove('info-panel-hidden');
@@ -70,33 +70,33 @@ function showAreaFeatureDetails(areaFeat) {
 // Setup map interaction
 class DemoInteraction extends PointerInteraction {
     constructor(poly) {
-	   super();
-	   this.poly = poly;
+        super();
+        this.poly = poly;
     }
 
     handleDownEvent(e) {
-	   let features = [];
-	   
-	   this.getMap().forEachFeatureAtPixel(e.pixel, (feature, layer) => {
-		  // Check it is a feature we defined
-		  if (feature.attributes !== undefined
-			 && feature.attributes.area_id !== undefined) {
-			 features.push(feature);
-		  }
-	   });
+        let features = [];
+        
+        this.getMap().forEachFeatureAtPixel(e.pixel, (feature, layer) => {
+            // Check it is a feature we defined
+            if (feature.attributes !== undefined
+                && feature.attributes.area_id !== undefined) {
+                features.push(feature);
+            }
+        });
 
-	   if (features.length > 1) {
-		  // The UI can only show 1 area's details at a time right now
-		  alert('Please only click on 1 area');
-	   }
+        if (features.length > 1) {
+            // The UI can only show 1 area's details at a time right now
+            alert('Please only click on 1 area');
+        }
 
-	   if (features.length === 0) {
-		  // If clicked away from an area hide its details
-		  panelEl.classList.add('info-panel-hidden');
-	   } else {
-		  // If clicked on an area show its details
-		  showAreaFeatureDetails(features[0]);
-	   }
+        if (features.length === 0) {
+            // If clicked away from an area hide its details
+            panelEl.classList.add('info-panel-hidden');
+        } else {
+            // If clicked on an area show its details
+            showAreaFeatureDetails(features[0]);
+        }
     }
 }
 
@@ -120,17 +120,17 @@ let map = new Map({
 let poly1 = new Polygon([
     // First "ring" defines border
     [
-	   [-70.995, 42.005],
-	   [-71, 42.013],
-	   [-71.007, 42.018],
-	   [-71.014, 42.018],
-	   [-71.021, 42.016],
-	   [-71.023, 42.009],
-	   [-71.034, 42.005],
-	   [-71.029, 41.995],
-	   [-71.023, 41.99],
-	   [-70.997, 42.001],
-	   [-70.995, 42.005],
+        [-70.995, 42.005],
+        [-71, 42.013],
+        [-71.007, 42.018],
+        [-71.014, 42.018],
+        [-71.021, 42.016],
+        [-71.023, 42.009],
+        [-71.034, 42.005],
+        [-71.029, 41.995],
+        [-71.023, 41.99],
+        [-70.997, 42.001],
+        [-70.995, 42.005],
     ]
 ]);
 
@@ -142,27 +142,27 @@ feat1.attributes = {
     user: 'noah',
     score: 5678,
     comments: [
-	   { user: 'james', value: 'Aw man! You took over my spot!' },
-	   { user: 'noah', value: 'Not for long buddy :)' },
-	   { user: 'james', value: 'I am the king of Hockomock swamp!' },
+        { user: 'james', value: 'Aw man! You took over my spot!' },
+        { user: 'noah', value: 'Not for long buddy :)' },
+        { user: 'james', value: 'I am the king of Hockomock swamp!' },
     ],
 };
 
 let vecSrc = new VectorSource({
     features: [
-	   feat1
+        feat1
     ],
 });
 let vecLay = new VectorLayer({
     source: vecSrc,
     style: new Style({
-	   fill: new Fill({
-		  color: 'rgba(175, 81, 245, 0.5)',
-	   }),
-	   stroke: new Stroke({
-		  color: '#777777',
-		  width: 1,
-	   }),
+        fill: new Fill({
+            color: 'rgba(175, 81, 245, 0.5)',
+        }),
+        stroke: new Stroke({
+            color: '#777777',
+            width: 1,
+        }),
     }),
 });
 
