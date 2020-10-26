@@ -5,15 +5,11 @@ import View from 'ol/View';
 import { OSM, Vector as VectorSource } from 'ol/source';
 import { Vector as VectorLayer } from 'ol/layer';
 import Feature from 'ol/Feature';
-import { LonLat } from 'ol/proj';
-import Projection from 'ol/proj/Projection';
 import {
     Pointer as PointerInteraction,
     defaults as defaultInteractions
 } from 'ol/interaction';
 import { Polygon } from 'ol/geom';
-
-import MultiPoint from 'ol/geom/MultiPoint';
 import {Fill, Stroke, Style} from 'ol/style';
 
 
@@ -75,9 +71,9 @@ class DemoInteraction extends PointerInteraction {
     }
 
     handleDownEvent(e) {
-        let features = [];
+        const features = [];
         
-        this.getMap().forEachFeatureAtPixel(e.pixel, (feature, layer) => {
+        this.getMap().forEachFeatureAtPixel(e.pixel, (feature) => {
             // Check it is a feature we defined
             if (feature.attributes !== undefined
                 && feature.attributes.area_id !== undefined) {
@@ -101,7 +97,7 @@ class DemoInteraction extends PointerInteraction {
 }
 
 // Show map
-let map = new Map({
+const map = new Map({
     interactions: defaultInteractions().extend([ new DemoInteraction() ]),
     layers: [
         new TileLayer({
@@ -117,7 +113,7 @@ let map = new Map({
 });
 
 // Draw sample area
-let poly1 = new Polygon([
+const poly1 = new Polygon([
     // First "ring" defines border
     [
         [-70.995, 42.005],
@@ -134,7 +130,7 @@ let poly1 = new Polygon([
     ]
 ]);
 
-let feat1 = new Feature({
+const feat1 = new Feature({
     geometry: poly1,
 });
 feat1.attributes = {
@@ -148,12 +144,12 @@ feat1.attributes = {
     ],
 };
 
-let vecSrc = new VectorSource({
+const vecSrc = new VectorSource({
     features: [
         feat1
     ],
 });
-let vecLay = new VectorLayer({
+const vecLay = new VectorLayer({
     source: vecSrc,
     style: new Style({
         fill: new Fill({
