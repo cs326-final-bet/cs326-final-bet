@@ -18,30 +18,30 @@ import { PROJ } from './mapping.js';
  * Break any area up into 0.01 mile square boxes.
  */
 function polysForExt(extent) {
-    let polys = [];
+    const polys = [];
 
     function r(v) {
-	   return Math.round((v + Number.EPSILON) * 100) / 100;
+        return Math.round((v + Number.EPSILON) * 100) / 100;
     }
     
     const extBegin = [ extent[0], extent[1] ].map(r).map(v => v - 0.01);
     const extEnd = [ extent[2], extent[3] ].map(r).map(v => v + 0.01);
 
     for (let x = extBegin[0]; x < extEnd[0]; x += 0.01) {
-	   for (let y = extBegin[1]; y < extEnd[1]; y += 0.01) {
-		  const p = new Polygon([
-			 // First "ring" defines border
-			 [
-				[x, y],
-				[x, y + 0.01],
-				[x + 0.01, y + 0.01],
-				[x + 0.01, y],
-				[x, y],
-			 ]
-		  ]);
-		  
-		  polys.push(p);
-	   }
+        for (let y = extBegin[1]; y < extEnd[1]; y += 0.01) {
+            const p = new Polygon([
+                // First "ring" defines border
+                [
+                    [x, y],
+                    [x, y + 0.01],
+                    [x + 0.01, y + 0.01],
+                    [x + 0.01, y],
+                    [x, y],
+                ]
+            ]);
+            
+            polys.push(p);
+        }
     }
 
     return polys;
@@ -51,8 +51,10 @@ function polysForExt(extent) {
  * Returns the center of any box.
  */
 function extCenter(ext) {
-    return [ ext[0] + ((ext[2] - ext[0]) / 2),
-		   ext[1] + ((ext[3] - ext[1]) /2 ) ];
+    return [
+        ext[0] + ((ext[2] - ext[0]) / 2),
+        ext[1] + ((ext[3] - ext[1]) /2 )
+    ];
 }
 
 // Set map to window's height b/c we must
@@ -205,15 +207,15 @@ const demoAreaExt = poly1.getExtent();
 
 const demoAreaExtSrc = new VectorSource({
     features: [ new Feature({
-	   geometry: new Polygon([
-		  [
-			 [ demoAreaExt[0], demoAreaExt[1] ],
-			 [ demoAreaExt[0], demoAreaExt[3] ],
-			 [ demoAreaExt[2], demoAreaExt[3] ],
-			 [ demoAreaExt[2], demoAreaExt[1] ],
-			 [ demoAreaExt[0], demoAreaExt[1] ],
-		  ],
-	   ]),
+        geometry: new Polygon([
+            [
+                [ demoAreaExt[0], demoAreaExt[1] ],
+                [ demoAreaExt[0], demoAreaExt[3] ],
+                [ demoAreaExt[2], demoAreaExt[3] ],
+                [ demoAreaExt[2], demoAreaExt[1] ],
+                [ demoAreaExt[0], demoAreaExt[1] ],
+            ],
+        ]),
     }) ],
 });
 const demoAreaExtLay = new VectorLayer({
@@ -225,20 +227,20 @@ let shownAreaExtBox = false;
 const showAreaExtEl = document.getElementById('show-area-extent');
 showAreaExtEl.onclick = () => {
     if (shownAreaExtBox === true) {
-	   map.removeLayer(demoAreaExtLay);
-	   shownAreaExtBox = false;
-	   showAreaExtEl.innerText = 'Show Area Extent';
+        map.removeLayer(demoAreaExtLay);
+        shownAreaExtBox = false;
+        showAreaExtEl.innerText = 'Show Area Extent';
     } else {
-	   map.addLayer(demoAreaExtLay);
-	   shownAreaExtBox = true;
-	   showAreaExtEl.innerText = 'Hide Area Extent';
+        map.addLayer(demoAreaExtLay);
+        shownAreaExtBox = true;
+        showAreaExtEl.innerText = 'Hide Area Extent';
     }
 };
 
 // Draw area tiles in area extent
 const demoAreaExtTilesFeats = polysForExt(demoAreaExt).map(poly => {
     return new Feature({
-	   geometry: poly,
+        geometry: poly,
     });
 });
 
@@ -255,48 +257,25 @@ let shownAreaExtTilesBoxes = false;
 const showAreaExtTilesBoxesEl = document.getElementById('show-area-extent-boxes');
 showAreaExtTilesBoxesEl.onclick = () => {
     if (shownAreaExtTilesBoxes === true) {
-	   map.removeLayer(demoAreaExtTilesLay);
-	   shownAreaExtTilesBoxes = false;
-	   showAreaExtTilesBoxesEl.innerText = 'Show Boxes in Area Extent';
+        map.removeLayer(demoAreaExtTilesLay);
+        shownAreaExtTilesBoxes = false;
+        showAreaExtTilesBoxesEl.innerText = 'Show Boxes in Area Extent';
     } else {
-	   map.addLayer(demoAreaExtTilesLay);
-	   shownAreaExtTilesBoxes = true;
-	   showAreaExtTilesBoxesEl.innerText = 'Hide Boxes in Area ExtTilesent';
+        map.addLayer(demoAreaExtTilesLay);
+        shownAreaExtTilesBoxes = true;
+        showAreaExtTilesBoxesEl.innerText = 'Hide Boxes in Area ExtTilesent';
     }
 };
 
 // Draw intersecting area tiles for demo
-const nonIntersectsStyle = new Style({
-    fill: new Fill({
-	   color: 'rgba(0, 0, 0, 0.0)',
-    }),
-    stroke: new Stroke({
-	   color: 'rgba(175, 81, 245, 1)',
-	   width: 1,
-    }),
-});
-const intersectsStyle = new Style({
-    fill: new Fill({
-	   color: 'rgba(0, 255, 0, 1)',
-    }),
-    stroke: new Stroke({
-	   color: 'rgba(175, 81, 245, 1)',
-	   width: 1,
-    }),
-});
-
 const demoAreaInterFeats = polysForExt(demoAreaExt).map(poly => {
     // Test if area box is in excercise track
     const polyCenter = extCenter(poly.getExtent());
     
-    let style = nonIntersectsStyle;
-    
     if (poly1.intersectsCoordinate(polyCenter) === true) {
-	   style = intersectsStyle;
-
-	   return new Feature({
-		  geometry: poly,
-	   });
+        return new Feature({
+            geometry: poly,
+        });
     }
     
     return undefined;
@@ -315,22 +294,22 @@ let shownInterAreaBoxes = false;
 const showInterAreaBoxesEl = document.getElementById('show-intersecting-area-boxes');
 showInterAreaBoxesEl.onclick = () => {
     if (shownInterAreaBoxes === true) {
-	   map.removeLayer(demoAreaInterLay);
-	   shownInterAreaBoxes = false;
-	   showInterAreaBoxesEl.innerText = 'Show Intersecting Area Boxes';
+        map.removeLayer(demoAreaInterLay);
+        shownInterAreaBoxes = false;
+        showInterAreaBoxesEl.innerText = 'Show Intersecting Area Boxes';
     } else {
-	   map.addLayer(demoAreaInterLay);
-	   shownInterAreaBoxes = true;
-	   showInterAreaBoxesEl.innerText = 'Hide Intersecting Area Boxes';
+        map.addLayer(demoAreaInterLay);
+        shownInterAreaBoxes = true;
+        showInterAreaBoxesEl.innerText = 'Hide Intersecting Area Boxes';
     }
 };
 
 // Demonstrate how area boxes work
 const mapExtent = map.getView().calculateExtent(map.getSize());
 
-let areaFeats = polysForExt(mapExtent).map(poly => {
+const areaFeats = polysForExt(mapExtent).map(poly => {
     return new Feature({
-	   geometry: poly,
+        geometry: poly,
     });
 });
 
@@ -356,12 +335,12 @@ let shownGlobalAreaBoxes = false;
 const showGlobalAreaBoxesEl = document.getElementById('show-global-area-boxes');
 showGlobalAreaBoxesEl.onclick = () => {
     if (shownGlobalAreaBoxes === true) {
-	   map.removeLayer(areaLay);
-	   shownGlobalAreaBoxes = false;
-	   showGlobalAreaBoxesEl.innerText = 'Show Global Area Boxes';
+        map.removeLayer(areaLay);
+        shownGlobalAreaBoxes = false;
+        showGlobalAreaBoxesEl.innerText = 'Show Global Area Boxes';
     } else {
-	   map.addLayer(areaLay);
-	   shownGlobalAreaBoxes = true;
-	   showGlobalAreaBoxesEl.innerText = 'Hide Global Area Boxes';
+        map.addLayer(areaLay);
+        shownGlobalAreaBoxes = true;
+        showGlobalAreaBoxesEl.innerText = 'Hide Global Area Boxes';
     }
 };
