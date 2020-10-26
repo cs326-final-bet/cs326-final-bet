@@ -1,5 +1,6 @@
 # Milestone 1
-## Division Of Labor
+## Teamwork
+### Division Of Labor
 The division of labor in phase 1 is as follows:
 
 - Data (Descriptions and user interactions)
@@ -13,8 +14,33 @@ The division of labor in phase 1 is as follows:
 Notes: The create user and login pages were both completed by Patrick Goss 
 because these pages are similar. 
 
+### Communication
+The team held 2 virtual meetings over Zoom to directly coordinate work for this 
+milestone. A private student only Slack channel was also used to communicate 
+daily about milestone 1 details. The team made sure to come to an agreement 
+before instituting any new processes or utilizing any new technologies.
+
 ## Data
 TODO: List types of data  
+User Data. Contains the data for each individual user.
+User Data JSON: 
+{
+  userId : 1,
+  userName : 'DToothaker',
+  userPassword : 'password',
+  userStats : {
+      currentDistance : 12,
+      totalDistance: 22,
+      currentTime: 1456,
+      totalTime: 2087
+  },
+  email : 'dtoothaker@umass.edu'
+  friendsList : {
+     friendID : [1, 5, 27]
+  }
+}
+Each user will have a unique ID to identify them. Each user will have a username and passowrd to log into our application. Each user will have an email to register with.
+We will also keep track of the users stats and friends list.
 TODO: Describe each type of data (Mock out a JSON object and describe each field)  
 TODO: Describe user interactions with each piece of data  
 
