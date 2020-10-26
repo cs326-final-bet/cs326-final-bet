@@ -83,7 +83,7 @@ The data type will have the following fields:
 
 The purpose of the Register page is for users to create a profile by entering their email, a desired username and a password.
 Wireframe:
-![Register Page](./ProjectRegisterWireframe.jpg)
+![Register Page](./ProjectRegisterWireframe.JPG)
 
 [HTML implementation of wireframe](../../register.html)
 
@@ -92,7 +92,7 @@ Wireframe:
 
 The purpose of the Login page is to allow users to login with their personal login credentials, username and password.
 
-![Register Page](./ProjectLoginWireframe.jpg)
+![Register Page](./ProjectLoginWireframe.JPG)
 
 [HTML implementation of wireframe](../../login.html)
 
