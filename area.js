@@ -5,6 +5,10 @@ import View from 'ol/View';
 import OSM from 'ol/source/OSM';
 import { LonLat } from 'ol/proj';
 import Projection from 'ol/proj/Projection';
+import {
+    Pointer as PointerInteraction,
+    defaults as defaultInteractions
+} from 'ol/interaction';
 
 /**
  * The geographical projection used in this project. What us laymen usually
@@ -22,8 +26,23 @@ const resizeMap = () => {
 resizeMap();
 window.onresize = resizeMap;
 
+// Setup the side panel to pop out when we click on the map
+const panelEl = document.getElementById('info-panel');
+
+// Setup map interaction
+class DemoInteraction extends PointerInteraction {
+    constructor() {
+	   super();
+    }
+
+    handleDownEvent(e) {
+	   
+    }
+}
+
 // Show map
 let map = new Map({
+    interactions: defaultInteractions().extend([ new DemoInteraction() ]),
     layers: [
         new TileLayer({
             source: new OSM()
