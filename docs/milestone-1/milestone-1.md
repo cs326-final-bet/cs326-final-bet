@@ -44,6 +44,28 @@ We will also keep track of the users stats and friends list.
 TODO: Describe each type of data (Mock out a JSON object and describe each field)  
 TODO: Describe user interactions with each piece of data  
 
+Track Data. Contains the data for each individual track
+Track Data JSON:
+{
+  id : '123456789'
+  long : 42.6359
+  lat : -70.71
+  comments : 'This is a comment that I commented'
+  likes : 3
+}
+
+Each track will have a unique id to identify them. Each track will have a longitude and latitude value that will point to the beginning of each track. Each track will support comment data so users will be able to comment on each track and they will also support like data so users can like tracks.
+
+Work Out Data JSON:
+{
+  startTime : 12:03
+  finishTime : 13:03
+  totalTime : 01:00
+  date : 10-25-2020
+}
+
+Everytime a user completes a workout workout data will be logged. This includes a startTime value which will hold the time (military time) the workout was started, a finishTime value that will hold the time (military time) the workout was completed, and totalTime which will be the duration of the workout (startTime - finishTime). Each workout will also take down the date of the workout. All the times for now will be taken down in EST.
+
 ### Example Data Type
 This data type is named example data type. It has the purpose of demonstrating 
 how we will document our data in milestone 1.
@@ -57,15 +79,22 @@ The data type will have the following fields:
   - `bar` (Boolean): You get the idea
 
 # Pages
-## Create User 
-TODO: Quick description of purpose of page  
-TODO: Upload wireframe picture  
-TODO: Link to completed HTML page  
+## Register Page 
+
+The purpose of the Register page is for users to create a profile by entering their email, a desired username and a password.
+Wireframe:
+![Register Page](./ProjectRegisterWireframe.jpg)
+
+[HTML implementation of wireframe](../../register.html)
+
 
 ## Login
-TODO: Quick description of purpose of page  
-TODO: Upload wireframe picture  
-TODO: Link to completed HTML page  
+
+The purpose of the Login page is to allow users to login with their personal login credentials, username and password.
+
+![Register Page](./ProjectLoginWireframe.jpg)
+
+[HTML implementation of wireframe](../../login.html)
 
 ## Profile 
 Description:
