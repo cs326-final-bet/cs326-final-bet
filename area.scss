@@ -13,6 +13,7 @@ nav i {
 }
 
 #info-panel {
+    max-width: 400px;
     display: fixed;
     position: absolute;
     top: $header-height + 10px;
@@ -55,5 +56,14 @@ nav i {
         width: 60px;
         margin-right: 10px;
         display: inline-block;
+    }
+}
+
+#area-debug-buttons {
+    margin-top: 20px;
+
+    button {
+	   display: block;
+	   margin-top: 10px;
     }
 }
