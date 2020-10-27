@@ -4,7 +4,10 @@
 The division of labor in phase 1 is as follows:
 
 - Data (Descriptions and user interactions)
-  - **Name Of Data Type**: Your name
+  - **Track**: Patrick Goss
+  - **Work Out**: Patrick Goss
+  - **Profile**: Dylan Toothaker
+  - **Area**: Noah
 - Pages (Wireframes and HTML implementations)
   - **Create User**: Patrick Goss
   - **Login**: Patrick Goss
