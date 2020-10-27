@@ -17,12 +17,6 @@ The division of labor in phase 1 is as follows:
 Notes: The create user and login pages were both completed by Patrick Goss 
 because these pages are similar. 
 
-### Communication
-The team held 2 virtual meetings over Zoom to directly coordinate work for this 
-milestone. A private student only Slack channel was also used to communicate 
-daily about milestone 1 details. The team made sure to come to an agreement 
-before instituting any new processes or utilizing any new technologies.
-
 ## Data Interactions
 This app will operate on a user based system. Each person that signs up will have their own profile that will keep track of their user data (email, password, username) and each user will have to sign up with an email and create a username and password for verification. Profiles will also keep track of the users personal fitness statistics (number of workouts, space claimed, duration of workouts, dates of workouts) so they can see how long and consistantly they workout. This app will also support data on what routes have been run in an area and will display this by showing the area claimed on a map. The ability to comment on different routes will also be available through this application. Finally this app will have data on which route is most popular, users will have the ability to rate different routes they have ran or biked.
 
