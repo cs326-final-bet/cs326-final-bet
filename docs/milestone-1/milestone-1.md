@@ -20,6 +20,9 @@ milestone. A private student only Slack channel was also used to communicate
 daily about milestone 1 details. The team made sure to come to an agreement 
 before instituting any new processes or utilizing any new technologies.
 
+## Data Interactions
+This app will operate on a user based system. Each person that signs up will have their own profile that will keep track of their user data (email, password, username) and each user will have to sign up with an email and create a username and password for verification. Profiles will also keep track of the users personal fitness statistics (number of workouts, space claimed, duration of workouts, dates of workouts) so they can see how long and consistantly they workout. This app will also support data on what routes have been run in an area and will display this by showing the area claimed on a map. The ability to comment on different routes will also be available through this application. Finally this app will have data on which route is most popular, users will have the ability to rate different routes they have ran or biked.
+
 ## Data
 ### User
 User Data. Contains the data for each individual user.
@@ -42,6 +45,7 @@ User Data JSON:
   }
 }
 ```
+
 Each user will have a unique ID to identify them. Each user will have a username and passowrd to log into our application. Each user will have an email to register with.
 We will also keep track of the users stats and friends list.
 
@@ -106,9 +110,10 @@ Description:
 This page shows a users profile which includes the users map, and stats 
 as well as a way to compare the users stats to your own.
 Wireframe:
-![Profile page](https://github.com/cs326-final-bet/cs326-final-bet/blob/main/docs/milestone-1/Profile%20page%20wirefram.PNG)
 
-[HTML Implementation](https://github.com/cs326-final-bet/cs326-final-bet/blob/main/profile.html)
+![Register Page](./ProfilePageWireframe.PNG)
+HTML Implementation:
+[HTML implementation of wireframe](../../profile.html)
 
 ## Area
 The page shows areas claimed by exercises.
@@ -116,3 +121,7 @@ The page shows areas claimed by exercises.
 ![Wireframe of area page](./area-wireframe.jpg)  
 
 [HTML implementation of wireframe](../../area.html)
+
+
+
+https://github.com/cs326-final-bet/cs326-final-bet/blob/main/docs/milestone-1/Profile%20page%20wirefram.PNG
