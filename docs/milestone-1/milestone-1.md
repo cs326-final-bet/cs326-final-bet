@@ -21,9 +21,11 @@ daily about milestone 1 details. The team made sure to come to an agreement
 before instituting any new processes or utilizing any new technologies.
 
 ## Data
-TODO: List types of data  
+### User
 User Data. Contains the data for each individual user.
 User Data JSON: 
+
+```json
 {
   userId : 1,
   userName : 'DToothaker',
@@ -39,13 +41,15 @@ User Data JSON:
      friendID : [1, 5, 27]
   }
 }
+```
 Each user will have a unique ID to identify them. Each user will have a username and passowrd to log into our application. Each user will have an email to register with.
 We will also keep track of the users stats and friends list.
-TODO: Describe each type of data (Mock out a JSON object and describe each field)  
-TODO: Describe user interactions with each piece of data  
 
+### Track
 Track Data. Contains the data for each individual track
 Track Data JSON:
+
+```json
 {
   id : '123456789'
   long : 42.6359
@@ -53,30 +57,31 @@ Track Data JSON:
   comments : 'This is a comment that I commented'
   likes : 3
 }
+```
 
 Each track will have a unique id to identify them. Each track will have a longitude and latitude value that will point to the beginning of each track. Each track will support comment data so users will be able to comment on each track and they will also support like data so users can like tracks.
 
 Work Out Data JSON:
+
+```json
 {
   startTime : 12:03
   finishTime : 13:03
   totalTime : 01:00
   date : 10-25-2020
 }
+```
 
 Everytime a user completes a workout workout data will be logged. This includes a startTime value which will hold the time (military time) the workout was started, a finishTime value that will hold the time (military time) the workout was completed, and totalTime which will be the duration of the workout (startTime - finishTime). Each workout will also take down the date of the workout. All the times for now will be taken down in EST.
 
-### Example Data Type
-This data type is named example data type. It has the purpose of demonstrating 
-how we will document our data in milestone 1.
-
-The data type will have the following fields:
-
-- `name` (String): The name of the thing
-- `age` (Integer): The age of the thing
-- `complex` (Object): A more complex field which has sub-fields
-  - `foo` (String): A nested field under `complex` named `foo`
-  - `bar` (Boolean): You get the idea
+### Area
+Area Data. Contains data about an area claimed by a user's exercise track. 
+To record this data we divide the world into equally sized squares which we 
+call "areas". Every valid location on the ground has a corresponding area. 
+Determining which area a coordinate falls in is easy because we can simply 
+divide coordinates by the area square size to determine which area box they 
+correspond. No need to do any sort of complex query in the database, instead
+just use this 2-dimensional hash function.
 
 # Pages
 ## Register Page 
@@ -101,9 +106,9 @@ Description:
 This page shows a users profile which includes the users map, and stats 
 as well as a way to compare the users stats to your own.
 Wireframe:
-https://github.com/cs326-final-bet/cs326-final-bet/blob/main/docs/milestone-1/Profile%20page%20wirefram.PNG
-HTML Implementation:
-https://github.com/cs326-final-bet/cs326-final-bet/blob/main/profile.html
+![Profile page](https://github.com/cs326-final-bet/cs326-final-bet/blob/main/docs/milestone-1/Profile%20page%20wirefram.PNG)
+
+[HTML Implementation](https://github.com/cs326-final-bet/cs326-final-bet/blob/main/profile.html)
 
 ## Area
 The page shows areas claimed by exercises.
