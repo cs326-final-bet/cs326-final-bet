@@ -83,7 +83,7 @@ to do any sort of complex query in the database, instead just use this
 2-dimensional hash function.
 
 How this logic works is outside the scope of milestone 1. However in preparation
-for future milestones our team has solved this problem ([`area-tiles/area-tiles.md`](../area-tiles/area-tiles.md)).
+for future milestones our team has solved this problem.
 
 Area Data JSON:
 
