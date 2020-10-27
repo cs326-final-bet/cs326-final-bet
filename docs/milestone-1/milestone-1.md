@@ -75,10 +75,32 @@ Everytime a user completes a workout workout data will be logged. This includes 
 Area Data. Contains data about an area claimed by a user's exercise track. 
 To record this data we divide the world into equally sized squares which we 
 call "areas". Every valid location on the ground has a corresponding area. 
-Determining which area a coordinate falls in is easy because we can simply 
-divide coordinates by the area square size to determine which area box they 
-correspond. No need to do any sort of complex query in the database, instead
-just use this 2-dimensional hash function.
+Determining which area a coordinate falls in is easy using this method. No need
+to do any sort of complex query in the database, instead just use this 
+2-dimensional hash function.
+
+How this logic works is outside the scope of milestone 1. However in preparation
+for future milestones our team has solved this problem ([`area-tiles/area-tiles.md`](../area-tiles/area-tiles.md)).
+
+Area Data JSON:
+
+- `position` (Object)
+  - `lat` (Number)
+  - `long` (Number)
+- `trackIds` (Number[])
+- `ownerId` (Number)
+
+The `trackIds` field records the ID of every track which encompassed the area 
+tile. The current winner who owns this area tile is recorded in the `ownerId` 
+field.
+
+User interactions:
+
+- Any time the user submits a new work out the area tiles they claim will 
+  be recorded.
+- Any time the user loads the area page the area tiles the user will see on the
+  map will be queried and returned. This will be used to show the winner of
+  each tile.
 
 # Pages
 ## Register Page 
@@ -105,16 +127,13 @@ as well as a way to compare the users stats to your own.
 Wireframe:
 
 ![Register Page](./ProfilePageWireframe.PNG)
-HTML Implementation:
+
 [HTML implementation of wireframe](../../profile.html)
 
 ## Area
-The page shows areas claimed by exercises.
+The page shows areas claimed by exercises. The winners who have claimed each
+area are displayed here. Like a leader board map.
 
 ![Wireframe of area page](./area-wireframe.jpg)  
 
 [HTML implementation of wireframe](../../area.html)
-
-
-
-https://github.com/cs326-final-bet/cs326-final-bet/blob/main/docs/milestone-1/Profile%20page%20wirefram.PNG
