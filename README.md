@@ -47,6 +47,9 @@ will use a bundler to combine all the files in the `node_modules` folder into
 one big Javascript file. Finally we will include this big Javascript file in our
 frontend code. 
 
+Now we could do this by hand, but honestly it would be a huge pain. So instead
+use Parcel, because it does it for us :)
+
 The Parcel bundler does this all for us. Without the Parcel bundler user's 
 browsers would have no idea where to download the source code for all the NPM
 packages we are using. With a bundler we just combine all the package source 
