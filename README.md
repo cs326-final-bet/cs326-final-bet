@@ -21,39 +21,29 @@ written in HTML, Javascript, and SASS and uses Parcel for bundling.
 ## What Is Bundling?
 Why do we need Parcel for "bundling"? And what is "bundling" anyways?
 
-It's important to recognize the difference between writing server code for 
-NodeJs and writing frontend code for the browser. The server code will be run
-by NodeJs. While the frontend code will be run by every user's browser. These
-are two completely different environments, and have their own idiosyncrasies. 
-For example in the browser you can access the `window` and `document` variables
-in order to control what the user sees. However these variables are not 
-available in NodeJs. Differences like these are why we need a bundler.
+First, it's important to recognize the difference between writing server code 
+for NodeJs and writing frontend code for the browser. The server code will be 
+run by NodeJs, while the frontend code will be run by every user's browser. 
+These are two completely different environments, and each have their own 
+idiosyncrasies. For example, in the browser you can access the `window` and
+`document` variables in order to control what the user sees, however these 
+variables are not available in NodeJs.
 
-When developing in NodeJs we can use packages which are published to 
-NPM repository (aka the node package manager repository). We can do this on the
-server side because NodeJs knows that packages are downloaded into the 
-`node_modules` directory.
+Similarly, when developing in NodeJs we can use packages which are published to 
+the NPM (Node Package Manager) repository because NodeJs knows that packages are
+downloaded into the `node_modules` directory. However, the browser doesn't have 
+access to the `node_modules` directory, and even if it did it wouldn't have any
+idea how packages work. This issue in particular is why we need a bundler.
 
-However when developing code for the frontend, which will run in the browser, we
-must use a bundler if we want to use packages from NPM. This is because people
-will be viewing our frontend via their own browser's. And their browsers have 
-absolutely no idea how to get packages from the NPM repository. So we must help 
-them out. This is where a bundler comes in. 
-
-Since user's browsers won't have any idea how to download packages from the NPM
-package repository we have to help them out. We will help them out by first 
-downloading the NPM packages we want into our `node_modules` folder. Then we 
-will use a bundler to combine all the files in the `node_modules` folder into
-one big Javascript file. Finally we will include this big Javascript file in our
-frontend code. 
+To use NPM packages in the browser, we need to use a bundler to include those
+packages in our frontend code. First we download the NPM packages we want into
+our `node_modules` folder. Then we use a bundler to combine all the files in the
+`node_modules` folder into one big Javascript file. Finally we will include this
+big Javascript file in our frontend code.
 
 Now we could do this by hand, but honestly it would be a huge pain. So instead
-we use Parcel.
-
-The Parcel bundler does this all for us. Without the Parcel bundler user's 
-browsers would have no idea where to download the source code for all the NPM
-packages we are using. With a bundler we just combine all the package source 
-code files and give it to the user's browser.
+we use Parcel, which automatically combines all the packages we want into that
+single file, which we can then just include in our frontend code.
 
 ## Server
 To develop the server edit files in the [`server/`](./server) directory. The
