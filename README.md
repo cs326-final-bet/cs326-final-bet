@@ -27,7 +27,7 @@ by NodeJs. While the frontend code will be run by every user's browser. These
 are two completely different environments, and have their own idiosyncrasies. 
 For example in the browser you can access the `window` and `document` variables
 in order to control what the user sees. However these variables are not 
-available in NodeJs.
+available in NodeJs. Differences like these are why we need a bundler.
 
 When developing in NodeJs we can use packages which are published to 
 NPM repository (aka the node package manager repository). We can do this on the
@@ -48,7 +48,7 @@ one big Javascript file. Finally we will include this big Javascript file in our
 frontend code. 
 
 Now we could do this by hand, but honestly it would be a huge pain. So instead
-use Parcel, because it does it for us :)
+we use Parcel.
 
 The Parcel bundler does this all for us. Without the Parcel bundler user's 
 browsers would have no idea where to download the source code for all the NPM
