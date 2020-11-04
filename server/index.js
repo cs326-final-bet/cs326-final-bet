@@ -17,11 +17,11 @@ function getRandomInt(min, max) {
 }
 
 function getRandomInts(numMax, min, max) {
-    let items = [];
+    const items = [];
     const num = getRandomInt(1, numMax);
     
     for (let i = 0; i < num; i += 1) {
-        const n = getRandomInt(0, 1000);
+        const n = getRandomInt(min, max);
 
         if (items.indexOf(n) === -1) {
             items.push(n);
@@ -167,13 +167,13 @@ app.put('/tracks/:trackId([0-9]+)/likes',
         }
                
         res.send({
-		  track: {
-			 id: getRandomInt(0, 1000),
-			 longitude: getRandomInt(-80, 80),
-			 latitude: getRandomInt(-80, 80),
-			 comments: [],
-			 likes: likes,
-		  },
+            track: {
+                id: getRandomInt(0, 1000),
+                longitude: getRandomInt(-80, 80),
+                latitude: getRandomInt(-80, 80),
+                comments: [],
+                likes: likes,
+            },
         });
     });
 
@@ -183,16 +183,16 @@ app.put('/tracks/:trackId([0-9]+)/comments',
     })),
     (req, res) => {
         res.send({
-		  track: {
-			 id: getRandomInt(0, 1000),
-			 longitude: getRandomInt(-80, 80),
-			 latitude: getRandomInt(-80, 80),
-			 comments: [ {
-				userId: getRandomInt(0, 1000),
-				comment: req.body.comment,
-			 } ],
-			 likes: getRandomInts(10, 0, 1000),
-		  },
+            track: {
+                id: getRandomInt(0, 1000),
+                longitude: getRandomInt(-80, 80),
+                latitude: getRandomInt(-80, 80),
+                comments: [ {
+                    userId: getRandomInt(0, 1000),
+                    comment: req.body.comment,
+                } ],
+                likes: getRandomInts(10, 0, 1000),
+            },
         });
     });
 
