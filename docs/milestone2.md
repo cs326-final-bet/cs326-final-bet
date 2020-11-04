@@ -8,7 +8,7 @@ Final project milestone 2.
 Description of API endpoints. Organized by resource.
 
 ## Example Format Section
-### <HTTP Method> `/<HTTP Path>`
+### HTTP Method `/<HTTP Path>`
 Quickly describe the endpoint's purpose. Including any side effects it may have
 (like saving a piece of data in a database).
 
@@ -65,7 +65,7 @@ Body:
 - Empty JSON object.
 
 ## Track Endpoints
-### UPDATE `/tracks/<track ID>/likes`
+### PUT `/tracks/<track ID>/likes`
 Add or remove a like from a track.
 
 #### Request
@@ -83,7 +83,7 @@ Body:
 
 - `track` (Track): Updated track.
 
-### UPDATE `/tracks/<track ID>/comments`
+### PUT `/tracks/<track ID>/comments`
 Add a comment to a track.
 
 #### Request
