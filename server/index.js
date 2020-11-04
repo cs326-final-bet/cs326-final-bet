@@ -149,6 +149,25 @@ app.post('/strava',
         res.send({});
     });
 
+app.put('/tracks/:trackId([0-9]+)/likes',
+    validateBody(Joi.object({
+        liked: Joi.boolean().required(),
+    })),
+    (req, res) => {
+        const likes = [];
+        if (req.body.liked === true) {
+            likes.push(getRandomInt(0, 1000));
+        }
+               
+        res.send({
+            id: getRandomInt(0, 1000),
+            longitude: getRandomInt(-80, 80),
+            latitude: getRandomInt(-80, 80),
+            comments: [],
+            likes: likes,
+        });
+    });
+
 app.listen(port, () => {
     console.log(`\
 Server listening on port ${port}. View in your web browser:
