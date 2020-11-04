@@ -16,6 +16,21 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function getRandomInts(numMax, min, max) {
+    const items = [];
+    const num = getRandomInt(1, numMax);
+    
+    for (let i = 0; i < num; i += 1) {
+        const n = getRandomInt(min, max);
+
+        if (items.indexOf(n) === -1) {
+            items.push(n);
+        }
+    }
+
+    return items;
+}
+
 /**
  * Break any area up into 0.01 mile square boxes.
  */
@@ -107,15 +122,7 @@ app.get('/areas', (req, res) => {
     // Generate fake extent
     const polys = polysForExt(extent);
     const areas = polys.map((poly) => {
-        const trackIds = [];
-        const numTrackIds = getRandomInt(1, 10);
-        for (let i = 0; i < numTrackIds; i += 1) {
-            const n = getRandomInt(0, 1000);
-
-            if (trackIds.indexOf(n) === -1) {
-                trackIds.push(n);
-            }
-        }
+        const trackIds = getRandomInts(10, 0, 1000);
         
         return {
             position: {
@@ -160,13 +167,35 @@ app.put('/tracks/:trackId([0-9]+)/likes',
         }
                
         res.send({
-            id: getRandomInt(0, 1000),
-            longitude: getRandomInt(-80, 80),
-            latitude: getRandomInt(-80, 80),
-            comments: [],
-            likes: likes,
+            track: {
+                id: getRandomInt(0, 1000),
+                longitude: getRandomInt(-80, 80),
+                latitude: getRandomInt(-80, 80),
+                comments: [],
+                likes: likes,
+            },
         });
     });
+
+app.put('/tracks/:trackId([0-9]+)/comments',
+    validateBody(Joi.object({
+        comment: Joi.string().required(),
+    })),
+    (req, res) => {
+        res.send({
+            track: {
+                id: getRandomInt(0, 1000),
+                longitude: getRandomInt(-80, 80),
+                latitude: getRandomInt(-80, 80),
+                comments: [ {
+                    userId: getRandomInt(0, 1000),
+                    comment: req.body.comment,
+                } ],
+                likes: getRandomInts(10, 0, 1000),
+            },
+        });
+    });
+
 
 app.listen(port, () => {
     console.log(`\
