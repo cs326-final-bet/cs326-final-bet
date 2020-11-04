@@ -35,6 +35,74 @@ Other HTTP response code:
 ## User Endpoints
 TODO
 
+### PUT `/users/<userID>/add`
+Get the ID of the user to add as a friend or remove as a friend, and update the friends list with that user ID.
+#### Request
+URL parameters:
+- `userID` (Integer): ID of user to add or unadd.
+Body:
+- `isFriend` (Boolean): True if the user is on your friends list, false if the user
+  is not on your friends list.
+- `friendsList`(userID[]): Updated friends list.
+#### Response
+200:
+- `user` (User): Update user's friendslist.
+
+### GET `/users/<userID>/profile`
+  Get the ID of a user to access their profile page.
+#### Request
+URL parameters:
+- `userID` (Integer): ID of user whose profile to view
+#### Response
+200:
+- `user` (User): User information / profile page.
+
+### POST `/users/create`
+
+### PUT `/users/<userID>/userInfo`
+Update the users current information. Need authentication to make sure you are the correct user.
+#### Request
+URL Parameters:
+- `userID` (Integer): ID of your user.
+Body: 
+- `userId` (Number): Unique ID used to identify a user
+- `userName` (String): A user's set username
+- `userPassword` (String): A user's set password
+- `userStats` (Object): JSON object of the user's stats
+  - `currentDistance` (Number): The current distance the user has claimed
+  - `totalDistance` (Number): The total distance the user has claimed
+  - `currentTime` (Number): The current time a user has claimed
+  - `totalTime` (Number): The total time a user has claimed.
+- `email` (String): The user's email adress
+- `friendsList` (Number[]): an Array of userID's the represent the other user's this user has as
+a friend.
+#### Response
+200:
+  - `user` (User) updated user information 
+  
+### GET `/users/<userID>/userInfo`
+View the users current information
+#### Request
+URL Parameters:
+- `userID` (Integer): ID of user to view information
+#### Response
+200:
+  -Empty JSON object
+  
+### GET `/users/<userID>/userStats`
+  Get the stats of the user with the requested userID
+#### Request
+URL Parameters:
+- `userID` (Integer): ID of user to compare stats with.
+### Response
+200:
+- `userStats` (Object): JSON object of the user's stats
+  - `currentDistance` (Number): The current distance the user has claimed
+  - `totalDistance` (Number): The total distance the user has claimed
+  - `currentTime` (Number): The current time a user has claimed
+  - `totalTime` (Number): The total time a user has claimed.
+
+
 ## Workout Endpoints
 ### POST `/strava`
 Receive information from Strava about a new exercise activity. See the
