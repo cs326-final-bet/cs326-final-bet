@@ -8,7 +8,7 @@ Final project milestone 2.
 Description of API endpoints. Organized by resource.
 
 ## Example Format Section
-### <HTTP Method> <HTTP Path>
+### <HTTP Method> `/<HTTP Path>`
 Quickly describe the endpoint's purpose. Including any side effects it may have
 (like saving a piece of data in a database).
 
@@ -65,7 +65,23 @@ Body:
 - Empty JSON object.
 
 ## Track Endpoints
-TODO
+### UPDATE `/tracks/<track ID>/likes`
+Add or remove a like from a track.
+
+#### Request
+URL parameters:
+
+- `track ID` (String): ID of track to like or unlike.
+
+Body:
+
+- `liked` (Boolean): True if the track should be liked by the user, false if the
+  track should be un-liked by the user.
+
+#### Response
+200:
+
+- `track` (Track): Updated track.
 
 ## Area Endpoints
 ### GET `/areas?extend=<extent>`
