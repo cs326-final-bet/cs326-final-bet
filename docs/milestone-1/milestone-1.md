@@ -53,7 +53,9 @@ Data format:
 - `id` (Number)
 - `longitude` (Number)
 - `latitude` (Number)
-- `comments` (String)
+- `comments` (Object[])
+  - `userId` (Number)
+  - `comment` (String)
 - `likes` (Number[])
 
 Each track will have a unique id to identify them. Each track will have a longitude and latitude value that will point to the beginning of each track. Each track will support comment data so users will be able to comment on each track and they will also support like data so users can like tracks.
