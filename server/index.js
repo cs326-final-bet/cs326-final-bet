@@ -56,15 +56,15 @@ app.use(express.static('dist'));
  */
 function validateBody(schema) {
     return (req, res, next) => {
-	   const result = schema.validate(req.body);
+        const result = schema.validate(req.body);
 
-	   if (result.error !== undefined) {
-		  return res.status(400).send({
-			 error: result.error,
-		  });
-	   }
+        if (result.error !== undefined) {
+            return res.status(400).send({
+                error: result.error,
+            });
+        }
 
-	   next();
+        next();
     };
 }
 
@@ -133,21 +133,21 @@ app.get('/areas', (req, res) => {
 });
 
 app.post('/strava',
-	    validateBody(Joi.object({
-		   object_type: Joi.string()
-			  .required()
-			  .pattern(new RegExp('^activity$')),
-		   object_id: Joi.number().required(),
-		   aspect_type: Joi.string()
-			  .required()
-			  .pattern(new RegExp('^create$')),
-		   owner_id: Joi.number().required(),
-		   subscription_id: Joi.number().required(),
-		   event_time: Joi.number().required(),
-	    })),
-	    (req, res) => {
-		   res.send({});
-	    });
+    validateBody(Joi.object({
+        object_type: Joi.string()
+            .required()
+            .pattern(new RegExp('^activity$')),
+        object_id: Joi.number().required(),
+        aspect_type: Joi.string()
+            .required()
+            .pattern(new RegExp('^create$')),
+        owner_id: Joi.number().required(),
+        subscription_id: Joi.number().required(),
+        event_time: Joi.number().required(),
+    })),
+    (req, res) => {
+        res.send({});
+    });
 
 app.listen(port, () => {
     console.log(`\
