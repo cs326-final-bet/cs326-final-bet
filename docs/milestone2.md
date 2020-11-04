@@ -7,6 +7,31 @@ Final project milestone 2.
 # API Reference
 Description of API endpoints. Organized by resource.
 
+## Example Format Section
+### <HTTP Method> <HTTP Path>
+Quickly describe the endpoint's purpose. Including any side effects it may have
+(like saving a piece of data in a database).
+
+#### Request
+URL parameters:
+
+- If you have URL parameters describe them here
+
+Body:
+
+- If your endpoint expects a request body use the bullet point list format, that
+  we used to define our data types in milestone 1, to define the JSON request we
+  expect for this endpoint.
+
+#### Response
+HTTP response code:
+
+- Same bullet point list format to describe JSON response
+
+Other HTTP response code:
+
+- Ditto
+
 ## User Endpoints
 TODO
 
