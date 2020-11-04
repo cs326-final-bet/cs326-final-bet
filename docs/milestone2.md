@@ -83,6 +83,23 @@ Body:
 
 - `track` (Track): Updated track.
 
+### UPDATE `/tracks/<track ID>/comments`
+Add a comment to a track.
+
+#### Request
+URL parameters:
+
+- `track ID` (String): ID of track on which to comment.
+
+Body:
+
+- `comment` (String): Text of comment.
+
+#### Response
+200:
+
+- `track` (Track): Updated track.
+
 ## Area Endpoints
 ### GET `/areas?extend=<extent>`
 Retrieve all area tiles in the extent provided.
