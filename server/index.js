@@ -50,63 +50,63 @@ app.get('/', (req, res) => {
     res.redirect('/area.html');
 });
 
-app.get(`/areas`, (req, res) => {
+app.get('/areas', (req, res) => {
     // Check extent parameter
-    let extStr = req.query.extent;
+    const extStr = req.query.extent;
 
     if (extStr === undefined) {
-	   return res
-		  .status(400)
-		  .send({
-			 error: '\"extent\" URL query parameter required'
-		  });
+        return res
+            .status(400)
+            .send({
+                error: '"extent" URL query parameter required'
+            });
     }
     
-    let extParts = extStr.split(',');
+    const extParts = extStr.split(',');
     let extBad = false;
     
     if (extParts.length !== 4) {
-	   extBad = true;
+        extBad = true;
     }
 
     const extent = extParts.map(s => parseInt(s));
     if (extent.filter(i => isNaN(i)).length > 0) {
-	   extBad = true;
+        extBad = true;
     }
 
     if (extBad === true) {
-	   return res
-		  .status(400)
-		  .send({
-			 error: '\"extent\" URL query parameter must be in the format: <top left latitude>,<top left longitude>,<bottom right latitude>,<bottom right longitude>',
-		  });
+        return res
+            .status(400)
+            .send({
+                error: '"extent" URL query parameter must be in the format: <top left latitude>,<top left longitude>,<bottom right latitude>,<bottom right longitude>',
+            });
     }
 
     // Generate fake extent
     const polys = polysForExt(extent);
     const areas = polys.map((poly) => {
-	   let trackIds = [];
-	   const numTrackIds = getRandomInt(1, 10);
-	   for (let i = 0; i < numTrackIds; i += 1) {
-		  let n = getRandomInt(0, 1000);
+        const trackIds = [];
+        const numTrackIds = getRandomInt(1, 10);
+        for (let i = 0; i < numTrackIds; i += 1) {
+            const n = getRandomInt(0, 1000);
 
-		  if (trackIds.indexOf(n) === -1) {
-			 trackIds.push(n);
-		  }
-	   }
-	   
-	   return {
-		  position: {
-			 latitude: poly[0],
-			 longitude: poly[1],
-		  },
-		  trackIds: trackIds,
-		  ownerId: getRandomInt(0, 1000),
-	   };
+            if (trackIds.indexOf(n) === -1) {
+                trackIds.push(n);
+            }
+        }
+        
+        return {
+            position: {
+                latitude: poly[0],
+                longitude: poly[1],
+            },
+            trackIds: trackIds,
+            ownerId: getRandomInt(0, 1000),
+        };
     });
 
     return res.send({
-	   areas: areas,
+        areas: areas,
     });
 });
 
