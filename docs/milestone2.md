@@ -7,6 +7,31 @@ Final project milestone 2.
 # API Reference
 Description of API endpoints. Organized by resource.
 
+## Example Format Section
+### <HTTP Method> `/<HTTP Path>`
+Quickly describe the endpoint's purpose. Including any side effects it may have
+(like saving a piece of data in a database).
+
+#### Request
+URL parameters:
+
+- If you have URL parameters describe them here
+
+Body:
+
+- If your endpoint expects a request body use the bullet point list format, that
+  we used to define our data types in milestone 1, to define the JSON request we
+  expect for this endpoint.
+
+#### Response
+HTTP response code:
+
+- Same bullet point list format to describe JSON response
+
+Other HTTP response code:
+
+- Ditto
+
 ## User Endpoints
 TODO
 
@@ -40,7 +65,23 @@ Body:
 - Empty JSON object.
 
 ## Track Endpoints
-TODO
+### UPDATE `/tracks/<track ID>/likes`
+Add or remove a like from a track.
+
+#### Request
+URL parameters:
+
+- `track ID` (String): ID of track to like or unlike.
+
+Body:
+
+- `liked` (Boolean): True if the track should be liked by the user, false if the
+  track should be un-liked by the user.
+
+#### Response
+200:
+
+- `track` (Track): Updated track.
 
 ## Area Endpoints
 ### GET `/areas?extend=<extent>`
