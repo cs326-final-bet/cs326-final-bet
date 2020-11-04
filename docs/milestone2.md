@@ -33,7 +33,31 @@ Other HTTP response code:
 - Ditto
 
 ## User Endpoints
-TODO
+### POST /Login
+ Allows for users to login
+
+#### Request
+Body:
+
+* `Username` (String) and `Password` (String)
+
+#### Response
+200:
+
+* encrypted token used for authentication
+
+### CREATE /createUser
+allows for users to be created 
+
+#### Request
+Body:
+
+* `Email` (String), `Username` (String), `Password` (String)
+
+#### Response
+200:
+
+* Users email, username and password are saved into database
 
 ## Workout Endpoints
 ### POST `/strava`
@@ -64,7 +88,34 @@ Body:
 
 - Empty JSON object.
 
+### GET /workout/ID
+View endpoint which returns all workout data (id (String), totalTime (Number), movingTime (Number), date) as JSON object.
+
+#### Request
+URL Parameters:
+
+* `workout ID` (String): ID of workout to get info on
+    
+#### Response
+200:
+
+* `workout` (Workout): ({'id' : '123456789', 'totalTime' : 4300, 'movingTime' : 4250,'date' : 2020-10-02})
+
 ## Track Endpoints
+
+### GET /track/ID
+View endpoint which returns all track data(id (String), long (Number), lat (Number), comments (String), likes (Number)) as JSON object.
+
+#### Request
+URL parameters: 
+
+* `track ID` (String): ID of track to get info on 
+    
+#### Response
+200:
+
+* `track` (Track): ({'id' : '123456789', 'long' : 42.111, 'lat' : -70.111, 'comments' : {'id' : 1, 'comment' : 'Some comment on track 123456789'}, 'likes' : 6})
+
 ### PUT `/tracks/<track ID>/likes`
 Add or remove a like from a track.
 
