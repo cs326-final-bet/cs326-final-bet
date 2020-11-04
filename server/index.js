@@ -1,4 +1,6 @@
 import express from 'express';
+import bodyParser from 'body-parser';
+import Joi from 'joi';
 
 /**
  * From: https://stackoverflow.com/a/1527820
@@ -41,10 +43,30 @@ function polysForExt(extent) {
     return polys;
 }
 
+// API
 const app = express();
 const port = process.env.PORT || 8000;
 
+app.use(bodyParser.json());
 app.use(express.static('dist'));
+
+/**
+ * Returns a middleware function to validate that a request body matches a 
+ * Joi schema.
+ */
+function validateBody(schema) {
+    return (req, res, next) => {
+	   const result = schema.validate(req.body);
+
+	   if (result.error !== undefined) {
+		  return res.status(400).send({
+			 error: result.error,
+		  });
+	   }
+
+	   next();
+    };
+}
 
 app.get('/', (req, res) => {
     res.redirect('/area.html');
@@ -109,6 +131,23 @@ app.get('/areas', (req, res) => {
         areas: areas,
     });
 });
+
+app.post('/strava',
+	    validateBody(Joi.object({
+		   object_type: Joi.string()
+			  .required()
+			  .pattern(new RegExp('^activity$')),
+		   object_id: Joi.number().required(),
+		   aspect_type: Joi.string()
+			  .required()
+			  .pattern(new RegExp('^create$')),
+		   owner_id: Joi.number().required(),
+		   subscription_id: Joi.number().required(),
+		   event_time: Joi.number().required(),
+	    })),
+	    (req, res) => {
+		   res.send({});
+	    });
 
 app.listen(port, () => {
     console.log(`\
