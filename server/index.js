@@ -208,15 +208,15 @@ app.put('/user/:userId([0-9]+)/addFriend',
         res.send({
             userInfo: {
                 id: getRandomInt(0, 1000),
-                userName: "user name",
-                userPassword: "user password",
+                userName: 'user name',
+                userPassword: 'user password',
                 userStats: {
                     currentDistance: getRandomInt(0, 1000),
                     currentTime: getRandomInt(0, 1000),
                     totalDistance: getRandomInt(0 ,1000),
                     totalTime: getRandomInt(0, 1000)
                 },
-                email: "user email",
+                email: 'user email',
                 friendsList: [req.body.id]
             }
         });
@@ -232,27 +232,27 @@ app.get('/user/userStats', (req, res) => {
             });
     }
     const userId = parseInt(userIdStr);
-    if(userId === NaN){
+    if(isNaN(userId)){
         return res  
             .status(400)
             .send({
-                error: "userId must be an integer"
+                error: 'userId must be an integer'
             });
     }
     //Generate fake user
     const userInfo = {
         id: userId,
-        userName: "user name",
-        userPassword: "user password",
+        userName: 'user name',
+        userPassword: 'user password',
         userStats: {
             currentDistance: getRandomInt(0, 1000),
             currentTime: getRandomInt(0, 1000),
             totalDistance: getRandomInt(0 ,1000),
             totalTime: getRandomInt(0, 1000)
         },
-        email: "user email",
+        email: 'user email',
         friendsList: [getRandomInts(10, 0, 1000)]
-    }
+    };
     return res.send({
         userStats: userInfo.userStats,
     });
@@ -268,28 +268,30 @@ app.get('/user', (req, res) =>{
             });
     }
     const userId = parseInt(userIdStr);
-    if(userId === NaN){
+    if(isNaN(userId)){
         return res  
             .status(400)
             .send({
-                error: "userId must be an integer"
+                error: 'userId must be an integer'
             });
     }
     //Generate fake user
     const userInfo = {
         id: userId,
-        userName: "user name",
-        userPassword: "user password",
+        userName: 'user name',
+        userPassword: 'user password',
         userStats: {
             currentDistance: getRandomInt(0, 1000),
             currentTime: getRandomInt(0, 1000),
             totalDistance: getRandomInt(0 ,1000),
             totalTime: getRandomInt(0, 1000)
         },
-        email: "user email",
+        email: 'user email',
         friendsList: [getRandomInts(10, 0, 1000)]
-    }
-    return res.redirect('/profile.html');
+    };
+    return res.send({
+        userInfo: userInfo,
+    });
 });
 
 app.listen(port, () => {
