@@ -293,6 +293,54 @@ app.get('/user', (req, res) =>{
         userInfo: userInfo,
     });
 });
+//update user information
+app.put('/user/updateInfo',(req, res) => {
+    const userIdStr = req.query.userId;
+    const newUsername = req.query.newUsername;
+    if(userIdStr === undefined){
+        return res
+            .status(400)
+            .send({
+                error: '"userId" URL query parameter required'
+            });
+    }
+    if(username === undefined){
+        return res
+            .status(400)
+            .send({
+                error: '"username" URL query parameter required'
+            });
+    }
+    const userId = parseInt(userIdStr);
+    if(isNaN(userId)){
+        return res  
+            .status(400)
+            .send({
+                error: 'userId must be an integer'
+            });
+    }
+    validateBody(Joi.object({
+        username: Joi.string().required(),
+    }));
+    //Generate fake user
+    let userInfo = {
+        id: userId,
+        userName: 'user name',
+        userPassword: 'user password',
+        userStats: {
+            currentDistance: getRandomInt(0, 1000),
+            currentTime: getRandomInt(0, 1000),
+            totalDistance: getRandomInt(0 ,1000),
+            totalTime: getRandomInt(0, 1000)
+        },
+        email: 'user email',
+        friendsList: [getRandomInts(10, 0, 1000)]
+    };
+    userInfo.userName = newUsername;
+    req.send({
+        userInfo: userInfo,
+    });
+});
 
 app.listen(port, () => {
     console.log(`\
