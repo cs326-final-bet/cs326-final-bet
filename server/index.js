@@ -304,7 +304,7 @@ app.put('/user/updateInfo',(req, res) => {
                 error: '"userId" URL query parameter required'
             });
     }
-    if(username === undefined){
+    if(newUsername === undefined){
         return res
             .status(400)
             .send({
@@ -323,7 +323,7 @@ app.put('/user/updateInfo',(req, res) => {
         username: Joi.string().required(),
     }));
     //Generate fake user
-    let userInfo = {
+    const userInfo = {
         id: userId,
         userName: 'user name',
         userPassword: 'user password',
