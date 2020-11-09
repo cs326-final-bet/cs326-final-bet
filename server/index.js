@@ -215,17 +215,19 @@ app.post('/createUser', (req, res) => {
         password: Joi.string().required()
     }));
     res.send({
-        id: getRandomInt(0, 1000),
-        userName: 'user name',
-        userPassword: 'user password',
-        userStats: {
-            currentDistance: 0,
-            currentTime: 0,
-            totalDistance: 0,
-            totalTime: 0
-        },
-        email: 'user email',
-        friendsList: [] 
+        user : {
+            id: getRandomInt(0, 1000),
+            userName: 'user name',
+            userPassword: 'user password',
+            userStats: {
+                currentDistance: 0,
+                currentTime: 0,
+                totalDistance: 0,
+                totalTime: 0
+            },
+            email: 'user email',
+            friendsList: []
+        }
     });
 });
 
