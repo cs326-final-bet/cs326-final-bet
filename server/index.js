@@ -195,7 +195,152 @@ app.put('/tracks/:trackId([0-9]+)/comments',
             },
         });
     });
-
+//add friend
+app.put('/user/:userId([0-9]+)/addFriend',
+    validateBody(Joi.object({
+        isFriend: Joi.boolean().required(),
+    })),
+    (req, res) => {
+        const friendsList = [];
+        if(req.body.isFriend === true){
+            friendsList.push(getRandomInt(0, 1000));
+        }
+        res.send({
+            userInfo: {
+                id: getRandomInt(0, 1000),
+                userName: 'user name',
+                userPassword: 'user password',
+                userStats: {
+                    currentDistance: getRandomInt(0, 1000),
+                    currentTime: getRandomInt(0, 1000),
+                    totalDistance: getRandomInt(0 ,1000),
+                    totalTime: getRandomInt(0, 1000)
+                },
+                email: 'user email',
+                friendsList: [req.body.id]
+            }
+        });
+    });
+//get user stats
+app.get('/user/userStats', (req, res) => {
+    const userIdStr = req.query.userId;
+    if(userIdStr === undefined){
+        return res
+            .status(400)
+            .send({
+                error: '"userId" URL query parameter required'
+            });
+    }
+    const userId = parseInt(userIdStr);
+    if(isNaN(userId)){
+        return res  
+            .status(400)
+            .send({
+                error: 'userId must be an integer'
+            });
+    }
+    //Generate fake user
+    const userInfo = {
+        id: userId,
+        userName: 'user name',
+        userPassword: 'user password',
+        userStats: {
+            currentDistance: getRandomInt(0, 1000),
+            currentTime: getRandomInt(0, 1000),
+            totalDistance: getRandomInt(0 ,1000),
+            totalTime: getRandomInt(0, 1000)
+        },
+        email: 'user email',
+        friendsList: [getRandomInts(10, 0, 1000)]
+    };
+    return res.send({
+        userStats: userInfo.userStats,
+    });
+});
+//get user profile
+app.get('/user', (req, res) =>{
+    const userIdStr = req.query.userId;
+    if(userIdStr === undefined){
+        return res
+            .status(400)
+            .send({
+                error: '"userId" URL query parameter required'
+            });
+    }
+    const userId = parseInt(userIdStr);
+    if(isNaN(userId)){
+        return res  
+            .status(400)
+            .send({
+                error: 'userId must be an integer'
+            });
+    }
+    //Generate fake user
+    const userInfo = {
+        id: userId,
+        userName: 'user name',
+        userPassword: 'user password',
+        userStats: {
+            currentDistance: getRandomInt(0, 1000),
+            currentTime: getRandomInt(0, 1000),
+            totalDistance: getRandomInt(0 ,1000),
+            totalTime: getRandomInt(0, 1000)
+        },
+        email: 'user email',
+        friendsList: [getRandomInts(10, 0, 1000)]
+    };
+    return res.send({
+        userInfo: userInfo,
+    });
+});
+//update user information
+app.put('/user/updateInfo',(req, res) => {
+    const userIdStr = req.query.userId;
+    const newUsername = req.query.newUsername;
+    if(userIdStr === undefined){
+        return res
+            .status(400)
+            .send({
+                error: '"userId" URL query parameter required'
+            });
+    }
+    if(newUsername === undefined){
+        return res
+            .status(400)
+            .send({
+                error: '"username" URL query parameter required'
+            });
+    }
+    const userId = parseInt(userIdStr);
+    if(isNaN(userId)){
+        return res  
+            .status(400)
+            .send({
+                error: 'userId must be an integer'
+            });
+    }
+    validateBody(Joi.object({
+        username: Joi.string().required(),
+    }));
+    //Generate fake user
+    const userInfo = {
+        id: userId,
+        userName: 'user name',
+        userPassword: 'user password',
+        userStats: {
+            currentDistance: getRandomInt(0, 1000),
+            currentTime: getRandomInt(0, 1000),
+            totalDistance: getRandomInt(0 ,1000),
+            totalTime: getRandomInt(0, 1000)
+        },
+        email: 'user email',
+        friendsList: [getRandomInts(10, 0, 1000)]
+    };
+    userInfo.userName = newUsername;
+    req.send({
+        userInfo: userInfo,
+    });
+});
 
 //login 
 app.put('/login',(req, res) => {
