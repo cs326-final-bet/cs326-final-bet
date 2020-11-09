@@ -203,8 +203,7 @@ app.put('/login',(req, res) => {
         username: Joi.string().required(),
         password: Joi.string().required()
     }));
-    userInfo.userName = newUsername;
-    req.send('Login Successful');
+    res.send('Login Successful');
 });
 
 //createUser
