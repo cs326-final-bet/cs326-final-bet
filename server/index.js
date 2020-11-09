@@ -204,7 +204,7 @@ app.put('/login',(req, res) => {
         password: Joi.string().required()
     }));
     userInfo.userName = newUsername;
-    req.send({});
+    req.send('Login Successful');
 });
 
 //createUser
