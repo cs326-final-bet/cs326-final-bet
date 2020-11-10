@@ -397,7 +397,7 @@ app.post('/createUser', (req, res) => {
 });
 
 //get workout Data
-app.get('/workout/:workoutId([0-9]+', (req, res) => {
+app.get('/workout/:workoutId([0-9]+)', (req, res) => {
     const workoutIdStr = req.query.workoutId;
     if(workoutIdStr === undefined){
         return res
@@ -423,7 +423,7 @@ app.get('/workout/:workoutId([0-9]+', (req, res) => {
 });
 
 //get track Data
-app.get('/track/:trackId([0-9]+', (req, res) => {
+app.get('/track/:trackId([0-9]+)', (req, res) => {
     const trackIdStr = req.query.trackId;
     if(trackIdStr === undefined){
         return res
