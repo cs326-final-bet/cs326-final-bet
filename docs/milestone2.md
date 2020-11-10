@@ -2,12 +2,11 @@
 Final project milestone 2.
 
 # Table Of Contents
-- Division of labor
+- [Division Of Labor](#division-of-labor)
 - [API Reference](#api-reference)
-- CRUD Operations per Page
+- [CRUD Operations Per Page](#crud-operations-per-page)
 
 # Division of Labor
-
 Noah Huppert: 
 * API descriptions & mockups of: POST `/strava`, PUT `/tracks/<track ID>/likes`, PUT `/tracks/<track ID>/comment`, GET `/area`
 * Deployed onto Heroku
@@ -264,3 +263,10 @@ URL parameters:
 ![Register Page](./loginPage.JPG)
 
 * Read: This page will read the username and email as the users login credentials
+
+![Area Page](./areaPage.jpg)
+
+* Read: Retrieves a list of areas which are contained in the section of the map
+  which users are currently looking.
+* Update: Updates a track with a comment when the user clicks the comment button.
+* Update: Updates a track with a like when the user clicks the like button.
