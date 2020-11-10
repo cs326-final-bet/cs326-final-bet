@@ -31,9 +31,9 @@ const panelScoreEl = document.getElementById('info-score');
 const panelAreaEl = document.getElementById('info-area');
 const panelCommentsEl = document.getElementById('info-existing-comments');
 
-const leaveCommentValueEl = document.getElementById("leave-comment-value");
-const leaveCommentButtonEl = document.getElementById("info-leave-comment");
-const likeButtonEl = document.getElementById("info-like");
+const leaveCommentValueEl = document.getElementById('leave-comment-value');
+const leaveCommentButtonEl = document.getElementById('info-leave-comment');
+const likeButtonEl = document.getElementById('info-like');
 
 function addComment(comment) {
     const container = document.createElement('div');
@@ -65,41 +65,41 @@ function showAreaFeatureDetails(areaFeat) {
 
     // Setup comments GUI
     leaveCommentButtonEl.onclick = async () => {
-	   if (leaveCommentValueEl.value.length === 0) {
-		  alert("Cannot leave empty comment");
-		  return;
-	   }
-	   
-	   const resp = await fetch(`/tracks/${areaFeat.attributes.trackIds[0]}/comments`, {
-		  method: "PUT",
-		  headers: {
-			 "Content-Type": "application/json",
-		  },
-		  body: JSON.stringify({
-			 comment: leaveCommentValueEl.value,
-		  }),
-	   });
+        if (leaveCommentValueEl.value.length === 0) {
+            alert('Cannot leave empty comment');
+            return;
+        }
+        
+        await fetch(`/tracks/${areaFeat.attributes.trackIds[0]}/comments`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                comment: leaveCommentValueEl.value,
+            }),
+        });
 
-	   addComment({
-		  user: 'You!',
-		  value: leaveCommentValueEl.value,
-	   });
+        addComment({
+            user: 'You!',
+            value: leaveCommentValueEl.value,
+        });
 
-	   leaveCommentValueEl.value = "";
+        leaveCommentValueEl.value = '';
     };
 
     likeButtonEl.onclick = async () => {
-	   const resp = await fetch(`/tracks/${areaFeat.attributes.trackIds[0]}/likes`, {
-		  method: "PUT",
-		  headers: {
-			 "Content-Type": "application/json",
-		  },
-		  body: JSON.stringify({
-			 liked: true,
-		  }),
-	   });
+        await fetch(`/tracks/${areaFeat.attributes.trackIds[0]}/likes`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                liked: true,
+            }),
+        });
 
-	   alert("Like recorded");
+        alert('Like recorded');
     };
 
     // Show panel
@@ -163,13 +163,13 @@ const src = new VectorSource({
 const lay = new VectorLayer({
     source: src,
     style: new Style({
-	   fill: new Fill({
-		  color: 'rgba(175, 81, 245, 0.4)',
-	   }),
-	   stroke: new Stroke({
-		  color: 'rgba(175, 81, 245, 1)',
-		  width: 1,
-	   }),
+        fill: new Fill({
+            color: 'rgba(175, 81, 245, 0.4)',
+        }),
+        stroke: new Stroke({
+            color: 'rgba(175, 81, 245, 1)',
+            width: 1,
+        }),
     }),
 });
 
@@ -182,29 +182,29 @@ map.addLayer(lay);
 async function getAndDrawAreas(map) {
     const ext = map.getView().calculateExtent(map.getSize());
     
-    const resp = await fetch(`/areas?extent=${ext.join(",")}`);
+    const resp = await fetch(`/areas?extent=${ext.join(',')}`);
     const body = await resp.json();
     
     const feats = body.areas.map(area => {
-	   const feat = new Feature({
-		  geometry: new Polygon([area.polygon]),
-	   });
+        const feat = new Feature({
+            geometry: new Polygon([area.polygon]),
+        });
 
-	   feat.attributes = {
-		  area_id: area.id,
-		  user: area.ownerId,
-		  score: area.score,
-		  comments: [],
-		  trackIds: area.trackIds,
-	   };
+        feat.attributes = {
+            area_id: area.id,
+            user: area.ownerId,
+            score: area.score,
+            comments: [],
+            trackIds: area.trackIds,
+        };
 
-	   return feat;
+        return feat;
     });
 
     src.clear();
     src.addFeatures(feats);
 }
 
-map.on("moveend", () => {
+map.on('moveend', () => {
     getAndDrawAreas(map);
 });

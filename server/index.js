@@ -51,7 +51,7 @@ function polysForExt(extent) {
                 [x, y + 0.01],
                 [x + 0.01, y + 0.01],
                 [x + 0.01, y],
-			 [x, y],
+                [x, y],
             ]);
         }
     }
@@ -122,23 +122,23 @@ app.get('/areas', (req, res) => {
 
     // Generate fake extent
     const polys = polysForExt(extent);
-    let areas = polys.map((poly) => {
+    const areas = polys.map((poly) => {
         const trackIds = getRandomInts(10, 0, 1000);
         
         return {
-		  id: getRandomInt(0, 1000),
-		  score: getRandomInt(0, 1000),
+            id: getRandomInt(0, 1000),
+            score: getRandomInt(0, 1000),
             position: {
-			 topLeft: {
-				latitude: poly[0][0],
-				longitude: poly[0][1],
-			 },
-			 bottomRight: {
-				latitude: poly[2][0],
-				longitude: poly[2][1],
-			 },
-		  },
-		  polygon: poly,
+                topLeft: {
+                    latitude: poly[0][0],
+                    longitude: poly[0][1],
+                },
+                bottomRight: {
+                    latitude: poly[2][0],
+                    longitude: poly[2][1],
+                },
+            },
+            polygon: poly,
             trackIds: trackIds,
             ownerId: getRandomInt(0, 1000),
         };
@@ -147,12 +147,12 @@ app.get('/areas', (req, res) => {
     // Remove some areas so the entire screen isn't just full
     let maxRemoveNum = areas.length;
     if (maxRemoveNum > 5) {
-	   maxRemoveNum -= 5;
+        maxRemoveNum -= 5;
     }
     
     const removeNum = getRandomInt(Math.round(areas.length / 2), maxRemoveNum);
     for (let i = 0; i < removeNum; i++) {
-	   areas.splice(getRandomInt(0, areas.length-1), 1);
+        areas.splice(getRandomInt(0, areas.length-1), 1);
     }
 
     return res.send({
