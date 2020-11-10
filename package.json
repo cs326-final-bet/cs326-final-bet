@@ -2,12 +2,11 @@
     "name": "milestone-1",
     "version": "0.1.0",
     "description": "Final project milestone 1",
-    "main": "index.js",
     "type": "module",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "lint": "eslint {server,frontend}/*.{js,html}",
-	   "lint-fix": "eslint --fix {server,frontend}/*.{js,html}",
+        "lint-fix": "eslint --fix {server,frontend}/*.{js,html}",
         "build": "parcel build frontend/*.html",
         "watch": "parcel watch frontend/*.html",
         "start": "node server/index.js"
@@ -19,7 +18,7 @@
         "eslint": "^7.12.0",
         "eslint-plugin-html": "^6.1.0",
         "ol": "^6.4.3",
-        "parcel-bundler": "^1.12.4",
+        "parcel": "^2.0.0-beta.1",
         "sass": "^1.27.0"
     },
     "dependencies": {

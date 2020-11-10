@@ -107,54 +107,55 @@ const map = new Map({
     }),
 });
 
-// Draw sample area
-const poly1 = new Polygon([
-    // First "ring" defines border
-    [
-        [-70.995, 42.005],
-        [-71, 42.013],
-        [-71.007, 42.018],
-        [-71.014, 42.018],
-        [-71.021, 42.016],
-        [-71.023, 42.009],
-        [-71.034, 42.005],
-        [-71.029, 41.995],
-        [-71.023, 41.99],
-        [-70.997, 42.001],
-        [-70.995, 42.005],
-    ]
-]);
-
-const feat1 = new Feature({
-    geometry: poly1,
+// Retrieve areas from API
+const src = new VectorSource({
+    features: [],
 });
-feat1.attributes = {
-    area_id: 546,
-    user: 'noah',
-    score: 5678,
-    comments: [
-        { user: 'james', value: 'Aw man! You took over my spot!' },
-        { user: 'noah', value: 'Not for long buddy :)' },
-        { user: 'james', value: 'I am the king of Hockomock swamp!' },
-    ],
-};
 
-const vecSrc = new VectorSource({
-    features: [
-        feat1
-    ],
-});
-const vecLay = new VectorLayer({
-    source: vecSrc,
+const lay = new VectorLayer({
+    source: src,
     style: new Style({
-        fill: new Fill({
-            color: 'rgba(175, 81, 245, 0.5)',
-        }),
-        stroke: new Stroke({
-            color: '#777777',
-            width: 1,
-        }),
+	   fill: new Fill({
+		  color: 'rgba(175, 81, 245, 0.4)',
+	   }),
+	   stroke: new Stroke({
+		  color: 'rgba(175, 81, 245, 1)',
+		  width: 1,
+	   }),
     }),
 });
 
-map.addLayer(vecLay);
+map.addLayer(lay);
+
+/**
+ * Get areas from the API which are visible on the map and draw them.
+ * @param map {Map} To draw areas.
+ */
+async function getAndDrawAreas(map) {
+    const ext = map.getView().calculateExtent(map.getSize());
+    
+    const resp = await fetch(`/areas?extent=${ext.join(",")}`);
+    const body = await resp.json();
+    
+    const feats = body.areas.map(area => {
+	   const feat = new Feature({
+		  geometry: new Polygon([area.polygon]),
+	   });
+
+	   feat.attributes = {
+		  area_id: area.id,
+		  user: area.ownerId,
+		  score: area.score,
+		  comments: [],
+	   };
+
+	   return feat;
+    });
+
+    src.clear();
+    src.addFeatures(feats);
+}
+
+map.on("moveend", () => {
+    getAndDrawAreas(map);
+});
