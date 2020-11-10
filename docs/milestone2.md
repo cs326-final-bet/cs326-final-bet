@@ -264,6 +264,14 @@ URL parameters:
 
 * Read: This page will read the username and email as the users login credentials
 
+#### Profile Page
+
+![Profile Page](./profilePage.JPG)
+
+* Read: This page will read the users profile and user information.
+
+#### Area Page
+
 ![Area Page](./areaPage.jpg)
 
 * Read: Retrieves a list of areas which are contained in the section of the map
