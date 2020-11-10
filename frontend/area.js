@@ -31,30 +31,78 @@ const panelScoreEl = document.getElementById('info-score');
 const panelAreaEl = document.getElementById('info-area');
 const panelCommentsEl = document.getElementById('info-existing-comments');
 
+const leaveCommentValueEl = document.getElementById("leave-comment-value");
+const leaveCommentButtonEl = document.getElementById("info-leave-comment");
+const likeButtonEl = document.getElementById("info-like");
+
+function addComment(comment) {
+    const container = document.createElement('div');
+    
+    const user = document.createElement('b');
+    user.appendChild(document.createTextNode(comment.user));
+
+    const value = document.createElement('span');
+    value.appendChild(document.createTextNode(comment.value));
+
+    container.appendChild(user);
+    container.appendChild(value);
+
+    panelCommentsEl.appendChild(container);
+}
+
 function showAreaFeatureDetails(areaFeat) {
+    // Basic top panel info
     panelUserEl.innerText = areaFeat.attributes.user;
     panelScoreEl.innerText = areaFeat.attributes.score;
     panelAreaEl.innerText = areaFeat.getGeometry().getArea().toFixed(5);
 
+    // Show comments
     while (panelCommentsEl.firstChild !== null) {
         panelCommentsEl.removeChild(panelCommentsEl.firstChild);
     }
 
-    areaFeat.attributes.comments.forEach(comment => {
-        const container = document.createElement('div');
-        
-        const user = document.createElement('b');
-        user.appendChild(document.createTextNode(comment.user));
+    areaFeat.attributes.comments.forEach(addComment);
 
-        const value = document.createElement('span');
-        value.appendChild(document.createTextNode(comment.value));
+    // Setup comments GUI
+    leaveCommentButtonEl.onclick = async () => {
+	   if (leaveCommentValueEl.value.length === 0) {
+		  alert("Cannot leave empty comment");
+		  return;
+	   }
+	   
+	   const resp = await fetch(`/tracks/${areaFeat.attributes.trackIds[0]}/comments`, {
+		  method: "PUT",
+		  headers: {
+			 "Content-Type": "application/json",
+		  },
+		  body: JSON.stringify({
+			 comment: leaveCommentValueEl.value,
+		  }),
+	   });
 
-        container.appendChild(user);
-        container.appendChild(value);
+	   addComment({
+		  user: 'You!',
+		  value: leaveCommentValueEl.value,
+	   });
 
-        panelCommentsEl.appendChild(container);
-    });
+	   leaveCommentValueEl.value = "";
+    };
 
+    likeButtonEl.onclick = async () => {
+	   const resp = await fetch(`/tracks/${areaFeat.attributes.trackIds[0]}/likes`, {
+		  method: "PUT",
+		  headers: {
+			 "Content-Type": "application/json",
+		  },
+		  body: JSON.stringify({
+			 liked: true,
+		  }),
+	   });
+
+	   alert("Like recorded");
+    };
+
+    // Show panel
     panelEl.classList.remove('info-panel-hidden');
 }
 
@@ -147,6 +195,7 @@ async function getAndDrawAreas(map) {
 		  user: area.ownerId,
 		  score: area.score,
 		  comments: [],
+		  trackIds: area.trackIds,
 	   };
 
 	   return feat;
