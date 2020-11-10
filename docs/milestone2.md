@@ -272,7 +272,7 @@ URL parameters:
 
 #### Area Page
 
-![Area Page](./areaPage.jpg)
+![Area Page](./areaPage.png)
 
 * Read: Retrieves a list of areas which are contained in the section of the map
   which users are currently looking.
