@@ -2,7 +2,22 @@
 Final project milestone 2.
 
 # Table Of Contents
+- Division of labor
 - [API Reference](#api-reference)
+- CRUD Operations per Page
+
+# Division of Labor
+
+Noah Huppert: 
+* API descriptions & mockups of: POST `/strava`, PUT `/tracks/<track ID>/likes`, PUT `/tracks/<track ID>/comment`, GET `/area`
+* Deployed onto Heroku
+
+Patrick Goss
+* API descriptions & mockups of: PUT `/createUser`, GET `/workout/id`, GET `/track/id`, POST `/login`
+* Wrote CRUD descriptions for Login and Register Pages
+
+Dylan Toothaker
+* API descriptions & mockups of: PUT `/users/<userID>/add`, GET `/users/<userID>/profile`, PUT `/users/<userID>/userInfo`, GET `/users/<userID>/userInfo`, GET `/users/<userID>/userStats`
 
 # API Reference
 Description of API endpoints. Organized by resource.
@@ -237,3 +252,15 @@ URL parameters:
 200:
 
 - `areas` (Area[]): Areas in the extent.
+
+## CRUD for Each Page
+
+#### Register Page
+
+![Register Page](./registerPage.JPG)
+
+* Create: this page will all users to be created with the imput of an email, username, and passwordd
+
+![Register Page](./loginPage.JPG)
+
+* Read: This page will read the username and email as the users login credentials
