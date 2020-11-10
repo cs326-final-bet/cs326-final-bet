@@ -342,6 +342,92 @@ app.put('/user/updateInfo',(req, res) => {
     });
 });
 
+//login 
+app.put('/login',(req, res) => {
+    validateBody(Joi.object({
+        username: Joi.string().required(),
+        password: Joi.string().required()
+    }));
+    res.send('Login Successful');
+});
+
+//createUser
+app.post('/createUser', (req, res) => {
+    validateBody(Joi.object({
+        email: Joi.string().required(),
+        username: Joi.string().required(),
+        password: Joi.string().required()
+    }));
+    res.send({
+        user : {
+            id: getRandomInt(0, 1000),
+            userName: 'user name',
+            userPassword: 'user password',
+            userStats: {
+                currentDistance: 0,
+                currentTime: 0,
+                totalDistance: 0,
+                totalTime: 0
+            },
+            email: 'user email',
+            friendsList: []
+        }
+    });
+});
+
+//get workout Data
+app.get('/workout/:workoutId([0-9]+', (req, res) => {
+    const workoutIdStr = req.query.workoutId;
+    if(workoutIdStr === undefined){
+        return res
+            .status(400)
+            .send({
+                error: 'workoutID is not included in URL'
+            });
+    }
+    const workoutID = parseInt(workoutIdStr);
+    if(isNaN(workoutID)){
+        return res  
+            .status(400)
+            .send({
+                error: 'workoutID must be an integer'
+            });
+    }
+    return res.send({
+        workoutId: getRandomInt(0, 1000),
+        totalTime: getRandomInt(0, 10000),
+        movingTime: getRandomInt(0,10000),
+        date: '11-01-2020'
+    });
+});
+
+//get track Data
+app.get('/track/:trackId([0-9]+', (req, res) => {
+    const trackIdStr = req.query.trackId;
+    if(trackIdStr === undefined){
+        return res
+            .status(400)
+            .send({
+                error: 'TrackID not included in URL'
+            });
+    }
+    const trackID = parseInt(trackIdStr);
+    if(isNaN(trackID)){
+        return res  
+            .status(400)
+            .send({
+                error: 'trackID must be an integer'
+            });
+    }
+    return res.send({
+        trackId: getRandomInt(0, 1000),
+        longitude: getRandomInt(-80, 80),
+        latitude: getRandomInt(-80, 80),
+        comments: [],
+        likes: getRandomInts(10, 0, 1000)
+    });
+});
+
 app.listen(port, () => {
     console.log(`\
 Server listening on port ${port}. View in your web browser:
