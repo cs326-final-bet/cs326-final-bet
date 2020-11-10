@@ -264,3 +264,9 @@ URL parameters:
 ![Register Page](./loginPage.JPG)
 
 * Read: This page will read the username and email as the users login credentials
+
+#### Profile Page
+
+![Profile Page](./profilePage.JPG)
+
+* Read: This page will read the users profile and user information.
