@@ -237,3 +237,23 @@ URL parameters:
 200:
 
 - `areas` (Area[]): Areas in the extent.
+<<<<<<< Updated upstream
+=======
+
+## CRUD for Each Page
+#### Profile Page
+
+![Profile Page](./profilePage.JPG)
+
+* Read: This page will read the users profile and user information.
+
+#### Register Page
+
+![Register Page](./registerPage.JPG)
+
+* Create: this page will all users to be created with the imput of an email, username, and passwordd
+
+![Register Page](./loginPage.JPG)
+
+* Read: This page will read the username and email as the users login credentials
+>>>>>>> Stashed changes
