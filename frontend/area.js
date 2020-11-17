@@ -1,3 +1,5 @@
+import 'regenerator-runtime/runtime';
+
 import 'ol/ol.css';
 import Map from 'ol/Map';
 import TileLayer from 'ol/layer/Tile';
