@@ -2,7 +2,21 @@
 Final project milestone 2.
 
 # Table Of Contents
+- [Division Of Labor](#division-of-labor)
 - [API Reference](#api-reference)
+- [CRUD Operations Per Page](#crud-operations-per-page)
+
+# Division of Labor
+Noah Huppert: 
+* API descriptions & mockups of: POST `/strava`, PUT `/tracks/<track ID>/likes`, PUT `/tracks/<track ID>/comment`, GET `/area`
+* Deployed onto Heroku
+
+Patrick Goss
+* API descriptions & mockups of: PUT `/createUser`, GET `/workout/id`, GET `/track/id`, POST `/login`
+* Wrote CRUD descriptions for Login and Register Pages
+
+Dylan Toothaker
+* API descriptions & mockups of: PUT `/users/<userID>/add`, GET `/users/<userID>/profile`, PUT `/users/<userID>/userInfo`, GET `/users/<userID>/userInfo`, GET `/users/<userID>/userStats`
 
 # API Reference
 Description of API endpoints. Organized by resource.
@@ -237,10 +251,9 @@ URL parameters:
 200:
 
 - `areas` (Area[]): Areas in the extent.
-<<<<<<< Updated upstream
-=======
 
 ## CRUD for Each Page
+
 #### Register Page
 
 ![Register Page](./registerPage.JPG)
@@ -257,4 +270,11 @@ URL parameters:
 
 * Read: This page will read the users profile and user information.
 
->>>>>>> Stashed changes
+#### Area Page
+
+![Area Page](./areaPage.png)
+
+* Read: Retrieves a list of areas which are contained in the section of the map
+  which users are currently looking.
+* Update: Updates a track with a comment when the user clicks the comment button.
+* Update: Updates a track with a like when the user clicks the like button.

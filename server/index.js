@@ -1,6 +1,42 @@
+'use strict';
+
 import express from 'express';
 import bodyParser from 'body-parser';
 import Joi from 'joi';
+
+/*
+import passport from  'passport';
+import LocalStrategy from 'passport-local';
+//require('dotenv').config();
+//const passport = require('passport');               // handles authentication
+//const LocalStrategy = require('passport-local').Strategy; // username/password strategy
+//const minicrypt = require('./miniCrypt');
+//const mc = new minicrypt();
+
+const strategy = new LocalStrategy(
+    // async (username, password, done) => {
+    //     if (!findUser(username)) {
+    //         return done(null, false, { 'message' : 'Wrong username' });
+    //     }
+    //     if (!validatePassword(username, password)) {
+    //     // invalid password
+    //     // should disable logins after N messages
+    //     // delay return to rate-limit brute-force attacks
+    //         await new Promise((r) => setTimeout(r, 2000)); // two second delay
+    //         return done(null, false, { 'message' : 'Wrong password' });
+    //     }
+    //     // success!
+    //     // should create a user object here, associated with a unique identifier
+    //     return done(null, username);
+    // }
+);
+
+
+passport.use(strategy);
+app.use(passport.initialize());
+app.use(passport.session());
+*/
+
 
 /**
  * From: https://stackoverflow.com/a/1527820
@@ -51,6 +87,7 @@ function polysForExt(extent) {
                 [x, y + 0.01],
                 [x + 0.01, y + 0.01],
                 [x + 0.01, y],
+                [x, y],
             ]);
         }
     }
@@ -84,7 +121,7 @@ function validateBody(schema) {
 }
 
 app.get('/', (req, res) => {
-    res.redirect('/area.html');
+    res.redirect('/login.html');
 });
 
 app.get('/areas', (req, res) => {
@@ -106,7 +143,7 @@ app.get('/areas', (req, res) => {
         extBad = true;
     }
 
-    const extent = extParts.map(s => parseInt(s));
+    const extent = extParts.map(s => parseFloat(s));
     if (extent.filter(i => isNaN(i)).length > 0) {
         extBad = true;
     }
@@ -125,14 +162,34 @@ app.get('/areas', (req, res) => {
         const trackIds = getRandomInts(10, 0, 1000);
         
         return {
+            id: getRandomInt(0, 1000),
+            score: getRandomInt(0, 1000),
             position: {
-                latitude: poly[0],
-                longitude: poly[1],
+                topLeft: {
+                    latitude: poly[0][0],
+                    longitude: poly[0][1],
+                },
+                bottomRight: {
+                    latitude: poly[2][0],
+                    longitude: poly[2][1],
+                },
             },
+            polygon: poly,
             trackIds: trackIds,
             ownerId: getRandomInt(0, 1000),
         };
     });
+
+    // Remove some areas so the entire screen isn't just full
+    let maxRemoveNum = areas.length;
+    if (maxRemoveNum > 5) {
+        maxRemoveNum -= 5;
+    }
+    
+    const removeNum = getRandomInt(Math.round(areas.length / 2), maxRemoveNum);
+    for (let i = 0; i < removeNum; i++) {
+        areas.splice(getRandomInt(0, areas.length-1), 1);
+    }
 
     return res.send({
         areas: areas,
@@ -341,6 +398,122 @@ app.put('/user/updateInfo',(req, res) => {
         userInfo: userInfo,
     });
 });
+
+//login 
+app.post('/login',(req, res) => {
+    validateBody(Joi.object({
+        username: Joi.string().required(),
+        password: Joi.string().required()
+    }));
+    res.send('Login Successful');
+});
+
+//createUser
+app.post('/createUser', (req, res) => {
+    validateBody(Joi.object({
+        //email: Joi.string().required(),
+        username: Joi.string().required(),
+        password: Joi.string().required()
+    }));
+    res.send({
+        user : {
+            id: getRandomInt(0, 1000),
+            userName: 'user name',
+            userPassword: 'user password',
+            userStats: {
+                currentDistance: 0,
+                currentTime: 0,
+                totalDistance: 0,
+                totalTime: 0
+            },
+            email: 'user email',
+            friendsList: []
+        }
+    });
+});
+
+//get workout Data
+app.get('/workout/:workoutId([0-9]+)', (req, res) => {
+    const workoutIdStr = req.query.workoutId;
+    if(workoutIdStr === undefined){
+        return res
+            .status(400)
+            .send({
+                error: 'workoutID is not included in URL'
+            });
+    }
+    const workoutID = parseInt(workoutIdStr);
+    if(isNaN(workoutID)){
+        return res  
+            .status(400)
+            .send({
+                error: 'workoutID must be an integer'
+            });
+    }
+    return res.send({
+        workoutId: getRandomInt(0, 1000),
+        totalTime: getRandomInt(0, 10000),
+        movingTime: getRandomInt(0,10000),
+        date: '11-01-2020'
+    });
+});
+
+//get track Data
+app.get('/track/:trackId([0-9]+)', (req, res) => {
+    const trackIdStr = req.query.trackId;
+    if(trackIdStr === undefined){
+        return res
+            .status(400)
+            .send({
+                error: 'TrackID not included in URL'
+            });
+    }
+    const trackID = parseInt(trackIdStr);
+    if(isNaN(trackID)){
+        return res  
+            .status(400)
+            .send({
+                error: 'trackID must be an integer'
+            });
+    }
+    return res.send({
+        trackId: getRandomInt(0, 1000),
+        longitude: getRandomInt(-80, 80),
+        latitude: getRandomInt(-80, 80),
+        comments: [],
+        likes: getRandomInts(10, 0, 1000)
+    });
+});
+
+///////////////Authentication Stuff//////////////////
+//always returning true right now
+// function findUser(username){
+//     // if(username in database){
+//     let username = username;
+//     return true;
+//     // }
+//     //return false;
+// }
+
+// function validatePassword(username, password) {
+//     let password = password;
+//     if(!findUser(username)){
+//         return false;
+//     }
+//     return true;
+// }
+
+// function addUser(username, password){
+//     if(findUser(username)){
+//         return false;
+//     } else {
+//         const [salt, hash] = mc.hash(password);
+//         //add user to data base
+//         //db.users.insertOne
+//         return true;
+//     }
+// }
+//////////////////////
 
 app.listen(port, () => {
     console.log(`\

@@ -1,3 +1,5 @@
+import 'regenerator-runtime/runtime';
+
 import 'ol/ol.css';
 import Map from 'ol/Map';
 import TileLayer from 'ol/layer/Tile';
@@ -31,30 +33,78 @@ const panelScoreEl = document.getElementById('info-score');
 const panelAreaEl = document.getElementById('info-area');
 const panelCommentsEl = document.getElementById('info-existing-comments');
 
+const leaveCommentValueEl = document.getElementById('leave-comment-value');
+const leaveCommentButtonEl = document.getElementById('info-leave-comment');
+const likeButtonEl = document.getElementById('info-like');
+
+function addComment(comment) {
+    const container = document.createElement('div');
+    
+    const user = document.createElement('b');
+    user.appendChild(document.createTextNode(comment.user));
+
+    const value = document.createElement('span');
+    value.appendChild(document.createTextNode(comment.value));
+
+    container.appendChild(user);
+    container.appendChild(value);
+
+    panelCommentsEl.appendChild(container);
+}
+
 function showAreaFeatureDetails(areaFeat) {
+    // Basic top panel info
     panelUserEl.innerText = areaFeat.attributes.user;
     panelScoreEl.innerText = areaFeat.attributes.score;
     panelAreaEl.innerText = areaFeat.getGeometry().getArea().toFixed(5);
 
+    // Show comments
     while (panelCommentsEl.firstChild !== null) {
         panelCommentsEl.removeChild(panelCommentsEl.firstChild);
     }
 
-    areaFeat.attributes.comments.forEach(comment => {
-        const container = document.createElement('div');
+    areaFeat.attributes.comments.forEach(addComment);
+
+    // Setup comments GUI
+    leaveCommentButtonEl.onclick = async () => {
+        if (leaveCommentValueEl.value.length === 0) {
+            alert('Cannot leave empty comment');
+            return;
+        }
         
-        const user = document.createElement('b');
-        user.appendChild(document.createTextNode(comment.user));
+        await fetch(`/tracks/${areaFeat.attributes.trackIds[0]}/comments`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                comment: leaveCommentValueEl.value,
+            }),
+        });
 
-        const value = document.createElement('span');
-        value.appendChild(document.createTextNode(comment.value));
+        addComment({
+            user: 'You!',
+            value: leaveCommentValueEl.value,
+        });
 
-        container.appendChild(user);
-        container.appendChild(value);
+        leaveCommentValueEl.value = '';
+    };
 
-        panelCommentsEl.appendChild(container);
-    });
+    likeButtonEl.onclick = async () => {
+        await fetch(`/tracks/${areaFeat.attributes.trackIds[0]}/likes`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                liked: true,
+            }),
+        });
 
+        alert('Like recorded');
+    };
+
+    // Show panel
     panelEl.classList.remove('info-panel-hidden');
 }
 
@@ -107,54 +157,56 @@ const map = new Map({
     }),
 });
 
-// Draw sample area
-const poly1 = new Polygon([
-    // First "ring" defines border
-    [
-        [-70.995, 42.005],
-        [-71, 42.013],
-        [-71.007, 42.018],
-        [-71.014, 42.018],
-        [-71.021, 42.016],
-        [-71.023, 42.009],
-        [-71.034, 42.005],
-        [-71.029, 41.995],
-        [-71.023, 41.99],
-        [-70.997, 42.001],
-        [-70.995, 42.005],
-    ]
-]);
-
-const feat1 = new Feature({
-    geometry: poly1,
+// Retrieve areas from API
+const src = new VectorSource({
+    features: [],
 });
-feat1.attributes = {
-    area_id: 546,
-    user: 'noah',
-    score: 5678,
-    comments: [
-        { user: 'james', value: 'Aw man! You took over my spot!' },
-        { user: 'noah', value: 'Not for long buddy :)' },
-        { user: 'james', value: 'I am the king of Hockomock swamp!' },
-    ],
-};
 
-const vecSrc = new VectorSource({
-    features: [
-        feat1
-    ],
-});
-const vecLay = new VectorLayer({
-    source: vecSrc,
+const lay = new VectorLayer({
+    source: src,
     style: new Style({
         fill: new Fill({
-            color: 'rgba(175, 81, 245, 0.5)',
+            color: 'rgba(175, 81, 245, 0.4)',
         }),
         stroke: new Stroke({
-            color: '#777777',
+            color: 'rgba(175, 81, 245, 1)',
             width: 1,
         }),
     }),
 });
 
-map.addLayer(vecLay);
+map.addLayer(lay);
+
+/**
+ * Get areas from the API which are visible on the map and draw them.
+ * @param map {Map} To draw areas.
+ */
+async function getAndDrawAreas(map) {
+    const ext = map.getView().calculateExtent(map.getSize());
+    
+    const resp = await fetch(`/areas?extent=${ext.join(',')}`);
+    const body = await resp.json();
+    
+    const feats = body.areas.map(area => {
+        const feat = new Feature({
+            geometry: new Polygon([area.polygon]),
+        });
+
+        feat.attributes = {
+            area_id: area.id,
+            user: area.ownerId,
+            score: area.score,
+            comments: [],
+            trackIds: area.trackIds,
+        };
+
+        return feat;
+    });
+
+    src.clear();
+    src.addFeatures(feats);
+}
+
+map.on('moveend', () => {
+    getAndDrawAreas(map);
+});
