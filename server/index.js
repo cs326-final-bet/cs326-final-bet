@@ -8,6 +8,27 @@ const LocalStrategy = require('passport-local').Strategy; // username/password s
 const minicrypt = require('./miniCrypt');
 const mc = new minicrypt();
 
+const strategy = new LocalStrategy(
+    async (username, password, done) => {
+	if (!findUser(username)) {
+	    return done(null, false, { 'message' : 'Wrong username' });
+	}
+	if (!validatePassword(username, password)) {
+	    // invalid password
+	    // should disable logins after N messages
+	    // delay return to rate-limit brute-force attacks
+	    await new Promise((r) => setTimeout(r, 2000)); // two second delay
+	    return done(null, false, { 'message' : 'Wrong password' });
+	}
+	// success!
+	// should create a user object here, associated with a unique identifier
+	return done(null, username);
+});
+
+passport.use(strategy);
+app.use(passport.initialize());
+app.use(passport.session());
+
 /**
  * From: https://stackoverflow.com/a/1527820
  * Returns a random integer between min (inclusive) and max (inclusive).
@@ -456,24 +477,31 @@ app.get('/track/:trackId([0-9]+)', (req, res) => {
 });
 
 ///////////////Authentication Stuff//////////////////
+//always returning true right now
 function findUser(username){
     // if(username in database){
-    //     return true
+    return true;
     // }
-    
-    return false;
+    //return false;
 }
 
-function addUser(username, password){
-    if(findUser(username)){
+function validatePassword(username, password) {
+    if(!findUser(username)){
         return false;
-    } else {
-        const [salt, hash] = mc.hash(password);
-        //add user to data base
-        //db.users.insertOne
-        return true;
     }
+    return true;
 }
+
+// function addUser(username, password){
+//     if(findUser(username)){
+//         return false;
+//     } else {
+//         const [salt, hash] = mc.hash(password);
+//         //add user to data base
+//         //db.users.insertOne
+//         return true;
+//     }
+// }
 //////////////////////
 
 app.listen(port, () => {
