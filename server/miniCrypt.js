@@ -54,8 +54,8 @@ module.exports = (function() {
     @desc Validate a user password.
     */
     MiniCrypt.prototype.check = function(pw, salt, hash) {
-            return crypto.pbkdf2Sync(pw, salt, this.its, this.keyL, this.digest).toString('hex') === hash;
-        };
+        return crypto.pbkdf2Sync(pw, salt, this.its, this.keyL, this.digest).toString('hex') === hash;
+    };
 
     return MiniCrypt;
 }());

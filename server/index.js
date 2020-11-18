@@ -18,7 +18,7 @@ const strategy = new LocalStrategy(
         // should disable logins after N messages
         // delay return to rate-limit brute-force attacks
             await new Promise((r) => setTimeout(r, 2000)); // two second delay
-                return done(null, false, { 'message' : 'Wrong password' });
+            return done(null, false, { 'message' : 'Wrong password' });
         }
         // success!
         // should create a user object here, associated with a unique identifier
@@ -481,12 +481,14 @@ app.get('/track/:trackId([0-9]+)', (req, res) => {
 //always returning true right now
 function findUser(username){
     // if(username in database){
+    let username = username;
     return true;
     // }
     //return false;
 }
 
 function validatePassword(username, password) {
+    let password = password;
     if(!findUser(username)){
         return false;
     }
