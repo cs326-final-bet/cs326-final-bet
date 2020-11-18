@@ -5,24 +5,24 @@ import Joi from 'joi';
 require('dotenv').config();
 const passport = require('passport');               // handles authentication
 const LocalStrategy = require('passport-local').Strategy; // username/password strategy
-const minicrypt = require('./miniCrypt');
-const mc = new minicrypt();
+//const minicrypt = require('./miniCrypt');
+//const mc = new minicrypt();
 
 const strategy = new LocalStrategy(
     async (username, password, done) => {
-	if (!findUser(username)) {
-	    return done(null, false, { 'message' : 'Wrong username' });
-	}
-	if (!validatePassword(username, password)) {
-	    // invalid password
-	    // should disable logins after N messages
-	    // delay return to rate-limit brute-force attacks
-	    await new Promise((r) => setTimeout(r, 2000)); // two second delay
-	    return done(null, false, { 'message' : 'Wrong password' });
-	}
-	// success!
-	// should create a user object here, associated with a unique identifier
-	return done(null, username);
+        if (!findUser(username)) {
+        return done(null, false, { 'message' : 'Wrong username' });
+    }
+    if (!validatePassword(username, password)) {
+        // invalid password
+        // should disable logins after N messages
+        // delay return to rate-limit brute-force attacks
+        await new Promise((r) => setTimeout(r, 2000)); // two second delay
+        return done(null, false, { 'message' : 'Wrong password' });
+    }
+    // success!
+    // should create a user object here, associated with a unique identifier
+    return done(null, username);
 });
 
 passport.use(strategy);
