@@ -1,8 +1,11 @@
+'use strict';
+
 import express from 'express';
 import bodyParser from 'body-parser';
 import Joi from 'joi';
 
 require('dotenv').config();
+
 const passport = require('passport');               // handles authentication
 const LocalStrategy = require('passport-local').Strategy; // username/password strategy
 //const minicrypt = require('./miniCrypt');
