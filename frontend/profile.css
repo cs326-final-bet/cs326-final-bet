@@ -58,3 +58,16 @@
     height: 300px;
     font-size: 20px;
 }
+
+#comments{
+    color: white;
+    background-color: #444444;
+    font-size: 25px;
+    outline: black solid;
+}#userComments{
+    color: white;
+    font-size: 15px;
+    outline: black solid;
+    height: 300px;
+    font-size: 20px;
+}

@@ -30,7 +30,7 @@
     
     <div id="stats">User's STATS:<div>
         <div id="userStats">
-            <div>Distance Traveled: <span> DISTANCE</span></div> 
+            <div>Current Distance Traveled: <span> DISTANCE</span></div> 
             <div>Current Area Filled: <span> AREA</span></div>
             <div>Total Distance Traveled:<span> DISTANCE</span></div>
             <div>Total Area Filled: <span> AREA</span></div>  
@@ -40,8 +40,20 @@
         </div>
         
     </div></div>
+    <div id="comments">Comments:<div>
+        <div id="userComments">
+            <div>User1: <span> Comment1</span></div> 
+            <div>User2: <span> Comment2</span></div>
+        </div>
+        <div class="buttons">
+            <input type="text" id="leaveAComment" value="Write a Comment!">
+            <input type="button" id='compareStats' value="Share Comment">
+        </div>
+        
+    </div></div>
     
 </div>
 <script type="module" src="./profile.js"></script>
+<script type="module" src="./profileIndex.js"></script>
 </body>
 </html>
