@@ -364,7 +364,7 @@ app.put('/user/updateInfo',(req, res) => {
 });
 
 //login 
-app.put('/login',(req, res) => {
+app.post('/login',(req, res) => {
     validateBody(Joi.object({
         username: Joi.string().required(),
         password: Joi.string().required()
@@ -375,7 +375,7 @@ app.put('/login',(req, res) => {
 //createUser
 app.post('/createUser', (req, res) => {
     validateBody(Joi.object({
-        email: Joi.string().required(),
+        //email: Joi.string().required(),
         username: Joi.string().required(),
         password: Joi.string().required()
     }));
@@ -448,6 +448,20 @@ app.get('/track/:trackId([0-9]+)', (req, res) => {
         likes: getRandomInts(10, 0, 1000)
     });
 });
+
+//Authentication Stuff
+
+
+
+
+
+
+
+
+
+
+
+//////////////////////
 
 app.listen(port, () => {
     console.log(`\
