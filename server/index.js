@@ -479,21 +479,21 @@ app.get('/track/:trackId([0-9]+)', (req, res) => {
 
 ///////////////Authentication Stuff//////////////////
 //always returning true right now
-function findUser(username){
-    // if(username in database){
-    let username = username;
-    return true;
-    // }
-    //return false;
-}
+// function findUser(username){
+//     // if(username in database){
+//     let username = username;
+//     return true;
+//     // }
+//     //return false;
+// }
 
-function validatePassword(username, password) {
-    let password = password;
-    if(!findUser(username)){
-        return false;
-    }
-    return true;
-}
+// function validatePassword(username, password) {
+//     let password = password;
+//     if(!findUser(username)){
+//         return false;
+//     }
+//     return true;
+// }
 
 // function addUser(username, password){
 //     if(findUser(username)){
