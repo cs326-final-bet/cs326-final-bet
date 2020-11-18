@@ -2,6 +2,12 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import Joi from 'joi';
 
+require('dotenv').config();
+const passport = require('passport');               // handles authentication
+const LocalStrategy = require('passport-local').Strategy; // username/password strategy
+const minicrypt = require('./miniCrypt');
+const mc = new minicrypt();
+
 /**
  * From: https://stackoverflow.com/a/1527820
  * Returns a random integer between min (inclusive) and max (inclusive).
@@ -449,18 +455,25 @@ app.get('/track/:trackId([0-9]+)', (req, res) => {
     });
 });
 
-//Authentication Stuff
+///////////////Authentication Stuff//////////////////
+function findUser(username){
+    // if(username in database){
+    //     return true
+    // }
+    
+    return false;
+}
 
-
-
-
-
-
-
-
-
-
-
+function addUser(username, password){
+    if(findUser(username)){
+        return false;
+    } else {
+        const [salt, hash] = mc.hash(password);
+        //add user to data base
+        //db.users.insertOne
+        return true;
+    }
+}
 //////////////////////
 
 app.listen(port, () => {
