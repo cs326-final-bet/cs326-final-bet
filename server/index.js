@@ -85,7 +85,7 @@ function validateBody(schema) {
 }
 
 app.get('/', (req, res) => {
-    res.redirect('/area.html');
+    res.redirect('/login.html');
 });
 
 app.get('/areas', (req, res) => {
