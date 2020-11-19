@@ -23,13 +23,21 @@ import { PROJ } from './mapping.js';
 const backToArea = document.getElementById('homeButton');
 const editProfileButton = document.getElementById('editProfile');
 const saveChangesToProfileButton = document.getElementById('info-save-changes');
+const newUsernameText = document.getElementById('update-username');
 const cancelEditProfileButton = document.getElementById('info-cancel');
 const panelEl = document.getElementById('info-panel');
+const userNameHeader = document.getElementById('header');
 
 backToArea.onclick = async () => {
     window.location = './area.html'
 };
 saveChangesToProfileButton.onclick = async ()=>{
+    if(newUsernameText.value === ''){
+        alert("Username cannot be blank");
+        return;
+    } else {
+        userNameHeader.innerHTML = newUsernameText.value + '`s Profile';
+    }
     panelEl.classList.add('info-panel-hidden');
 }
 editProfileButton.onclick = async () =>{
@@ -38,9 +46,6 @@ editProfileButton.onclick = async () =>{
 cancelEditProfileButton.onclick = async ()=> {
     panelEl.classList.add('info-panel-hidden');
 }
-
-
-
 
 
 // Show map
