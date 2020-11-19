@@ -98,7 +98,7 @@ app.use(bodyParser.json());
 app.use(express.static('dist'));
 app.use(express.static('frontend'));
 
-const mc = new minicrypt();
+//const mc = new minicrypt();
 app.use(expressSession(session));
 passport.use(strategy);
 app.use(passport.initialize());
