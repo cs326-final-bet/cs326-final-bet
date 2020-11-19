@@ -3,39 +3,30 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import Joi from 'joi';
-
-/*
 import passport from  'passport';
 import LocalStrategy from 'passport-local';
-//require('dotenv').config();
-//const passport = require('passport');               // handles authentication
-//const LocalStrategy = require('passport-local').Strategy; // username/password strategy
-//const minicrypt = require('./miniCrypt');
-//const mc = new minicrypt();
+//import expressSession from 'express-session';
+
+import minicrypt from './miniCrypt.js';
+// import * as minicrypt from './miniCrypt'
+// const mc = new minicrypt();
 
 const strategy = new LocalStrategy(
-    // async (username, password, done) => {
-    //     if (!findUser(username)) {
-    //         return done(null, false, { 'message' : 'Wrong username' });
-    //     }
-    //     if (!validatePassword(username, password)) {
-    //     // invalid password
-    //     // should disable logins after N messages
-    //     // delay return to rate-limit brute-force attacks
-    //         await new Promise((r) => setTimeout(r, 2000)); // two second delay
-    //         return done(null, false, { 'message' : 'Wrong password' });
-    //     }
-    //     // success!
-    //     // should create a user object here, associated with a unique identifier
-    //     return done(null, username);
-    // }
+    async (username, password, done) => {
+        // if (!findUser(username)) {
+        //     return done(null, false, { 'message' : 'Wrong username' });
+        // }
+        // if (!validatePassword(username, password)) {
+        // // invalid password
+        //     await new Promise((r) => setTimeout(r, 2000)); // two second delay
+        //     return done(null, false, { 'message' : 'Wrong password' });
+        // }
+        // should create a user object here, associated with a unique identifier
+        return done(null, username);
+    }
 );
 
 
-passport.use(strategy);
-app.use(passport.initialize());
-app.use(passport.session());
-*/
 
 
 /**
@@ -102,6 +93,13 @@ const port = process.env.PORT || 8000;
 app.use(bodyParser.json());
 app.use(express.static('dist'));
 
+const mc = new minicrypt();
+//app.use(expressSession(session));
+passport.use(strategy);
+app.use(passport.initialize());
+app.use(passport.session());
+
+
 /**
  * Returns a middleware function to validate that a request body matches a 
  * Joi schema.
@@ -120,9 +118,22 @@ function validateBody(schema) {
     };
 }
 
-app.get('/', (req, res) => {
-    res.redirect('/login.html');
-});
+function checkLoggedIn(req, res, next) {
+    if (req.isAuthenticated()) {
+        // If we are authenticated, run the next route.
+        next();
+    } else {
+        // Otherwise, redirect to the login page.
+        res.redirect('/login');
+    }
+}
+
+app.get('/', 
+    checkLoggedIn,
+    (req, res) => {
+        res.redirect('/area.html');
+    }
+);
 
 app.get('/areas', (req, res) => {
     // Check extent parameter
@@ -423,17 +434,25 @@ app.put('/user/updateInfo',(req, res) => {
     });
 });
 
-//login 
+//post login 
 app.post('/login',(req, res) => {
     validateBody(Joi.object({
         username: Joi.string().required(),
         password: Joi.string().required()
     }));
     res.send('Login Successful');
+    console.log(mc.hash('pat'));
+    //res.redirect('area.html');
 });
 
-//createUser
-app.post('/createUser', (req, res) => {
+//get login
+app.get('/login',
+    // (req, res) => res.sendFile('../frontend/login.html')
+    (req, res) => res.sendFile(__dirname + '../frontend/login.html')
+);
+
+//register
+app.post('/register', (req, res) => {
     validateBody(Joi.object({
         //email: Joi.string().required(),
         username: Joi.string().required(),
@@ -455,7 +474,12 @@ app.post('/createUser', (req, res) => {
             comments: [],
         }
     });
+    res.redirect('/login');
 });
+
+app.get('/register',
+    (req, res) => res.sendFile('../frontend/register.html', { 'root' : __dirname })
+);
 
 //get workout Data
 app.get('/workout/:workoutId([0-9]+)', (req, res) => {
@@ -512,16 +536,19 @@ app.get('/track/:trackId([0-9]+)', (req, res) => {
 
 ///////////////Authentication Stuff//////////////////
 //always returning true right now
+
+
+
 // function findUser(username){
 //     // if(username in database){
-//     let username = username;
+//     username = username;
 //     return true;
 //     // }
 //     //return false;
 // }
 
 // function validatePassword(username, password) {
-//     let password = password;
+//     password = password;
 //     if(!findUser(username)){
 //         return false;
 //     }
