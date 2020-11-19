@@ -193,8 +193,15 @@ app.get('/areas', (req, res) => {
             polygon: poly,
             trackIds: trackIds,
             ownerId: getRandomInt(0, 1000),
-            likes: getRandomInts(10, 0, 1000),
         };
+    });
+    const tracks = polys.map((poly) => {
+	   return {
+		  trackId: getRandomInt(0, 1000),
+		  longitude: poly[0][0][0],
+		  latitude: poly[0][0][1],
+		  likes: getRandomInts(10, 0, 1000),
+	   };
     });
 
     // Remove some areas so the entire screen isn't just full
@@ -204,17 +211,20 @@ app.get('/areas', (req, res) => {
     }
     
     const removeNum = getRandomInt(Math.round(areas.length / 2), maxRemoveNum);
-    for (let i = 0; i < removeNum; i++) {
-        areas.splice(getRandomInt(0, areas.length-1), 1);
+    for (let i =p 0; i < removeNum; i++) {
+	   const removeIndex = getRandomInt(0, areas.length-1);
+        areas.splice(removeIndex, 1);
+	   tracks.splice(removeIndex, 1);
     }
 
     return res.send({
         areas: areas,
+	   tracks: tracks,
     });
 });
 
 // Like area
-app.put('/areas/:areaId([0-9]+)/likes',
+app.put('/tracks/:trackId([0-9]+)/likes',
     validateBody(Joi.object({
         liked: Joi.boolean().required(),
     })),
@@ -224,28 +234,12 @@ app.put('/areas/:areaId([0-9]+)/likes',
             likes.push(getRandomInt(0, 1000));
         }
 
-        const poly = polysForExt([0, 0, 0.1, 0.1])[0];
-               
-        res.send({
-            area:  {
-                id: getRandomInt(0, 1000),
-                score: getRandomInt(0, 1000),
-                position: {
-                    topLeft: {
-                        latitude: poly[0][0],
-                        longitude: poly[0][1],
-                    },
-                    bottomRight: {
-                        latitude: poly[2][0],
-                        longitude: poly[2][1],
-                    },
-                },
-                polygon: poly,
-                trackIds: getRandomInts(10, 0, 1000),
-                ownerId: getRandomInt(0, 1000),
-                likes: likes,
-            },
-        });
+	   res.send({
+		  trackId: getRandomInt(0, 1000),
+		  longitude: getRandomInt(-80, 80),
+		  latitude: getRandomInt(-80, 80),
+		  likes: likes,
+	   }};
     });
 
 app.post('/strava',
@@ -521,8 +515,7 @@ app.get('/track/:trackId([0-9]+)', (req, res) => {
         trackId: getRandomInt(0, 1000),
         longitude: getRandomInt(-80, 80),
         latitude: getRandomInt(-80, 80),
-        comments: [],
-        likes: getRandomInts(10, 0, 1000)
+        likes: getRandomInts(10, 0, 1000),
     });
 });
 
