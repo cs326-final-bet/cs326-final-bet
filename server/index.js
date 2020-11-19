@@ -7,7 +7,7 @@ import passport from  'passport';
 import LocalStrategy from 'passport-local';
 import expressSession from 'express-session';
 
-import minicrypt from './miniCrypt.js';
+//import minicrypt from './miniCrypt.js';
 // import * as minicrypt from './miniCrypt'
 // const mc = new minicrypt();
 
