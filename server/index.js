@@ -5,6 +5,7 @@ import bodyParser from 'body-parser';
 import Joi from 'joi';
 import passport from  'passport';
 import LocalStrategy from 'passport-local';
+import expressSession from 'express-session';
 
 import minicrypt from './miniCrypt.js';
 // import * as minicrypt from './miniCrypt'
@@ -93,6 +94,7 @@ app.use(bodyParser.json());
 app.use(express.static('dist'));
 
 const mc = new minicrypt();
+app.use(expressSession(session));
 passport.use(strategy);
 app.use(passport.initialize());
 app.use(passport.session());
@@ -116,9 +118,22 @@ function validateBody(schema) {
     };
 }
 
-app.get('/', (req, res) => {
-    res.redirect('/login.html');
-});
+function checkLoggedIn(req, res, next) {
+    if (req.isAuthenticated()) {
+	// If we are authenticated, run the next route.
+	next();
+    } else {
+	// Otherwise, redirect to the login page.
+	res.redirect('/login');
+    }
+}
+
+app.get('/', 
+    checkLoggedIn,
+    (req, res) => {
+        res.redirect('/area.html');
+    }
+);
 
 app.get('/areas', (req, res) => {
     // Check extent parameter
@@ -395,18 +410,25 @@ app.put('/user/updateInfo',(req, res) => {
     });
 });
 
-//login 
+//post login 
 app.post('/login',(req, res) => {
     validateBody(Joi.object({
         username: Joi.string().required(),
         password: Joi.string().required()
     }));
     res.send('Login Successful');
-    res.redirect('area.html');
+    console.log(mc.hash('pat'));
+    //res.redirect('area.html');
 });
 
-//createUser
-app.post('/createUser', (req, res) => {
+//get login
+app.get('/login',
+    // (req, res) => res.sendFile('../frontend/login.html')
+    (req, res) => res.sendFile(__dirname + '../frontend/login.html')
+);
+
+//register
+app.post('/register', (req, res) => {
     validateBody(Joi.object({
         //email: Joi.string().required(),
         username: Joi.string().required(),
@@ -429,6 +451,10 @@ app.post('/createUser', (req, res) => {
     });
     res.redirect('/login');
 });
+
+app.get('/register',
+	(req, res) => res.sendFile('../frontend/register.html',
+				   { 'root' : __dirname }));
 
 //get workout Data
 app.get('/workout/:workoutId([0-9]+)', (req, res) => {
@@ -485,16 +511,19 @@ app.get('/track/:trackId([0-9]+)', (req, res) => {
 
 ///////////////Authentication Stuff//////////////////
 //always returning true right now
+
+
+
 function findUser(username){
     // if(username in database){
-    // username = username;
+    username = username;
     return true;
     // }
     //return false;
 }
 
 function validatePassword(username, password) {
-    //    = password;
+    password = password;
     if(!findUser(username)){
         return false;
     }
