@@ -13,7 +13,9 @@
     position: absolute;
     text-align: center;
 }
-
+#info-panel.info-panel-hidden {
+    display: none;
+}
 #map{
     color: white;
     background-color: #444444;

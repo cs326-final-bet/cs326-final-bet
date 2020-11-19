@@ -17,7 +17,27 @@
     <input type="button" id ='editProfile' value="Edit Profile">
     <input type="button" id= "followUser" value="Follow User">
 </div>
+<div class="card info-panel-hidden" id="info-panel">
+    <div class="card-body">
+        <h2 class="card-title">Edit Profile:</h2>
 
+        <div id="info-comments">
+            Update username: <input type="text" id="update-username" value="New username">
+            <br>
+            
+            <button class="btn-dark" id="info-save-changes">
+                Save Changes
+            </button>
+
+            <button class="btn-dark" id="info-cancel">
+                Cancel
+            </button>
+
+            <div id="info-existing-comments">
+            </div>
+        </div>
+    </div>
+</div>
 <div id="tabs">
     <div id="map">User's MAP:<div>
         <div id="userMap">

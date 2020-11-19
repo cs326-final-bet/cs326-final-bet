@@ -94,6 +94,9 @@ function polysForExt(extent) {
 
     return polys;
 }
+// DATABASES
+
+
 
 // API
 const app = express();
@@ -296,6 +299,8 @@ app.get('/user/userStats', (req, res) => {
                 error: 'userId must be an integer'
             });
     }
+    //Check to see if user is valid
+    
     //Generate fake user
     const userInfo = {
         id: userId,
