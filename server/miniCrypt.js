@@ -42,7 +42,7 @@ export default class MiniCrypt {
         const salt = crypto.randomBytes(this.saltL).toString('hex'), // get our new salt for this pw
             hash = crypto.pbkdf2Sync(pw, salt, this.its, this.keyL, this.digest).toString('hex'); // hash the pw
         return [salt, hash]; // return the pair for safe storage
-    };
+    }
 
     /**
     @public
@@ -55,5 +55,5 @@ export default class MiniCrypt {
     */
     check(pw, salt, hash) {
         return crypto.pbkdf2Sync(pw, salt, this.its, this.keyL, this.digest).toString('hex') === hash;
-    };
+    }
 }

@@ -13,14 +13,14 @@ import minicrypt from './miniCrypt.js';
 
 const strategy = new LocalStrategy(
     async (username, password, done) => {
-        if (!findUser(username)) {
-            return done(null, false, { 'message' : 'Wrong username' });
-        }
-        if (!validatePassword(username, password)) {
-        // invalid password
-            await new Promise((r) => setTimeout(r, 2000)); // two second delay
-            return done(null, false, { 'message' : 'Wrong password' });
-        }
+        // if (!findUser(username)) {
+        //     return done(null, false, { 'message' : 'Wrong username' });
+        // }
+        // if (!validatePassword(username, password)) {
+        // // invalid password
+        //     await new Promise((r) => setTimeout(r, 2000)); // two second delay
+        //     return done(null, false, { 'message' : 'Wrong password' });
+        // }
         // should create a user object here, associated with a unique identifier
          return done(null, username);
     }
@@ -514,21 +514,21 @@ app.get('/track/:trackId([0-9]+)', (req, res) => {
 
 
 
-function findUser(username){
-    // if(username in database){
-    username = username;
-    return true;
-    // }
-    //return false;
-}
+// function findUser(username){
+//     // if(username in database){
+//     username = username;
+//     return true;
+//     // }
+//     //return false;
+// }
 
-function validatePassword(username, password) {
-    password = password;
-    if(!findUser(username)){
-        return false;
-    }
-    return true;
-}
+// function validatePassword(username, password) {
+//     password = password;
+//     if(!findUser(username)){
+//         return false;
+//     }
+//     return true;
+// }
 
 // function addUser(username, password){
 //     if(findUser(username)){
