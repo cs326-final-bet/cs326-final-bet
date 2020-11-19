@@ -121,10 +121,10 @@ function validateBody(schema) {
 function checkLoggedIn(req, res, next) {
     if (req.isAuthenticated()) {
         // If we are authenticated, run the next route.
-	    next();
+        next();
     } else {
-	    // Otherwise, redirect to the login page.
-	    res.redirect('/login');
+        // Otherwise, redirect to the login page.
+        res.redirect('/login');
     }
 }
 
@@ -478,7 +478,7 @@ app.get('/workout/:workoutId([0-9]+)', (req, res) => {
         workoutId: getRandomInt(0, 1000),
         totalTime: getRandomInt(0, 10000),
         movingTime: getRandomInt(0,10000),
-        date: '11-01-2020'
+    date: '11-01-2020'
     });
 });
 
