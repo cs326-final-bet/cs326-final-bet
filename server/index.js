@@ -107,8 +107,7 @@ function polysForExt(extent) {
 }
 
 // API
-const app = express();
-const port = process.env.PORT || 8000;
+export const app = express();
 
 app.use(bodyParser.json()); // Parse HTTP body as JSON
 app.use(express.static('dist')); // Serve dist/ directory
@@ -211,7 +210,7 @@ app.get('/areas', (req, res) => {
     }
     
     const removeNum = getRandomInt(Math.round(areas.length / 2), maxRemoveNum);
-    for (let i =p 0; i < removeNum; i++) {
+    for (let i = 0; i < removeNum; i++) {
 	   const removeIndex = getRandomInt(0, areas.length-1);
         areas.splice(removeIndex, 1);
 	   tracks.splice(removeIndex, 1);
@@ -239,7 +238,7 @@ app.put('/tracks/:trackId([0-9]+)/likes',
 		  longitude: getRandomInt(-80, 80),
 		  latitude: getRandomInt(-80, 80),
 		  likes: likes,
-	   }};
+	   });
     });
 
 app.post('/strava',
@@ -545,13 +544,6 @@ app.get('/track/:trackId([0-9]+)', (req, res) => {
 //         //add user to data base
 //         //db.users.insertOne
 //         return true;
-//     }
+//    }
 // }
 //////////////////////
-
-app.listen(port, () => {
-    console.log(`\
-Server listening on port ${port}. View in your web browser:
-
-    http://127.0.0.1:${port} or http://localhost:${port}`);
-});
