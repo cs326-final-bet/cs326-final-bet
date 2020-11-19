@@ -39,12 +39,11 @@ app.use(passport.session());
 
 
 /**
+ * Generates random number.
  * From: https://stackoverflow.com/a/1527820
- * Returns a random integer between min (inclusive) and max (inclusive).
- * The value is no lower than min (or the next integer greater than min
- * if min isn't an integer) and no greater than max (or the next integer
- * lower than max if max isn't an integer).
- * Using Math.round() will give you a non-uniform distribution!
+ * @param min {number} Minimum inclusive.
+ * @param max {number} Maximum inclusive.
+ * @returns {number} Random number in range [min, max].
  */
 function getRandomInt(min, max) {
     min = Math.ceil(min);
@@ -52,6 +51,14 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+/**
+ * Get a random number of random numbers. At least one.
+ * @param numMax {number} Maximum number of random numbers, inclusive.
+ * @param min {number} Minimum random number inclusive.
+ * @param max {number} Maximum random number inclusive.
+ * @returns {number[]} Random amount of numbers (amount in range [1, numMax]).
+ *     Each number in the range [min, max].
+ */
 function getRandomInts(numMax, min, max) {
     const items = [];
     const num = getRandomInt(1, numMax);
@@ -69,6 +76,10 @@ function getRandomInts(numMax, min, max) {
 
 /**
  * Break any area up into 0.01 mile square boxes.
+ * @params extent {number[4]} Map extent, latitude and longitude pairs in the format
+ *     [upper left lat, upper left long, bottom right lat, bottom right long].
+ * @returns {number[][][]} All 0.01 mile square boxes which cover the provided extent.
+ *     Each box is provided as a line string, which is an array of lat long pair arrays.
  */
 function polysForExt(extent) {
     const polys = [];
@@ -99,12 +110,17 @@ function polysForExt(extent) {
 const app = express();
 const port = process.env.PORT || 8000;
 
-app.use(bodyParser.json());
-app.use(express.static('dist'));
+app.use(bodyParser.json()); // Parse HTTP body as JSON
+app.use(express.static('dist')); // Serve dist/ directory
 
 /**
  * Returns a middleware function to validate that a request body matches a 
  * Joi schema.
+ * @param schema {Joi Schema} Schema to ensure the request body meets.
+ * @returns {function(req, res, next)} An Express middleware function which ensures that
+ *     request body meets the requirements set by the schema. If the body does not 
+ *     fullfill the requirements an HTTP 400 response with an "error" key will be 
+ *     returned which holds the error object returned by Joi.
  */
 function validateBody(schema) {
     return (req, res, next) => {
