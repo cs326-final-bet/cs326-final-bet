@@ -478,8 +478,8 @@ app.post('/register', (req, res) => {
 });
 
 app.get('/register',
-	(req, res) => res.sendFile('../frontend/register.html',
-				   { 'root' : __dirname }));
+    (req, res) => res.sendFile('../frontend/register.html', { 'root' : __dirname })
+);
 
 //get workout Data
 app.get('/workout/:workoutId([0-9]+)', (req, res) => {
@@ -503,7 +503,7 @@ app.get('/workout/:workoutId([0-9]+)', (req, res) => {
         workoutId: getRandomInt(0, 1000),
         totalTime: getRandomInt(0, 10000),
         movingTime: getRandomInt(0,10000),
-    date: '11-01-2020'
+        date: '11-01-2020'
     });
 });
 
