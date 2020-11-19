@@ -58,7 +58,7 @@ class Tester {
                     
                     actualValue: undefined,
                     expectedValue: undefined,
-                    type: 'equal',
+                    type: 'eq',
 
                     actual: function(value) {
                         this.actualValue = value;
@@ -90,24 +90,39 @@ class Tester {
                     },
                     run: function() {
                         let result = true;
+                        let typeSymbol = '';
+                        let typeWords = '';
+                        
                         switch (this.type) {
-                        case 'equal':
+                        case 'eq':
                             result = this.actualValue === this.expectedValue;
+                            typeSymbol = '===';
+                            typeWords = 'equal';
                             break;
                         case 'ne':
                             result = this.actualValue !== this.expectedValue;
+                            typeSymbol = '!==';
+                            typeWords = 'not equal';
                             break;
                         case 'gt':
                             result = this.actualValue > this.expectedValue;
+                            typeSymbol = '>';
+                            typeWords = 'greater than';
                             break;
                         case 'lt':
                             result = this.actualValue < this.expectedValue;
+                            typeSymbol = '<';
+                            typeWords = 'less than';
                             break;
                         case 'gte':
                             result = this.actualValue >= this.expectedValue;
+                            typeSymbol = '>=';
+                            typeWords = 'greater than or equal to';
                             break;
                         case 'lte':
                             result = this.actualValue <= this.expectedValue;
+                            typeSymbol = '<=';
+                            typeWords = 'less than or equal to';
                             break;
                         }
                         
@@ -115,6 +130,8 @@ class Tester {
                             actual: this.actualValue,
                             expected: this.expectedValue,
                             type: this.type,
+                            typeSymbol: typeSymbol,
+                            typeWords: typeWords,
                             result: result,
                             subject: this.subject,
                         };
@@ -177,7 +194,7 @@ class Tester {
             const resultStr = booleanToEmoji(a.result);
             const colorStr = booleanToColor(a.result);
             
-            out.push(`${indent}  ${colorStr}${resultStr}${COLOR_RESET} ${a.subject} (Expected: "${a.expected}", Actual: "${a.actual}")`);
+            out.push(`${indent}  ${colorStr}${resultStr}${COLOR_RESET} ${a.subject} (Expected ${a.typeWords}: "${a.expected}", Actual: "${a.actual}")`);
         });
 
         res.children
@@ -208,7 +225,7 @@ const T = new Tester('HTTP API', async (T) => {
             T.assert('More than one area returned')
                 .actual(resp.body.areas.length)
                 .gt(0);
-            T.assert('more than one track returned')
+            T.assert('More than one track returned')
                 .actual(resp.body.tracks.length)
                 .gt(0);
         });
