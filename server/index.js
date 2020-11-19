@@ -5,7 +5,7 @@ import bodyParser from 'body-parser';
 import Joi from 'joi';
 import passport from  'passport';
 import LocalStrategy from 'passport-local';
-import expressSession from 'express-session';
+//import expressSession from 'express-session';
 
 import minicrypt from './miniCrypt.js';
 // import * as minicrypt from './miniCrypt'
@@ -22,7 +22,7 @@ const strategy = new LocalStrategy(
         //     return done(null, false, { 'message' : 'Wrong password' });
         // }
         // should create a user object here, associated with a unique identifier
-         return done(null, username);
+        return done(null, username);
     }
 );
 
@@ -94,7 +94,7 @@ app.use(bodyParser.json());
 app.use(express.static('dist'));
 
 const mc = new minicrypt();
-app.use(expressSession(session));
+//app.use(expressSession(session));
 passport.use(strategy);
 app.use(passport.initialize());
 app.use(passport.session());
@@ -120,11 +120,11 @@ function validateBody(schema) {
 
 function checkLoggedIn(req, res, next) {
     if (req.isAuthenticated()) {
-	// If we are authenticated, run the next route.
-	next();
+        // If we are authenticated, run the next route.
+	    next();
     } else {
-	// Otherwise, redirect to the login page.
-	res.redirect('/login');
+	    // Otherwise, redirect to the login page.
+	    res.redirect('/login');
     }
 }
 
