@@ -90,8 +90,8 @@ const port = process.env.PORT || 8000;
 app.use(bodyParser.json());
 app.use(express.static('dist'));
 
-//import * as minicrypt from './miniCrypt'
-//const mc = new minicrypt();
+import * as minicrypt from './miniCrypt.js';
+const mc = new minicrypt();
 passport.use(strategy);
 app.use(passport.initialize());
 app.use(passport.session());
@@ -401,6 +401,7 @@ app.post('/login',(req, res) => {
         password: Joi.string().required()
     }));
     res.send('Login Successful');
+    res.redirect('area.html');
 });
 
 //createUser
@@ -425,6 +426,7 @@ app.post('/createUser', (req, res) => {
             friendsList: []
         }
     });
+    res.redirect('/login');
 });
 
 //get workout Data
@@ -491,7 +493,7 @@ function findUser(username){
 }
 
 function validatePassword(username, password) {
-    // password = password;
+    //    = password;
     if(!findUser(username)){
         return false;
     }
