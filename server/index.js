@@ -5,6 +5,8 @@ import bodyParser from 'body-parser';
 import Joi from 'joi';
 import passport from  'passport';
 import LocalStrategy from 'passport-local';
+
+import minicrypt from './miniCrypt.js';
 // import * as minicrypt from './miniCrypt'
 // const mc = new minicrypt();
 
@@ -90,7 +92,6 @@ const port = process.env.PORT || 8000;
 app.use(bodyParser.json());
 app.use(express.static('dist'));
 
-import * as minicrypt from './miniCrypt.js';
 const mc = new minicrypt();
 passport.use(strategy);
 app.use(passport.initialize());
