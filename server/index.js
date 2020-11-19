@@ -177,7 +177,7 @@ app.get('/areas', (req, res) => {
             polygon: poly,
             trackIds: trackIds,
             ownerId: getRandomInt(0, 1000),
-		  likes: getRandomInts(10, 0, 1000),
+            likes: getRandomInts(10, 0, 1000),
         };
     });
 
@@ -207,26 +207,28 @@ app.put('/areas/:areaId([0-9]+)/likes',
         if (req.body.liked === true) {
             likes.push(getRandomInt(0, 1000));
         }
+
+        const poly = polysForExt([0, 0, 0.1, 0.1])[0];
                
         res.send({
             area:  {
-			 id: getRandomInt(0, 1000),
-			 score: getRandomInt(0, 1000),
-			 position: {
-				topLeft: {
+                id: getRandomInt(0, 1000),
+                score: getRandomInt(0, 1000),
+                position: {
+                    topLeft: {
                         latitude: poly[0][0],
                         longitude: poly[0][1],
-				},
-				bottomRight: {
+                    },
+                    bottomRight: {
                         latitude: poly[2][0],
                         longitude: poly[2][1],
-				},
-			 },
-			 polygon: poly,
-			 trackIds: trackIds,
-			 ownerId: getRandomInt(0, 1000),
-			 likes: likes,
-		  },
+                    },
+                },
+                polygon: poly,
+                trackIds: getRandomInts(10, 0, 1000),
+                ownerId: getRandomInt(0, 1000),
+                likes: likes,
+            },
         });
     });
 
@@ -255,19 +257,19 @@ app.put('/users/:userId([0-9]+)/comments',
     (req, res) => {
         res.send({
             user:  {
-			 id: req.userId,
-			 userName: 'user name',
-			 userPassword: 'user password',
-			 userStats: {
-				currentDistance: getRandomInt(0, 1000),
-				currentTime: getRandomInt(0, 1000),
-				totalDistance: getRandomInt(0 ,1000),
-				totalTime: getRandomInt(0, 1000)
-			 },
-			 email: 'user email',
-			 friendsList: [getRandomInts(10, 0, 1000)],
-			 comments: [ req.body.comment ],
-		  },
+                id: req.userId,
+                userName: 'user name',
+                userPassword: 'user password',
+                userStats: {
+                    currentDistance: getRandomInt(0, 1000),
+                    currentTime: getRandomInt(0, 1000),
+                    totalDistance: getRandomInt(0 ,1000),
+                    totalTime: getRandomInt(0, 1000)
+                },
+                email: 'user email',
+                friendsList: [getRandomInts(10, 0, 1000)],
+                comments: [ req.body.comment ],
+            },
         });
     });
 
@@ -294,7 +296,7 @@ app.put('/user/:userId([0-9]+)/addFriend',
                 },
                 email: 'user email',
                 friendsList: [req.body.id],
-			 comments: [ 'foobar', 'foobaz' ],
+                comments: [ 'foobar', 'foobaz' ],
             }
         });
     });
@@ -365,7 +367,7 @@ app.get('/user', (req, res) =>{
         },
         email: 'user email',
         friendsList: [getRandomInts(10, 0, 1000)],
-	   comments: ['foobar', 'foobaz'],
+        comments: ['foobar', 'foobaz'],
     };
     return res.send({
         userInfo: userInfo,
@@ -413,7 +415,7 @@ app.put('/user/updateInfo',(req, res) => {
         },
         email: 'user email',
         friendsList: [getRandomInts(10, 0, 1000)],
-	   comments: ['foobar', 'foobaz'],
+        comments: ['foobar', 'foobaz'],
     };
     userInfo.userName = newUsername;
     req.send({
@@ -450,7 +452,7 @@ app.post('/createUser', (req, res) => {
             },
             email: 'user email',
             friendsList: [],
-		  comments: [],
+            comments: [],
         }
     });
 });
