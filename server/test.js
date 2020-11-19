@@ -2,12 +2,25 @@ import request from 'supertest';
 import { app } from './index.js';
 
 function booleanToEmoji(value) {
-    let passedStr = '+';
+    let passedStr = '✔️';
     if (value === false) {
-        passedStr = '-';
+        passedStr = '❌';
     }
 
     return passedStr;
+}
+
+const COLOR_RESET = '\x1b[0m';
+const COLOR_FG_BLACK = '\x1b[30m';
+const COLOR_BG_RED = '\x1b[41m';
+const COLOR_BG_GREEN = '\x1b[42m';
+
+function booleanToColor(value) {
+    if (value === true) {
+        return COLOR_FG_BLACK + COLOR_BG_GREEN;
+    } else {
+        return COLOR_FG_BLACK + COLOR_BG_RED;
+    }
 }
 
 function objMap(obj, fn) {
@@ -142,9 +155,8 @@ class Tester {
         
         let indent = '';
         if (depth !== undefined) {
-            while (depth > 0) {
+            for (let i = 0; i < depth; i++) {
                 indent += '  ';
-                depth -= 1;
             }
         } else {
             depth = 0;
@@ -153,7 +165,9 @@ class Tester {
         const passed = this.resultCheck(res);
         const passedStr = booleanToEmoji(passed);
 
-        out.push(`${indent}${passedStr} ${res.subject}`);
+        const colorStr = booleanToColor(passed);
+
+        out.push(`${indent}${colorStr}${passedStr}${COLOR_RESET} ${res.subject}`);
         
         res.assertions.forEach((a) => {
             if (a.result === true) {
@@ -161,7 +175,9 @@ class Tester {
             }
 
             const resultStr = booleanToEmoji(a.result);
-            out.push(`${indent}  ${resultStr} ${a.subject} (Expected: "${a.expected}", Actual: "${a.actual}")`);
+            const colorStr = booleanToColor(a.result);
+            
+            out.push(`${indent}  ${colorStr}${resultStr}${COLOR_RESET} ${a.subject} (Expected: "${a.expected}", Actual: "${a.actual}")`);
         });
 
         res.children
