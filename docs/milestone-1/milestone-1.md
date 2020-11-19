@@ -41,6 +41,9 @@ Data format:
   - `totalTime` (Number)
 - `email` (String)
 - `friendsList` (Number[])
+- `comments` (Object[])
+  - `userId` (Number): ID of commenting user
+  - `comment` (String): Contents of comment
 
 Each user will have a unique ID to identify them. Each user will have a username and passowrd to log into our application. Each user will have an email to register with.
 We will also keep track of the users stats and friends list.
@@ -53,10 +56,6 @@ Data format:
 - `id` (Number)
 - `longitude` (Number)
 - `latitude` (Number)
-- `comments` (Object[])
-  - `userId` (Number)
-  - `comment` (String)
-- `likes` (Number[])
 
 Each track will have a unique id to identify them. Each track will have a longitude and latitude value that will point to the beginning of each track. Each track will support comment data so users will be able to comment on each track and they will also support like data so users can like tracks.
 
@@ -84,10 +83,17 @@ for future milestones our team has solved this problem.
 Area Data JSON:
 
 - `position` (Object)
-  - `latitude` (Number)
-  - `longitude` (Number)
+  - `topLeft`(Object)
+    - `latitude` (Number)
+    - `longitude` (Number)
+  - `bottomRight` (Object)
+    - `latitude` (Number)
+    - `longitude` (Number)
 - `trackIds` (Number[])
 - `ownerId` (Number)
+- `likes` (Number[]): ID of users which have liked the area
+- `polygon`: (Number[][][]): A line string of the area, which is an array of lat
+  long pair arrays.
 
 The `trackIds` field records the ID of every track which encompassed the area 
 tile. The current winner who owns this area tile is recorded in the `ownerId` 
