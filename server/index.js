@@ -6,21 +6,19 @@ import Joi from 'joi';
 import passport from  'passport';
 import LocalStrategy from 'passport-local';
 import expressSession from 'express-session';
+import minicrypt from './miniCrypt.js';
 
-//import minicrypt from './miniCrypt.js';
-// import * as minicrypt from './miniCrypt'
-// const mc = new minicrypt();
 
 const strategy = new LocalStrategy(
     async (username, password, done) => {
-        // if (!findUser(username)) {
-        //     return done(null, false, { 'message' : 'Wrong username' });
-        // }
-        // if (!validatePassword(username, password)) {
-        // // invalid password
-        //     await new Promise((r) => setTimeout(r, 2000)); // two second delay
-        //     return done(null, false, { 'message' : 'Wrong password' });
-        // }
+        if (!findUser(username)) {
+            return done(null, false, { 'message' : 'Wrong username' });
+        }
+        if (!validatePassword(username, password)) {
+        // invalid password
+            await new Promise((r) => setTimeout(r, 2000)); // two second delay
+            return done(null, false, { 'message' : 'Wrong password' });
+        }
         // should create a user object here, associated with a unique identifier
         return done(null, username);
     }
@@ -98,7 +96,7 @@ app.use(bodyParser.json());
 app.use(express.static('dist'));
 app.use(express.static('frontend'));
 
-//const mc = new minicrypt();
+const mc = new minicrypt();
 app.use(expressSession(session));
 passport.use(strategy);
 app.use(passport.initialize());
@@ -123,6 +121,7 @@ function validateBody(schema) {
     };
 }
 
+//checks to see if a user is logged in
 function checkLoggedIn(req, res, next) {
     if (req.isAuthenticated()) {
         // If we are authenticated, run the next route.
@@ -440,13 +439,17 @@ app.put('/user/updateInfo',(req, res) => {
 });
 
 //post login 
-app.post('/login',(req, res) => {
+app.post('/login', (req, res) => {
     validateBody(Joi.object({
         username: Joi.string().required(),
         password: Joi.string().required()
-    }));
-    res.send('Login Successful');
-    //res.redirect('area.html');
+    })),
+    //console.log('in app.post(login)');
+    res.redirect('/register');
+    /*passport.authenticate('local', {
+        'successRedirect' : '/areas',   // when we login, go to /areas 
+	     'failureRedirect' : '/areas'    
+    })*/
 });
 
 //get login
@@ -457,7 +460,7 @@ app.get('/login',
 //register
 app.post('/register', (req, res) => {
     validateBody(Joi.object({
-        //email: Joi.string().required(),
+        email: Joi.string().required(),
         username: Joi.string().required(),
         password: Joi.string().required()
     }));
@@ -477,7 +480,7 @@ app.post('/register', (req, res) => {
             comments: []
         }
     });
-    res.redirect('/login');
+    // res.redirect('/login');
 });
 
 //get register
@@ -540,35 +543,31 @@ app.get('/track/:trackId([0-9]+)', (req, res) => {
 
 ///////////////Authentication Stuff//////////////////
 //always returning true right now
+function findUser(username){
+    // if(username in database){
+    username = username;
+    return true;
+    // }
+    //return false;
+}
 
+function validatePassword(username, password) {
+    if(!findUser(username)){
+        return false;
+    }
+    return true;
+}
 
-
-// function findUser(username){
-//     // if(username in database){
-//     username = username;
-//     return true;
-//     // }
-//     //return false;
-// }
-
-// function validatePassword(username, password) {
-//     password = password;
-//     if(!findUser(username)){
-//         return false;
-//     }
-//     return true;
-// }
-
-// function addUser(username, password){
-//     if(findUser(username)){
-//         return false;
-//     } else {
-//         const [salt, hash] = mc.hash(password);
-//         //add user to data base
-//         //db.users.insertOne
-//         return true;
-//     }
-// }
+function addUser(username, password){
+    if(findUser(username)){
+        return false;
+    } else {
+        const [salt, hash] = mc.hash(password);
+        //add user to data base
+        //db.users.insertOne
+        return true;
+    }
+}
 //////////////////////
 
 app.listen(port, () => {
