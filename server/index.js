@@ -12,35 +12,32 @@ import mongo from 'mongodb';
 /*
 import passport from  'passport';
 import LocalStrategy from 'passport-local';
-//require('dotenv').config();
-//const passport = require('passport');               // handles authentication
-//const LocalStrategy = require('passport-local').Strategy; // username/password strategy
-//const minicrypt = require('./miniCrypt');
-//const mc = new minicrypt();
+import expressSession from 'express-session';
+
+//import minicrypt from './miniCrypt.js';
+// import * as minicrypt from './miniCrypt'
+// const mc = new minicrypt();
 
 const strategy = new LocalStrategy(
-    // async (username, password, done) => {
-    //     if (!findUser(username)) {
-    //         return done(null, false, { 'message' : 'Wrong username' });
-    //     }
-    //     if (!validatePassword(username, password)) {
-    //     // invalid password
-    //     // should disable logins after N messages
-    //     // delay return to rate-limit brute-force attacks
-    //         await new Promise((r) => setTimeout(r, 2000)); // two second delay
-    //         return done(null, false, { 'message' : 'Wrong password' });
-    //     }
-    //     // success!
-    //     // should create a user object here, associated with a unique identifier
-    //     return done(null, username);
-    // }
+    async (username, password, done) => {
+        // if (!findUser(username)) {
+        //     return done(null, false, { 'message' : 'Wrong username' });
+        // }
+        // if (!validatePassword(username, password)) {
+        // // invalid password
+        //     await new Promise((r) => setTimeout(r, 2000)); // two second delay
+        //     return done(null, false, { 'message' : 'Wrong password' });
+        // }
+        // should create a user object here, associated with a unique identifier
+        return done(null, username);
+    }
 );
 
-
-passport.use(strategy);
-app.use(passport.initialize());
-app.use(passport.session());
-*/
+const session = {
+    secret : process.env.SECRET || 'SECRET', // set this encryption key in Heroku config (never in GitHub)!
+    resave : false,
+    saveUninitialized: false
+};
 
 
 /**
@@ -173,6 +170,12 @@ app.use(bodyParser.json()); // Parse HTTP body as JSON
 app.use(express.static('dist')); // Serve dist/ directory
 app.use(cookieParser()); // Parse cookies
 
+//const mc = new minicrypt();
+app.use(expressSession(session));
+passport.use(strategy);
+app.use(passport.initialize());
+app.use(passport.session());
+
 /**
  * Returns a middleware function to validate that a request body matches a 
  * Joi schema.
@@ -227,10 +230,22 @@ const verifyStravaAuthToken = async (req, res, next) => {
     next();
 };
 
+function checkLoggedIn(req, res, next) {
+    if (req.isAuthenticated()) {
+        // If we are authenticated, run the next route.
+        next();
+    } else {
+        // Otherwise, redirect to the login page.
+        res.redirect('/login');
+    }
+}
 
-app.get('/', (req, res) => {
-    res.redirect('/login.html');
-});
+app.get('/', 
+    checkLoggedIn,
+    (req, res) => {
+        res.redirect('/area.html');
+    }
+);
 
 /**
  * Users will be redirected to this endpoint when they complete the Strava
@@ -637,17 +652,23 @@ app.put('/user/updateInfo',(req, res) => {
     });
 });
 
-//login 
+//post login 
 app.post('/login',(req, res) => {
     validateBody(Joi.object({
         username: Joi.string().required(),
         password: Joi.string().required()
     }));
     res.send('Login Successful');
+    //res.redirect('area.html');
 });
 
-//createUser
-app.post('/createUser', (req, res) => {
+//get login
+app.get('/login',
+    (req, res) => res.sendFile(process.cwd() + '/frontend/login.html')
+);
+
+//register
+app.post('/register', (req, res) => {
     validateBody(Joi.object({
         //email: Joi.string().required(),
         username: Joi.string().required(),
@@ -666,10 +687,16 @@ app.post('/createUser', (req, res) => {
             },
             email: 'user email',
             friendsList: [],
-            comments: [],
+            comments: []
         }
     });
+    res.redirect('/login');
 });
+
+//get register
+app.get('/register',
+    (req, res) => res.sendFile(process.cwd() + '/frontend/register.html')
+);
 
 //get workout Data
 app.get('/workout/:workoutId([0-9]+)', (req, res) => {
@@ -737,16 +764,19 @@ Server listening on port ${config.port}. View in your web browser:
 
 ///////////////Authentication Stuff//////////////////
 //always returning true right now
+
+
+
 // function findUser(username){
 //     // if(username in database){
-//     let username = username;
+//     username = username;
 //     return true;
 //     // }
 //     //return false;
 // }
 
 // function validatePassword(username, password) {
-//     let password = password;
+//     password = password;
 //     if(!findUser(username)){
 //         return false;
 //     }
