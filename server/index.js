@@ -9,7 +9,6 @@ import jwt from 'jsonwebtoken';
 import decodePolyline from 'decode-google-map-polyline';
 import mongo from 'mongodb';
 
-/*
 import passport from  'passport';
 import LocalStrategy from 'passport-local';
 import expressSession from 'express-session';
