@@ -5,9 +5,9 @@ import bodyParser from 'body-parser';
 import Joi from 'joi';
 import passport from  'passport';
 import LocalStrategy from 'passport-local';
-//import expressSession from 'express-session';
+import expressSession from 'express-session';
 
-import minicrypt from './miniCrypt.js';
+//import minicrypt from './miniCrypt.js';
 // import * as minicrypt from './miniCrypt'
 // const mc = new minicrypt();
 
@@ -26,7 +26,11 @@ const strategy = new LocalStrategy(
     }
 );
 
-
+const session = {
+    secret : process.env.SECRET || 'SECRET', // set this encryption key in Heroku config (never in GitHub)!
+    resave : false,
+    saveUninitialized: false
+};
 
 
 /**
@@ -92,9 +96,10 @@ const port = process.env.PORT || 8000;
 
 app.use(bodyParser.json());
 app.use(express.static('dist'));
+app.use(express.static('frontend'));
 
-const mc = new minicrypt();
-//app.use(expressSession(session));
+//const mc = new minicrypt();
+app.use(expressSession(session));
 passport.use(strategy);
 app.use(passport.initialize());
 app.use(passport.session());
@@ -441,14 +446,12 @@ app.post('/login',(req, res) => {
         password: Joi.string().required()
     }));
     res.send('Login Successful');
-    console.log(mc.hash('pat'));
     //res.redirect('area.html');
 });
 
 //get login
 app.get('/login',
-    // (req, res) => res.sendFile('../frontend/login.html')
-    (req, res) => res.sendFile(__dirname + '../frontend/login.html')
+    (req, res) => res.sendFile(process.cwd() + '/frontend/login.html')
 );
 
 //register
@@ -471,14 +474,15 @@ app.post('/register', (req, res) => {
             },
             email: 'user email',
             friendsList: [],
-            comments: [],
+            comments: []
         }
     });
     res.redirect('/login');
 });
 
+//get register
 app.get('/register',
-    (req, res) => res.sendFile('../frontend/register.html', { 'root' : __dirname })
+    (req, res) => res.sendFile(process.cwd() + '/frontend/register.html')
 );
 
 //get workout Data
