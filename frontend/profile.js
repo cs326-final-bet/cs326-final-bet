@@ -64,8 +64,9 @@ leaveCommentButtonEl.onclick = async () => {
         body: JSON.stringify({
             comment: leaveCommentValueEl.value,
         }),
+        
     });
-
+    
     addComment({
         user: userNameHeader.innerHTML,
         value: leaveCommentValueEl.value,
