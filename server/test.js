@@ -215,7 +215,7 @@ const T = new Tester('HTTP API', async (T) => {
                 0, 0, // bottom right
             ];
             const extStr = ext.map(e => e.toString()).join(',');
-            const resp = await request(app).get(`/areas?extent=${extStr}`);
+            const resp = await request(app).get(`/areas?extent=-0.05,-0.05,0,0`);
 
             // Assert
             T.assert('Response 200 OK')
