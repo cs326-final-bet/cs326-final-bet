@@ -176,7 +176,7 @@ const STRAVA_AUTH_ALGORITHM ='HS256';
 /**
  * Name of cookie in which authentication tokens are stored.
  */
-const STRAVA_AUTH_COOKIE = 'authenticationToken';
+const STRAVA_AUTH_COOKIE = 'stravaAuthenticationToken';
 
 // Check that the configured Strava OAuth redirect endpoint matches with the
 // endpoint we will define in our express API, I make this mistake all the
@@ -246,37 +246,6 @@ function validateBody(schema) {
         next();
     };
 }
-
-/**
- * Middleware which ensures a valid Strava JWT authentication token exists then sets
- * req.stravaAuthToken to the decoded value. Additionally creates a Strava client for
- * that user in req.userStrava.
- */
-const verifyStravaAuthToken = async (req, res, next) => {
-    // Check authentication cookie exists
-    if (req.cookies[STRAVA_AUTH_COOKIE] === undefined) {
-        // If not then redirect user to authenticate with Strava
-        return res.redirect(`http://www.strava.com/oauth/authorize?client_id=${config.strava.client_id}&response_type=code&redirect_uri=${config.strava.redirect_uri}&approval_prompt=force&scope=read,activity:read`);
-    }
-
-    // Verify JWT
-    const authCookie = req.cookies[STRAVA_AUTH_COOKIE];
-    try {
-        req.authToken = await jwt.verify(
-            authCookie, config.strava.authentication_token_secret, {
-                algorithm: STRAVA_AUTH_ALGORITHM,
-            });
-    } catch (e) {
-        console.error(`Failed to verify an authentication token JWT: ${e}`);
-        return res.status(401).json({
-            error: 'Not authorized',
-        });
-    }
-
-    req.userStrava = new stravaApi.client(req.authToken.payload.strava.authentication.access_token);
-
-    next();
-};
 
 function checkLoggedIn(req, res, next) {
     if (req.isAuthenticated()) {
@@ -355,7 +324,44 @@ app.get(STRAVA_OAUTH_REDIRECT_ENDPOINT, async (req, res) => {
     return res.redirect('/strava_sync');
 });
 
-app.get('/strava_sync', verifyStravaAuthToken, async (req, res) => {
+app.get('/strava_sync',
+        /**
+         * Middleware which ensures a valid Strava JWT authentication token exists.
+         * This gives us access to a user's Strava account. If the user is not logged
+         * in we redirect them through the strava OAuth flow. Then we set the 
+         * req.stravaAuthToken to the decoded value. Additionally creates a Strava 
+         * client for that user in req.userStrava.
+         */
+
+        async (req, res) => {
+            // Check authentication cookie exists
+            if (req.cookies[STRAVA_AUTH_COOKIE] === undefined) {
+                // If not then redirect user to authenticate with Strava
+                return res.redirect(`http://www.strava.com/oauth/authorize?client_id=${config.strava.client_id}&response_type=code&redirect_uri=${config.strava.redirect_uri}&approval_prompt=force&scope=read,activity:read`);
+            }
+
+            // Verify JWT
+            const authCookie = req.cookies[STRAVA_AUTH_COOKIE];
+            try {
+                req.authToken = await jwt.verify(
+                    authCookie, config.strava.authentication_token_secret, {
+                        algorithm: STRAVA_AUTH_ALGORITHM,
+                    });
+            } catch (e) {
+                console.error(`Failed to verify an authentication token JWT: ${e}`);
+                return res.status(401).json({
+                    error: 'Not authorized',
+                });
+            }
+
+            req.userStrava = new stravaApi.client(req.authToken.payload.strava.authentication.access_token);
+
+            next();
+        },
+        /**
+         * Actual handler which does the activity fetching. It get's all activities in 
+         * the 
+        async (req, res) => {
     // Get activities
     let activities = null;
     
