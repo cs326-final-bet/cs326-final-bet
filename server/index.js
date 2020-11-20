@@ -3,39 +3,36 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import Joi from 'joi';
-
-/*
 import passport from  'passport';
 import LocalStrategy from 'passport-local';
-//require('dotenv').config();
-//const passport = require('passport');               // handles authentication
-//const LocalStrategy = require('passport-local').Strategy; // username/password strategy
-//const minicrypt = require('./miniCrypt');
-//const mc = new minicrypt();
+import expressSession from 'express-session';
+import minicrypt from './miniCrypt.js';
+import MongoClient from 'mongodb';
+
+// The environment variable DATABASE_URL should be defined (through Heroku / locally / both)
+
+const client = new MongoClient(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const strategy = new LocalStrategy(
-    // async (username, password, done) => {
-    //     if (!findUser(username)) {
-    //         return done(null, false, { 'message' : 'Wrong username' });
-    //     }
-    //     if (!validatePassword(username, password)) {
-    //     // invalid password
-    //     // should disable logins after N messages
-    //     // delay return to rate-limit brute-force attacks
-    //         await new Promise((r) => setTimeout(r, 2000)); // two second delay
-    //         return done(null, false, { 'message' : 'Wrong password' });
-    //     }
-    //     // success!
-    //     // should create a user object here, associated with a unique identifier
-    //     return done(null, username);
-    // }
+    async (username, password, done) => {
+        if (!findUser(username)) {
+            return done(null, false, { 'message' : 'Wrong username' });
+        }
+        if (!validatePassword(username, password)) {
+        // invalid password
+            await new Promise((r) => setTimeout(r, 2000)); // two second delay
+            return done(null, false, { 'message' : 'Wrong password' });
+        }
+        // should create a user object here, associated with a unique identifier
+        return done(null, username);
+    }
 );
 
-
-passport.use(strategy);
-app.use(passport.initialize());
-app.use(passport.session());
-*/
+const session = {
+    secret : process.env.SECRET || 'SECRET', // set this encryption key in Heroku config (never in GitHub)!
+    resave : false,
+    saveUninitialized: false
+};
 
 
 /**
@@ -94,16 +91,33 @@ function polysForExt(extent) {
 
     return polys;
 }
-// DATABASES
-
-
 
 // API
 const app = express();
-const port = process.env.PORT || 8000;
+//const port = process.env.PORT || 8000;
+// Connect to the database, then start the server
+client.connect(err => {
+    if (err) {
+        console.error(err);
+    } else {
+        app.listen(process.env.PORT || 8000);
+    }
+})
 
 app.use(bodyParser.json());
 app.use(express.static('dist'));
+app.use(express.static('frontend'));
+
+const mc = new minicrypt();
+app.use(expressSession(session));
+passport.use(strategy);
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.use(express.json()); // allow JSON inputs
+app.use(express.urlencoded({'extended' : true})); // allow URLencoded data
+
+
 
 /**
  * Returns a middleware function to validate that a request body matches a 
@@ -123,9 +137,23 @@ function validateBody(schema) {
     };
 }
 
-app.get('/', (req, res) => {
-    res.redirect('/login.html');
-});
+//checks to see if a user is logged in
+function checkLoggedIn(req, res, next) {
+    if (req.isAuthenticated()) {
+        // If we are authenticated, run the next route.
+        next();
+    } else {
+        // Otherwise, redirect to the login page.
+        res.redirect('/login');
+    }
+}
+
+app.get('/', 
+    checkLoggedIn,
+    (req, res) => {
+        res.redirect('/area.html');
+    }
+);
 
 app.get('/areas', (req, res) => {
     // Check extent parameter
@@ -180,6 +208,7 @@ app.get('/areas', (req, res) => {
             polygon: poly,
             trackIds: trackIds,
             ownerId: getRandomInt(0, 1000),
+            likes: getRandomInts(10, 0, 1000),
         };
     });
 
@@ -197,7 +226,43 @@ app.get('/areas', (req, res) => {
     return res.send({
         areas: areas,
     });
+
 });
+
+// Like area
+app.put('/areas/:areaId([0-9]+)/likes',
+    validateBody(Joi.object({
+        liked: Joi.boolean().required(),
+    })),
+    (req, res) => {
+        const likes = [];
+        if (req.body.liked === true) {
+            likes.push(getRandomInt(0, 1000));
+        }
+
+        const poly = polysForExt([0, 0, 0.1, 0.1])[0];
+               
+        res.send({
+            area:  {
+                id: getRandomInt(0, 1000),
+                score: getRandomInt(0, 1000),
+                position: {
+                    topLeft: {
+                        latitude: poly[0][0],
+                        longitude: poly[0][1],
+                    },
+                    bottomRight: {
+                        latitude: poly[2][0],
+                        longitude: poly[2][1],
+                    },
+                },
+                polygon: poly,
+                trackIds: getRandomInts(10, 0, 1000),
+                ownerId: getRandomInt(0, 1000),
+                likes: likes,
+            },
+        });
+    });
 
 app.post('/strava',
     validateBody(Joi.object({
@@ -216,45 +281,30 @@ app.post('/strava',
         res.send({});
     });
 
-app.put('/tracks/:trackId([0-9]+)/likes',
-    validateBody(Joi.object({
-        liked: Joi.boolean().required(),
-    })),
-    (req, res) => {
-        const likes = [];
-        if (req.body.liked === true) {
-            likes.push(getRandomInt(0, 1000));
-        }
-               
-        res.send({
-            track: {
-                id: getRandomInt(0, 1000),
-                longitude: getRandomInt(-80, 80),
-                latitude: getRandomInt(-80, 80),
-                comments: [],
-                likes: likes,
-            },
-        });
-    });
-
-app.put('/tracks/:trackId([0-9]+)/comments',
+// Comment on user
+app.put('/users/:userId([0-9]+)/comments',
     validateBody(Joi.object({
         comment: Joi.string().required(),
     })),
     (req, res) => {
         res.send({
-            track: {
-                id: getRandomInt(0, 1000),
-                longitude: getRandomInt(-80, 80),
-                latitude: getRandomInt(-80, 80),
-                comments: [ {
-                    userId: getRandomInt(0, 1000),
-                    comment: req.body.comment,
-                } ],
-                likes: getRandomInts(10, 0, 1000),
+            user:  {
+                id: req.userId,
+                userName: 'user name',
+                userPassword: 'user password',
+                userStats: {
+                    currentDistance: getRandomInt(0, 1000),
+                    currentTime: getRandomInt(0, 1000),
+                    totalDistance: getRandomInt(0 ,1000),
+                    totalTime: getRandomInt(0, 1000)
+                },
+                email: 'user email',
+                friendsList: [getRandomInts(10, 0, 1000)],
+                comments: [ req.body.comment ],
             },
         });
     });
+
 //add friend
 app.put('/user/:userId([0-9]+)/addFriend',
     validateBody(Joi.object({
@@ -277,7 +327,8 @@ app.put('/user/:userId([0-9]+)/addFriend',
                     totalTime: getRandomInt(0, 1000)
                 },
                 email: 'user email',
-                friendsList: [req.body.id]
+                friendsList: [req.body.id],
+                comments: [ 'foobar', 'foobaz' ],
             }
         });
     });
@@ -299,8 +350,6 @@ app.get('/user/userStats', (req, res) => {
                 error: 'userId must be an integer'
             });
     }
-    //Check to see if user is valid
-    
     //Generate fake user
     const userInfo = {
         id: userId,
@@ -349,7 +398,8 @@ app.get('/user', (req, res) =>{
             totalTime: getRandomInt(0, 1000)
         },
         email: 'user email',
-        friendsList: [getRandomInts(10, 0, 1000)]
+        friendsList: [getRandomInts(10, 0, 1000)],
+        comments: ['foobar', 'foobaz'],
     };
     return res.send({
         userInfo: userInfo,
@@ -396,7 +446,8 @@ app.put('/user/updateInfo',(req, res) => {
             totalTime: getRandomInt(0, 1000)
         },
         email: 'user email',
-        friendsList: [getRandomInts(10, 0, 1000)]
+        friendsList: [getRandomInts(10, 0, 1000)],
+        comments: ['foobar', 'foobaz'],
     };
     userInfo.userName = newUsername;
     req.send({
@@ -404,19 +455,29 @@ app.put('/user/updateInfo',(req, res) => {
     });
 });
 
-//login 
-app.post('/login',(req, res) => {
+//post login 
+app.post('/login', (req, res) => {
     validateBody(Joi.object({
         username: Joi.string().required(),
         password: Joi.string().required()
     }));
-    res.send('Login Successful');
+    console.log('in post(/login)');
+    res.redirect('/areas');
+    /*passport.authenticate('local', {
+        'successRedirect' : '/area.html',   // when we login, go to /areas 
+	     'failureRedirect' : '/login.html'    
+    });*/ 
 });
 
-//createUser
-app.post('/createUser', (req, res) => {
+//get login
+app.get('/login',
+    (req, res) => res.sendFile(process.cwd() + '/frontend/login.html')
+);
+
+//register
+app.post('/register', (req, res) => {
     validateBody(Joi.object({
-        //email: Joi.string().required(),
+        email: Joi.string().required(),
         username: Joi.string().required(),
         password: Joi.string().required()
     }));
@@ -432,10 +493,17 @@ app.post('/createUser', (req, res) => {
                 totalTime: 0
             },
             email: 'user email',
-            friendsList: []
+            friendsList: [],
+            comments: []
         }
     });
+    res.redirect('/login');
 });
+
+//get register
+app.get('/register',
+    (req, res) => res.sendFile(process.cwd() + '/frontend/register.html')
+);
 
 //get workout Data
 app.get('/workout/:workoutId([0-9]+)', (req, res) => {
@@ -492,32 +560,31 @@ app.get('/track/:trackId([0-9]+)', (req, res) => {
 
 ///////////////Authentication Stuff//////////////////
 //always returning true right now
-// function findUser(username){
-//     // if(username in database){
-//     let username = username;
-//     return true;
-//     // }
-//     //return false;
-// }
+function findUser(username){
+    // if(username in database){
+    username = username;
+    return true;
+    // }
+    //return false;
+}
 
-// function validatePassword(username, password) {
-//     let password = password;
-//     if(!findUser(username)){
-//         return false;
-//     }
-//     return true;
-// }
+function validatePassword(username, password) {
+    if(!findUser(username)){
+        return false;
+    }
+    return true;
+}
 
-// function addUser(username, password){
-//     if(findUser(username)){
-//         return false;
-//     } else {
-//         const [salt, hash] = mc.hash(password);
-//         //add user to data base
-//         //db.users.insertOne
-//         return true;
-//     }
-// }
+async function addUser(username, password){
+    if(findUser(username)){
+        return false;
+    } else {
+        const [salt, hash] = mc.hash(password);
+        //add user to data base
+        await client.db('Fitness.io').collection('users').instertOne(username);
+        return true;
+    }
+}
 //////////////////////
 
 app.listen(port, () => {
