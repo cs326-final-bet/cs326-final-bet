@@ -29,5 +29,5 @@ jobs:
     - name: 👀 Lint
       run: npm run lint
       
-    - name: 🧪 Build
+    - name: 👷 Build Frontend
       run: npm run build

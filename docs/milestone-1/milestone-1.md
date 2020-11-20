@@ -54,8 +54,12 @@ Track Data. Contains the data for each individual track
 Data format:
 
 - `id` (Number)
-- `longitude` (Number)
-- `latitude` (Number)
+- `points` (Object[])
+  - `longitude` (Number)
+  - `latitude` (Number)
+- `strava` (Object)
+  - `activityId` (Number)
+- `likes` (Number[]): ID of users which have liked the area
 
 Each track will have a unique id to identify them. Each track will have a longitude and latitude value that will point to the beginning of each track. Each track will support comment data so users will be able to comment on each track and they will also support like data so users can like tracks.
 
@@ -91,7 +95,6 @@ Area Data JSON:
     - `longitude` (Number)
 - `trackIds` (Number[])
 - `ownerId` (Number)
-- `likes` (Number[]): ID of users which have liked the area
 - `polygon`: (Number[][][]): A line string of the area, which is an array of lat
   long pair arrays.
 

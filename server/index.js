@@ -3,6 +3,12 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import Joi from 'joi';
+import stravaApi from 'strava-v3';
+import cookieParser from 'cookie-parser';
+import jwt from 'jsonwebtoken';
+import decodePolyline from 'decode-google-map-polyline';
+import mongo from 'mongodb';
+
 import passport from  'passport';
 import LocalStrategy from 'passport-local';
 import expressSession from 'express-session';
@@ -34,12 +40,11 @@ const session = {
 
 
 /**
+ * Generates random number.
  * From: https://stackoverflow.com/a/1527820
- * Returns a random integer between min (inclusive) and max (inclusive).
- * The value is no lower than min (or the next integer greater than min
- * if min isn't an integer) and no greater than max (or the next integer
- * lower than max if max isn't an integer).
- * Using Math.round() will give you a non-uniform distribution!
+ * @param min {number} Minimum inclusive.
+ * @param max {number} Maximum inclusive.
+ * @returns {number} Random number in range [min, max].
  */
 function getRandomInt(min, max) {
     min = Math.ceil(min);
@@ -47,6 +52,14 @@ function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+/**
+ * Get a random number of random numbers. At least one.
+ * @param numMax {number} Maximum number of random numbers, inclusive.
+ * @param min {number} Minimum random number inclusive.
+ * @param max {number} Maximum random number inclusive.
+ * @returns {number[]} Random amount of numbers (amount in range [1, numMax]).
+ *     Each number in the range [min, max].
+ */
 function getRandomInts(numMax, min, max) {
     const items = [];
     const num = getRandomInt(1, numMax);
@@ -64,6 +77,10 @@ function getRandomInts(numMax, min, max) {
 
 /**
  * Break any area up into 0.01 mile square boxes.
+ * @params extent {number[4]} Map extent, latitude and longitude pairs in the format
+ *     [upper left lat, upper left long, bottom right lat, bottom right long].
+ * @returns {number[][][]} All 0.01 mile square boxes which cover the provided extent.
+ *     Each box is provided as a line string, which is an array of lat long pair arrays.
  */
 function polysForExt(extent) {
     const polys = [];
@@ -90,13 +107,73 @@ function polysForExt(extent) {
     return polys;
 }
 
-// API
-const app = express();
-const port = process.env.PORT || 8000;
+/**
+ * Application configuration, all values set via environment variables.
+ */
+const config = {
+    port: process.env.PORT, // Heroku sets this
+    strava: {
+        access_token: process.env.STRAVA_ACCESS_TOKEN,
+        client_id: process.env.STRAVA_CLIENT_ID,
+        client_secret: process.env.STRAVA_CLIENT_SECRET,
+        redirect_uri: process.env.STRAVA_REDIRECT_URI,
+        authentication_token_secret: process.env.STRAVA_AUTHENTICATION_TOKEN_SECRET,
+    },
+    mongo: {
+        uri: process.env.APP_MONGO_URI,
+        db: process.env.APP_MONGO_DB,
+    }
+};
 
-app.use(bodyParser.json());
-app.use(express.static('dist'));
-app.use(express.static('frontend'));
+/**
+ * Algorithm used to construct JWT authentication tokens.
+ */
+const STRAVA_AUTH_ALGORITHM ='HS256';
+
+/**
+ * Name of cookie in which authentication tokens are stored.
+ */
+const STRAVA_AUTH_COOKIE = 'authenticationToken';
+
+// Check that the configured Strava OAuth redirect endpoint matches with the
+// endpoint we will define in our express API, I make this mistake all the
+// time so I'm gonna catch it this time...
+const STRAVA_OAUTH_REDIRECT_ENDPOINT = '/strava_oauth_callback';
+if (config.strava.redirect_uri.indexOf(STRAVA_OAUTH_REDIRECT_ENDPOINT) === -1) {
+    throw 'The configured Strava OAuth redirect URI and this app\'s API endpoint do not match, this will cause problems and you must fix it';
+}
+
+// Database
+let dbClient = null;
+let db = null;
+let dbUsers = null;
+let dbAreas = null;
+let dbTracks = null;
+
+(async function () {
+    try {
+        dbClient = await mongo.MongoClient.connect(config.mongo.uri, {
+            useUnifiedTopology: true
+        });
+    } catch (e) {
+        console.error(`Failed to connect to MongoDB: ${e}`);
+        process.exit(1);
+    }
+
+    db = dbClient.db(config.mongo.db);
+    dbUsers = db.collection('users');
+    dbAreas = db.collection('areas');
+    dbTracks = db.collection('tracks');
+
+    console.log('Connected to MongoDB');
+})();
+
+// API
+export const app = express();
+
+app.use(bodyParser.json()); // Parse HTTP body as JSON
+app.use(express.static('dist')); // Serve dist/ directory
+app.use(cookieParser()); // Parse cookies
 
 //const mc = new minicrypt();
 app.use(expressSession(session));
@@ -104,10 +181,14 @@ passport.use(strategy);
 app.use(passport.initialize());
 app.use(passport.session());
 
-
 /**
  * Returns a middleware function to validate that a request body matches a 
  * Joi schema.
+ * @param schema {Joi Schema} Schema to ensure the request body meets.
+ * @returns {function(req, res, next)} An Express middleware function which ensures that
+ *     request body meets the requirements set by the schema. If the body does not 
+ *     fullfill the requirements an HTTP 400 response with an "error" key will be 
+ *     returned which holds the error object returned by Joi.
  */
 function validateBody(schema) {
     return (req, res, next) => {
@@ -122,6 +203,37 @@ function validateBody(schema) {
         next();
     };
 }
+
+/**
+ * Middleware which ensures a valid Strava JWT authentication token exists then sets
+ * req.stravaAuthToken to the decoded value. Additionally creates a Strava client for
+ * that user in req.userStrava.
+ */
+const verifyStravaAuthToken = async (req, res, next) => {
+    // Check authentication cookie exists
+    if (req.cookies[STRAVA_AUTH_COOKIE] === undefined) {
+        // If not then redirect user to authenticate with Strava
+        return res.redirect(`http://www.strava.com/oauth/authorize?client_id=${config.strava.client_id}&response_type=code&redirect_uri=${config.strava.redirect_uri}&approval_prompt=force&scope=read,activity:read`);
+    }
+
+    // Verify JWT
+    const authCookie = req.cookies[STRAVA_AUTH_COOKIE];
+    try {
+        req.authToken = await jwt.verify(
+            authCookie, config.strava.authentication_token_secret, {
+                algorithm: STRAVA_AUTH_ALGORITHM,
+            });
+    } catch (e) {
+        console.error(`Failed to verify an authentication token JWT: ${e}`);
+        return res.status(401).json({
+            error: 'Not authorized',
+        });
+    }
+
+    req.userStrava = new stravaApi.client(req.authToken.payload.strava.authentication.access_token);
+
+    next();
+};
 
 function checkLoggedIn(req, res, next) {
     if (req.isAuthenticated()) {
@@ -139,6 +251,118 @@ app.get('/',
         res.redirect('/area.html');
     }
 );
+
+/**
+ * Users will be redirected to this endpoint when they complete the Strava
+ * OAuth flow. We then store their Strava credentials in a cookie and redirect
+ * them to the homepage.
+ */
+app.get(STRAVA_OAUTH_REDIRECT_ENDPOINT, async (req, res) => {
+    // After the user agrees to give us access to their Strava account we should
+    // have a request with a 'code' URL parameter. Exchange that with Strava on
+    // our end and "we're in" ;)
+    const stravaOAuthCode = req.query.code;
+
+    let stravaTok = null;
+
+    try {
+        stravaTok = await stravaApi.oauth.getToken(stravaOAuthCode);
+    } catch (e) {
+        console.error(`Failed to exchange a Strava OAuth code for a token: ${e}`);
+        return res.redirect('/strava_sync?auth_error=strava');
+    }
+
+    // Figure out who this token belongs to, makes our life a lot easier later on.
+    const userStrava = new stravaApi.client(stravaTok.access_token);
+    
+    let athlete = null;
+    try {
+        athlete = await userStrava.athlete.get();
+    } catch (e) {
+        console.error(`Failed to get information about authentication token owner: ${e}`);
+        return res.redirect('/strava_sync?auth_error=strava');
+    }
+
+    // Send user a symmetrically encrypted JWT which contains their strava token,
+    // we will use this in other endpoints to get their data.
+    let token = null;
+    
+    try {
+        token = await jwt.sign({
+            payload: {
+                strava: {
+                    authentication: {
+                        expires_at: stravaTok.expires_at,
+                        refresh_token: stravaTok.refresh_token,
+                        access_token: stravaTok.access_token,
+                    },
+                    athlete: athlete,
+                },
+            },
+        }, config.strava.authentication_token_secret, {
+            algorithm: STRAVA_AUTH_ALGORITHM, 
+        });
+    } catch (e) {
+        console.error(`Failed to construct JWT: ${e}`);
+        return res.redirect('/strava_sync?auth_error=internal');
+    }
+
+    res.cookie(STRAVA_AUTH_COOKIE, token);
+
+    return res.redirect('/strava_sync');
+});
+
+app.get('/strava_sync', verifyStravaAuthToken, async (req, res) => {
+    // Get activities
+    let activities = null;
+    
+    try {
+        activities = await req.userStrava.athlete.listActivities({});
+    } catch (e) {
+        console.error(`Failed to get Strava user activities: ${e}`);
+        return res.status(500).json({
+            error: 'Failed to get Strava user activities',
+        });
+    }
+
+    // Add all user's tracks to database
+    await Promise.all(activities.map(async (act) => {
+        // Check if we already have this track in the database
+        const storedTrack = await dbTracks.findOne({
+            strava: {
+                activityId: act.id,
+            },
+        });
+
+        if (storedTrack !== null) {
+            // We already have this activity synced into our database so just skip
+            console.log(`skipping ${act.id}`);
+            return;
+        }
+
+        // Get the points of the workout
+        const points = decodePolyline(act.map.summary_polyline).map((pnt) => {
+            return {
+                longitude: pnt.lng,
+                latitude: pnt.lat,
+            };
+        });
+
+        // Insert into database
+        const track = {
+            strava: {
+                activityId: act.id,
+            },
+            points: points,
+            likes: [],
+        };
+        
+        await dbTracks.insert(track);
+        console.log(`inserted ${act.id}`);
+    }));
+    
+    res.redirect('/area.html');
+});
 
 app.get('/areas', (req, res) => {
     // Check extent parameter
@@ -193,6 +417,13 @@ app.get('/areas', (req, res) => {
             polygon: poly,
             trackIds: trackIds,
             ownerId: getRandomInt(0, 1000),
+        };
+    });
+    const tracks = polys.map((poly) => {
+        return {
+            trackId: getRandomInt(0, 1000),
+            longitude: poly[0][0][0],
+            latitude: poly[0][0][1],
             likes: getRandomInts(10, 0, 1000),
         };
     });
@@ -205,16 +436,19 @@ app.get('/areas', (req, res) => {
     
     const removeNum = getRandomInt(Math.round(areas.length / 2), maxRemoveNum);
     for (let i = 0; i < removeNum; i++) {
-        areas.splice(getRandomInt(0, areas.length-1), 1);
+        const removeIndex = getRandomInt(0, areas.length-1);
+        areas.splice(removeIndex, 1);
+        tracks.splice(removeIndex, 1);
     }
 
     return res.send({
         areas: areas,
+        tracks: tracks,
     });
 });
 
 // Like area
-app.put('/areas/:areaId([0-9]+)/likes',
+app.put('/tracks/:trackId([0-9]+)/likes',
     validateBody(Joi.object({
         liked: Joi.boolean().required(),
     })),
@@ -224,27 +458,11 @@ app.put('/areas/:areaId([0-9]+)/likes',
             likes.push(getRandomInt(0, 1000));
         }
 
-        const poly = polysForExt([0, 0, 0.1, 0.1])[0];
-               
         res.send({
-            area:  {
-                id: getRandomInt(0, 1000),
-                score: getRandomInt(0, 1000),
-                position: {
-                    topLeft: {
-                        latitude: poly[0][0],
-                        longitude: poly[0][1],
-                    },
-                    bottomRight: {
-                        latitude: poly[2][0],
-                        longitude: poly[2][1],
-                    },
-                },
-                polygon: poly,
-                trackIds: getRandomInts(10, 0, 1000),
-                ownerId: getRandomInt(0, 1000),
-                likes: likes,
-            },
+            trackId: getRandomInt(0, 1000),
+            longitude: getRandomInt(-80, 80),
+            latitude: getRandomInt(-80, 80),
+            likes: likes,
         });
     });
 
@@ -533,10 +751,21 @@ app.get('/track/:trackId([0-9]+)', (req, res) => {
         trackId: getRandomInt(0, 1000),
         longitude: getRandomInt(-80, 80),
         latitude: getRandomInt(-80, 80),
-        comments: [],
-        likes: getRandomInts(10, 0, 1000)
+        likes: getRandomInts(10, 0, 1000),
     });
 });
+
+/**
+ * Run the server.
+ */
+export function runApp() {
+    app.listen(config.port, () => {
+        console.log(`\
+Server listening on port ${config.port}. View in your web browser:
+
+    http://127.0.0.1:${config.port} or http://localhost:${config.port}`);
+    });
+}
 
 ///////////////Authentication Stuff//////////////////
 //always returning true right now
@@ -570,10 +799,3 @@ app.get('/track/:trackId([0-9]+)', (req, res) => {
 //     }
 // }
 //////////////////////
-
-app.listen(port, () => {
-    console.log(`\
-Server listening on port ${port}. View in your web browser:
-
-    http://127.0.0.1:${port} or http://localhost:${port}`);
-});
