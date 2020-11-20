@@ -210,7 +210,7 @@ const T = new Tester('HTTP API', async (T) => {
     T.test('Area API', async (T) => {
         T.test('Get areas', async (T) => {
             // 1/2 x 1/2 mile squared extent
-            const resp = await request(app).get(`/areas?extent=-0.05,-0.05,0,0`);
+            const resp = await request(app).get('/areas?extent=-0.05,-0.05,0,0');
 
             // Assert
             T.assert('Response 200 OK')
