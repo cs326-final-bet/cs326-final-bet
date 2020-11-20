@@ -4,10 +4,10 @@
   Implementing cryptographically sound behavior in software is both very important and very hard.
   As such, in practice you should take great caution and be extra certain of what you're doing.
   Given this, it's best to rely on existing code that has been battle-tested and vetted by those knowledgeable.
-​
+
   Node.js provides a native cryptography module, by the name 'crypto'.
   This is essentially a JS wrapper around OpenSSL, a widely used and longstanding library written primarily in C that provides a vast array of cryptographic functions.
-​
+
   If you'd like to learn more about the theory and maths behind cryptography, then take 466 next semester. Great professor.
 */
 import crypto from 'crypto';
@@ -30,7 +30,7 @@ export default class MiniCrypt {
         this.saltL = saltL;
         this.digest = digest;
     }
-​
+
     /**
     @public
     @memberof MiniCrypt
@@ -43,7 +43,7 @@ export default class MiniCrypt {
             hash = crypto.pbkdf2Sync(pw, salt, this.its, this.keyL, this.digest).toString('hex'); // hash the pw
         return [salt, hash]; // return the pair for safe storage
     }
-​
+
     /**
     @public
     @memberof MiniCrypt
