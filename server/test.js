@@ -210,11 +210,6 @@ const T = new Tester('HTTP API', async (T) => {
     T.test('Area API', async (T) => {
         T.test('Get areas', async (T) => {
             // 1/2 x 1/2 mile squared extent
-            const ext = [
-                -0.05, 0.05, // top left
-                0, 0, // bottom right
-            ];
-            const extStr = ext.map(e => e.toString()).join(',');
             const resp = await request(app).get(`/areas?extent=-0.05,-0.05,0,0`);
 
             // Assert
