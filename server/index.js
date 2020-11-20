@@ -8,7 +8,6 @@ import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
 import decodePolyline from 'decode-google-map-polyline';
 import mongo from 'mongodb';
-
 import passport from  'passport';
 import LocalStrategy from 'passport-local';
 import expressSession from 'express-session';
@@ -105,6 +104,50 @@ function polysForExt(extent) {
     }
 
     return polys;
+}
+
+/**
+ * Return the extent box for the polygon.
+ * @param poly {Number[][]} Array of lat long pairs which make up the polygon.
+ * @returns {Number[4]} Extent.
+ */
+function extentForPolygon(polys) {
+    if (polys.length === 0) {
+        throw 'Polygon cannot by empty';
+    }
+    
+    let topLeft = polys[0];
+    let bottomRight = polys[0];
+
+    polys.forEach((poly) => {
+        if (poly[0] < topLeft[0]) {
+            topLeft[0] = poly[0];
+        }
+
+        if (poly[1] < topLeft[1]) {
+            topLeft[1] = poly[1];
+        }
+
+        if (poly[0] > bottomRight[0]) {
+            bottomRight[0] = poly[0];
+        }
+
+        if (poly[1] > bottomRight[1]) {
+            bottomRight[1] = poly[1];
+        }
+    });
+
+    return [topLeft[0], topLeft[1], bottomRight[0], bottomRight[1]];
+}
+
+/**
+ * Returns the center of any box.
+ */
+function extCenter(ext) {
+    return [
+        ext[0] + ((ext[2] - ext[0]) / 2),
+        ext[1] + ((ext[3] - ext[1]) /2 )
+    ];
 }
 
 /**
@@ -336,7 +379,6 @@ app.get('/strava_sync', verifyStravaAuthToken, async (req, res) => {
 
         if (storedTrack !== null) {
             // We already have this activity synced into our database so just skip
-            console.log(`skipping ${act.id}`);
             return;
         }
 
@@ -347,7 +389,10 @@ app.get('/strava_sync', verifyStravaAuthToken, async (req, res) => {
                 latitude: pnt.lat,
             };
         });
-
+        const pointsArr = points.map((point) => {
+            return [points.longitude, points.latitude];
+        });
+        
         // Insert into database
         const track = {
             strava: {
@@ -358,7 +403,13 @@ app.get('/strava_sync', verifyStravaAuthToken, async (req, res) => {
         };
         
         await dbTracks.insert(track);
-        console.log(`inserted ${act.id}`);
+
+        // Determine what areas track is within
+        const trackExt = extentForPolygon(pointsArr);
+        const extPolys = polysForExt(trackExt);
+        // TODO: These extPolys are now in step 2 of the finding areas algorithm.
+        //       Now all we must do is find if their center's are in the polygon
+        //       Then add the track's ID to the area!
     }));
     
     res.redirect('/area.html');
