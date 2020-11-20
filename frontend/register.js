@@ -9,6 +9,9 @@ const registerBtn = document.getElementById('register-button').value;
 
 
 registerBtn.onclick = async () => {
+
+    console.log('register Button Clicked');
+
     if(username === undefined || username.length === 0){
         alert('A valid username was not entered. Try Again');
         return;
@@ -21,7 +24,7 @@ registerBtn.onclick = async () => {
     }
 
     await fetch('/register', {
-        method: 'PUT',
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
@@ -32,5 +35,5 @@ registerBtn.onclick = async () => {
         })
     });
     alert('User: ' + username + ' created!');
-    window.location.href = 'area.html';
+    //window.location.href = 'area.html';
 };

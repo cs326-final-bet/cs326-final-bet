@@ -7,7 +7,11 @@ import passport from  'passport';
 import LocalStrategy from 'passport-local';
 import expressSession from 'express-session';
 import minicrypt from './miniCrypt.js';
+import MongoClient from 'mongodb';
 
+// The environment variable DATABASE_URL should be defined (through Heroku / locally / both)
+
+const client = new MongoClient(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const strategy = new LocalStrategy(
     async (username, password, done) => {
@@ -90,7 +94,15 @@ function polysForExt(extent) {
 
 // API
 const app = express();
-const port = process.env.PORT || 8000;
+//const port = process.env.PORT || 8000;
+// Connect to the database, then start the server
+client.connect(err => {
+    if (err) {
+        console.error(err);
+    } else {
+        app.listen(process.env.PORT || 8000);
+    }
+})
 
 app.use(bodyParser.json());
 app.use(express.static('dist'));
@@ -101,6 +113,10 @@ app.use(expressSession(session));
 passport.use(strategy);
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.use(express.json()); // allow JSON inputs
+app.use(express.urlencoded({'extended' : true})); // allow URLencoded data
+
 
 
 /**
@@ -210,6 +226,7 @@ app.get('/areas', (req, res) => {
     return res.send({
         areas: areas,
     });
+
 });
 
 // Like area
@@ -443,13 +460,13 @@ app.post('/login', (req, res) => {
     validateBody(Joi.object({
         username: Joi.string().required(),
         password: Joi.string().required()
-    })),
-    //console.log('in app.post(login)');
-    res.redirect('/register');
+    }));
+    console.log('in post(/login)');
+    res.redirect('/areas');
     /*passport.authenticate('local', {
-        'successRedirect' : '/areas',   // when we login, go to /areas 
-	     'failureRedirect' : '/areas'    
-    })*/
+        'successRedirect' : '/area.html',   // when we login, go to /areas 
+	     'failureRedirect' : '/login.html'    
+    });*/ 
 });
 
 //get login
@@ -480,7 +497,7 @@ app.post('/register', (req, res) => {
             comments: []
         }
     });
-    // res.redirect('/login');
+    res.redirect('/login');
 });
 
 //get register
@@ -558,13 +575,13 @@ function validatePassword(username, password) {
     return true;
 }
 
-function addUser(username, password){
+async function addUser(username, password){
     if(findUser(username)){
         return false;
     } else {
         const [salt, hash] = mc.hash(password);
         //add user to data base
-        //db.users.insertOne
+        await client.db('Fitness.io').collection('users').instertOne(username);
         return true;
     }
 }
