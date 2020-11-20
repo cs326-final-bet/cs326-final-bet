@@ -145,6 +145,10 @@ if (config.strava.redirect_uri.indexOf(STRAVA_OAUTH_REDIRECT_ENDPOINT) === -1) {
 
 // Database
 let dbClient = null;
+let db = null;
+let dbUsers = null;
+let dbAreas = null;
+let dbTracks = null;
 
 (async function () {
     try {
@@ -155,12 +159,14 @@ let dbClient = null;
         console.error(`Failed to connect to MongoDB: ${e}`);
         process.exit(1);
     }
-})();
 
-const db = dbClient.db(config.mongo.db);
-const dbUsers = db.collection('users');
-const dbAreas = db.collection('areas');
-const dbTracks = db.collection('tracks');
+    db = dbClient.db(config.mongo.db);
+    dbUsers = db.collection('users');
+    dbAreas = db.collection('areas');
+    dbTracks = db.collection('tracks');
+
+    console.log('Connected to MongoDB');
+})();
 
 // API
 export const app = express();
