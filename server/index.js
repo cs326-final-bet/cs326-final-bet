@@ -150,14 +150,16 @@ if (config.strava.redirect_uri.indexOf(STRAVA_OAUTH_REDIRECT_ENDPOINT) === -1) {
 // Database
 let dbClient = null;
 
-try {
-    dbClient = await mongo.MongoClient.connect(config.mongo.uri, {
-        useUnifiedTopology: true
-    });
-} catch (e) {
-    console.error(`Failed to connect to MongoDB: ${e}`);
-    process.exit(1);
-}
+(async function () {
+    try {
+        dbClient = await mongo.MongoClient.connect(config.mongo.uri, {
+            useUnifiedTopology: true
+        });
+    } catch (e) {
+        console.error(`Failed to connect to MongoDB: ${e}`);
+        process.exit(1);
+    }
+})();
 
 const db = dbClient.db(config.mongo.db);
 const dbUsers = db.collection('users');
@@ -209,15 +211,15 @@ const verifyStravaAuthToken = async (req, res, next) => {
     // Verify JWT
     const authCookie = req.cookies[STRAVA_AUTH_COOKIE];
     try {
-	   req.authToken = await jwt.verify(
-		  authCookie, config.strava.authentication_token_secret, {
-			 algorithm: STRAVA_AUTH_ALGORITHM,
-		  });
+        req.authToken = await jwt.verify(
+            authCookie, config.strava.authentication_token_secret, {
+                algorithm: STRAVA_AUTH_ALGORITHM,
+            });
     } catch (e) {
-	   console.error(`Failed to verify an authentication token JWT: ${e}`);
-	   return res.status(401).json({
-		  error: 'Not authorized',
-	   });
+        console.error(`Failed to verify an authentication token JWT: ${e}`);
+        return res.status(401).json({
+            error: 'Not authorized',
+        });
     }
 
     req.userStrava = new stravaApi.client(req.authToken.payload.strava.authentication.access_token);
@@ -241,13 +243,13 @@ app.get(STRAVA_OAUTH_REDIRECT_ENDPOINT, async (req, res) => {
     // our end and "we're in" ;)
     const stravaOAuthCode = req.query.code;
 
-    let stravaTok = null
+    let stravaTok = null;
 
     try {
-	   stravaTok = await stravaApi.oauth.getToken(stravaOAuthCode)
+        stravaTok = await stravaApi.oauth.getToken(stravaOAuthCode);
     } catch (e) {
-	   console.error(`Failed to exchange a Strava OAuth code for a token: ${e}`);
-	   return res.redirect('/strava_sync?auth_error=strava');
+        console.error(`Failed to exchange a Strava OAuth code for a token: ${e}`);
+        return res.redirect('/strava_sync?auth_error=strava');
     }
 
     // Figure out who this token belongs to, makes our life a lot easier later on.
@@ -255,10 +257,10 @@ app.get(STRAVA_OAUTH_REDIRECT_ENDPOINT, async (req, res) => {
     
     let athlete = null;
     try {
-	   athlete = await userStrava.athlete.get();
+        athlete = await userStrava.athlete.get();
     } catch (e) {
-	   console.error(`Failed to get information about authentication token owner: ${e}`);
-	   return res.redirect('/strava_sync?auth_error=strava');
+        console.error(`Failed to get information about authentication token owner: ${e}`);
+        return res.redirect('/strava_sync?auth_error=strava');
     }
 
     // Send user a symmetrically encrypted JWT which contains their strava token,
@@ -266,26 +268,26 @@ app.get(STRAVA_OAUTH_REDIRECT_ENDPOINT, async (req, res) => {
     let token = null;
     
     try {
-	   token = await jwt.sign({
-		  payload: {
-			 strava: {
-				authentication: {
-				    expires_at: stravaTok.expires_at,
-				    refresh_token: stravaTok.refresh_token,
-				    access_token: stravaTok.access_token,
-				},
-				athlete: athlete,
-			 },
-		  },
-	   }, config.strava.authentication_token_secret, {
-		  algorithm: STRAVA_AUTH_ALGORITHM, 
-	   });
+        token = await jwt.sign({
+            payload: {
+                strava: {
+                    authentication: {
+                        expires_at: stravaTok.expires_at,
+                        refresh_token: stravaTok.refresh_token,
+                        access_token: stravaTok.access_token,
+                    },
+                    athlete: athlete,
+                },
+            },
+        }, config.strava.authentication_token_secret, {
+            algorithm: STRAVA_AUTH_ALGORITHM, 
+        });
     } catch (e) {
-	   console.error(`Failed to construct JWT: ${e}`);
-	   return res.redirect('/strava_sync?auth_error=internal');
+        console.error(`Failed to construct JWT: ${e}`);
+        return res.redirect('/strava_sync?auth_error=internal');
     }
 
-    res.cookie(STRAVA_AUTH_COOKIE, token)
+    res.cookie(STRAVA_AUTH_COOKIE, token);
 
     return res.redirect('/strava_sync');
 });
@@ -295,12 +297,12 @@ app.get('/strava_sync', verifyStravaAuthToken, async (req, res) => {
     let activities = null;
     
     try {
-	   activities = await req.userStrava.athlete.listActivities({});
+        activities = await req.userStrava.athlete.listActivities({});
     } catch (e) {
-	   console.error(`Failed to get Strava user activities: ${e}`);
-	   return res.status(500).json({
-		  error: 'Failed to get Strava user activities',
-	   });
+        console.error(`Failed to get Strava user activities: ${e}`);
+        return res.status(500).json({
+            error: 'Failed to get Strava user activities',
+        });
     }
 
     // Add all user's tracks to database
@@ -327,7 +329,7 @@ app.get('/strava_sync', verifyStravaAuthToken, async (req, res) => {
         });
 
         // Insert into database
-        let track = {
+        const track = {
             strava: {
                 activityId: act.id,
             },

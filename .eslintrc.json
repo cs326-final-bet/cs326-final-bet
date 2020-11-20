@@ -16,6 +16,7 @@
 	   "DICTIONARY": true
     },
     "rules": {
+        "no-unused-vars": "warn",
 	   "no-var": "error",
 	   "eqeqeq": "error",
         "indent": [
