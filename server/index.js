@@ -6,12 +6,12 @@ import Joi from 'joi';
 import passport from  'passport';
 import LocalStrategy from 'passport-local';
 import expressSession from 'express-session';
-import minicrypt from './miniCrypt.js';
-import MongoClient from 'mongodb';
+//import minicrypt from './miniCrypt.js';
+//import MongoClient from 'mongodb';
 
 // The environment variable DATABASE_URL should be defined (through Heroku / locally / both)
 
-const client = new MongoClient(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true });
+//const client = new MongoClient(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const strategy = new LocalStrategy(
     async (username, password, done) => {
@@ -28,11 +28,11 @@ const strategy = new LocalStrategy(
     }
 );
 
-const session = {
-    secret : process.env.SECRET || 'SECRET', // set this encryption key in Heroku config (never in GitHub)!
-    resave : false,
-    saveUninitialized: false
-};
+// const session = {
+//     secret : process.env.SECRET || 'SECRET', // set this encryption key in Heroku config (never in GitHub)!
+//     resave : false,
+//     saveUninitialized: false
+// };
 
 
 /**
@@ -94,28 +94,28 @@ function polysForExt(extent) {
 
 // API
 const app = express();
-//const port = process.env.PORT || 8000;
+const port = process.env.PORT || 8000;
 // Connect to the database, then start the server
-client.connect(err => {
-    if (err) {
-        console.error(err);
-    } else {
-        app.listen(process.env.PORT || 8000);
-    }
-})
+// client.connect(err => {
+//     if (err) {
+//         console.error(err);
+//     } else {
+//         app.listen(process.env.PORT || 8000);
+//     }
+// })
 
 app.use(bodyParser.json());
 app.use(express.static('dist'));
 app.use(express.static('frontend'));
 
-const mc = new minicrypt();
-app.use(expressSession(session));
-passport.use(strategy);
-app.use(passport.initialize());
-app.use(passport.session());
+//const mc = new minicrypt();
+// app.use(expressSession(session));
+// passport.use(strategy);
+// app.use(passport.initialize());
+// app.use(passport.session());
 
-app.use(express.json()); // allow JSON inputs
-app.use(express.urlencoded({'extended' : true})); // allow URLencoded data
+// app.use(express.json()); // allow JSON inputs
+// app.use(express.urlencoded({'extended' : true})); // allow URLencoded data
 
 
 
@@ -575,16 +575,16 @@ function validatePassword(username, password) {
     return true;
 }
 
-async function addUser(username, password){
-    if(findUser(username)){
-        return false;
-    } else {
-        const [salt, hash] = mc.hash(password);
-        //add user to data base
-        await client.db('Fitness.io').collection('users').instertOne(username);
-        return true;
-    }
-}
+// async function addUser(username, password){
+//     if(findUser(username)){
+//         return false;
+//     } else {
+//         const [salt, hash] = mc.hash(password);
+//         //add user to data base
+//         await client.db('Fitness.io').collection('users').instertOne(username);
+//         return true;
+//     }
+// }
 //////////////////////
 
 app.listen(port, () => {

@@ -27,6 +27,9 @@ const newUsernameText = document.getElementById('update-username');
 const cancelEditProfileButton = document.getElementById('info-cancel');
 const panelEl = document.getElementById('info-panel');
 const userNameHeader = document.getElementById('header');
+const leaveCommentButtonEl = document.getElementById('shareComment');
+const leaveCommentValueEl = document.getElementById('leaveAComment');
+const commentBox = document.getElementById('userComments');
 
 backToArea.onclick = async () => {
     window.location = './area.html'
@@ -47,6 +50,43 @@ cancelEditProfileButton.onclick = async ()=> {
     panelEl.classList.add('info-panel-hidden');
 }
 
+leaveCommentButtonEl.onclick = async () => {
+    if (leaveCommentValueEl.value.length === 0) {
+        alert('Cannot leave empty comment');
+        return;
+    }
+    let userIDs = [0];
+    await fetch(`/users/${userIDs[0]}/comments`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            comment: leaveCommentValueEl.value,
+        }),
+    });
+
+    addComment({
+        user: userNameHeader.innerHTML,
+        value: leaveCommentValueEl.value,
+    });
+
+    leaveCommentValueEl.value = '';
+}
+function addComment(comment) {
+    const container = document.createElement('div');
+    
+    const user = document.createElement('b');
+    user.appendChild(document.createTextNode(comment.user + ': '));
+
+    const value = document.createElement('span');
+    value.appendChild(document.createTextNode(comment.value));
+
+    container.appendChild(user);
+    container.appendChild(value);
+
+    commentBox.appendChild(container);
+}
 
 // Show map
 new Map({
