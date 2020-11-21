@@ -251,6 +251,7 @@ URL parameters:
 200:
 
 - `areas` (Area[]): Areas in the extent.
+- `tracks` (Track[]) Tracks in the extent.
 
 ## CRUD for Each Page
 

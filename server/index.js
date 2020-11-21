@@ -8,7 +8,6 @@ import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
 import decodePolyline from 'decode-google-map-polyline';
 import mongo from 'mongodb';
-
 import passport from  'passport';
 import LocalStrategy from 'passport-local';
 import expressSession from 'express-session';
@@ -108,6 +107,50 @@ function polysForExt(extent) {
 }
 
 /**
+ * Return the extent box for the polygon.
+ * @param poly {Number[][]} Array of lat long pairs which make up the polygon.
+ * @returns {Number[4]} Extent.
+ */
+function extentForPolygon(polys) {
+    if (polys.length === 0) {
+        throw 'Polygon cannot by empty';
+    }
+    
+    const topLeft = polys[0];
+    const bottomRight = polys[0];
+
+    polys.forEach((poly) => {
+        if (poly[0] < topLeft[0]) {
+            topLeft[0] = poly[0];
+        }
+
+        if (poly[1] < topLeft[1]) {
+            topLeft[1] = poly[1];
+        }
+
+        if (poly[0] > bottomRight[0]) {
+            bottomRight[0] = poly[0];
+        }
+
+        if (poly[1] > bottomRight[1]) {
+            bottomRight[1] = poly[1];
+        }
+    });
+
+    return [topLeft[0], topLeft[1], bottomRight[0], bottomRight[1]];
+}
+
+/**
+ * Returns the center of any box.
+ */
+function extCenter(ext) {
+    return [
+        ext[0] + ((ext[2] - ext[0]) / 2),
+        ext[1] + ((ext[3] - ext[1]) /2 )
+    ];
+}
+
+/**
  * Application configuration, all values set via environment variables.
  */
 const config = {
@@ -133,13 +176,13 @@ const STRAVA_AUTH_ALGORITHM ='HS256';
 /**
  * Name of cookie in which authentication tokens are stored.
  */
-const STRAVA_AUTH_COOKIE = 'authenticationToken';
+const STRAVA_AUTH_COOKIE = 'stravaAuthenticationToken';
 
 // Check that the configured Strava OAuth redirect endpoint matches with the
 // endpoint we will define in our express API, I make this mistake all the
 // time so I'm gonna catch it this time...
 const STRAVA_OAUTH_REDIRECT_ENDPOINT = '/strava_oauth_callback';
-if (config.strava.redirect_uri.indexOf(STRAVA_OAUTH_REDIRECT_ENDPOINT) === -1 ) {
+if (config.strava.redirect_uri.indexOf(STRAVA_OAUTH_REDIRECT_ENDPOINT) === -1) {
     throw 'The configured Strava OAuth redirect URI and this app\'s API endpoint do not match, this will cause problems and you must fix it';
 }
 
@@ -203,37 +246,6 @@ function validateBody(schema) {
         next();
     };
 }
-
-/**
- * Middleware which ensures a valid Strava JWT authentication token exists then sets
- * req.stravaAuthToken to the decoded value. Additionally creates a Strava client for
- * that user in req.userStrava.
- */
-const verifyStravaAuthToken = async (req, res, next) => {
-    // Check authentication cookie exists
-    if (req.cookies[STRAVA_AUTH_COOKIE] === undefined) {
-        // If not then redirect user to authenticate with Strava
-        return res.redirect(`http://www.strava.com/oauth/authorize?client_id=${config.strava.client_id}&response_type=code&redirect_uri=${config.strava.redirect_uri}&approval_prompt=force&scope=read,activity:read`);
-    }
-
-    // Verify JWT
-    const authCookie = req.cookies[STRAVA_AUTH_COOKIE];
-    try {
-        req.authToken = await jwt.verify(
-            authCookie, config.strava.authentication_token_secret, {
-                algorithm: STRAVA_AUTH_ALGORITHM,
-            });
-    } catch (e) {
-        console.error(`Failed to verify an authentication token JWT: ${e}`);
-        return res.status(401).json({
-            error: 'Not authorized',
-        });
-    }
-
-    req.userStrava = new stravaApi.client(req.authToken.payload.strava.authentication.access_token);
-
-    next();
-};
 
 function checkLoggedIn(req, res, next) {
     if (req.isAuthenticated()) {
@@ -312,57 +324,103 @@ app.get(STRAVA_OAUTH_REDIRECT_ENDPOINT, async (req, res) => {
     return res.redirect('/strava_sync');
 });
 
-app.get('/strava_sync', verifyStravaAuthToken, async (req, res) => {
-    // Get activities
-    let activities = null;
-    
-    try {
-        activities = await req.userStrava.athlete.listActivities({});
-    } catch (e) {
-        console.error(`Failed to get Strava user activities: ${e}`);
-        return res.status(500).json({
-            error: 'Failed to get Strava user activities',
-        });
-    }
+app.get('/strava_sync',
+    /**
+         * Middleware which ensures a valid Strava JWT authentication token exists.
+         * This gives us access to a user's Strava account. If the user is not logged
+         * in we redirect them through the strava OAuth flow. Then we set the 
+         * req.stravaAuthToken to the decoded value. Additionally creates a Strava 
+         * client for that user in req.userStrava.
+         */
 
-    // Add all user's tracks to database
-    await Promise.all(activities.map(async (act) => {
-        // Check if we already have this track in the database
-        const storedTrack = await dbTracks.findOne({
-            strava: {
-                activityId: act.id,
-            },
-        });
-
-        if (storedTrack !== null) {
-            // We already have this activity synced into our database so just skip
-            console.log(`skipping ${act.id}`);
-            return;
+    async (req, res, next) => {
+        // Check authentication cookie exists
+        if (req.cookies[STRAVA_AUTH_COOKIE] === undefined) {
+            // If not then redirect user to authenticate with Strava
+            return res.redirect(`http://www.strava.com/oauth/authorize?client_id=${config.strava.client_id}&response_type=code&redirect_uri=${config.strava.redirect_uri}&approval_prompt=force&scope=read,activity:read`);
         }
 
-        // Get the points of the workout
-        const points = decodePolyline(act.map.summary_polyline).map((pnt) => {
-            return {
-                longitude: pnt.lng,
-                latitude: pnt.lat,
-            };
-        });
+        // Verify JWT
+        const authCookie = req.cookies[STRAVA_AUTH_COOKIE];
+        try {
+            req.authToken = await jwt.verify(
+                authCookie, config.strava.authentication_token_secret, {
+                    algorithm: STRAVA_AUTH_ALGORITHM,
+                });
+        } catch (e) {
+            console.error(`Failed to verify an authentication token JWT: ${e}`);
+            return res.status(401).json({
+                error: 'Not authorized',
+            });
+        }
 
-        // Insert into database
-        const track = {
-            strava: {
-                activityId: act.id,
-            },
-            points: points,
-            likes: [],
-        };
-        
-        await dbTracks.insert(track);
-        console.log(`inserted ${act.id}`);
-    }));
-    
-    res.redirect('/area.html');
-});
+        req.userStrava = new stravaApi.client(req.authToken.payload.strava.authentication.access_token);
+
+        next();
+    },
+    /**
+         * Actual handler which does the activity fetching. It get's all activities in 
+         * the user's strava account.
+         */
+    async (req, res) => {
+        // Get activities
+        let activities = null;
+            
+        try {
+            activities = await req.userStrava.athlete.listActivities({});
+        } catch (e) {
+            console.error(`Failed to get Strava user activities: ${e}`);
+            return res.status(500).json({
+                error: 'Failed to get Strava user activities',
+            });
+        }
+
+        // Add all user's tracks to database
+        await Promise.all(activities.map(async (act) => {
+            // Check if we already have this track in the database
+            const storedTrack = await dbTracks.findOne({
+                strava: {
+                    activityId: act.id,
+                },
+            });
+
+            if (storedTrack !== null) {
+                // We already have this activity synced into our database so just skip
+                return;
+            }
+
+            // Get the points of the workout
+            const points = decodePolyline(act.map.summary_polyline).map((pnt) => {
+                return {
+                    longitude: pnt.lng,
+                    latitude: pnt.lat,
+                };
+            });
+            const pointsArr = points.map((point) => {
+                return [points.longitude, points.latitude];
+            });
+                
+            // Insert into database
+            const track = {
+                strava: {
+                    activityId: act.id,
+                },
+                points: points,
+                likes: [],
+            };
+                
+            await dbTracks.insert(track);
+
+            // Determine what areas track is within
+            const trackExt = extentForPolygon(pointsArr);
+            const extPolys = polysForExt(trackExt);
+            // TODO: These extPolys are now in step 2 of the finding areas algorithm.
+            //       Now all we must do is find if their center's are in the polygon
+            //       Then add the track's ID to the area!
+        }));
+            
+        res.redirect('/area.html');
+    });
 
 app.get('/areas', (req, res) => {
     // Check extent parameter
@@ -484,7 +542,7 @@ app.post('/strava',
     });
 
 // Comment on user
-app.put('/users/:userIDs([0-9]+)/comments',
+app.put('/users/:userId([0-9]+)/comments',
     validateBody(Joi.object({
         comment: Joi.string().required(),
     })),
@@ -503,7 +561,7 @@ app.put('/users/:userIDs([0-9]+)/comments',
                 },
                 email: 'user email',
                 friendsList: [getRandomInts(10, 0, 1000)],
-                comments: [ {user: req.body.comment } ],
+                comments: [ req.body.comment ],
             },
         });
     });
@@ -603,7 +661,14 @@ app.get('/user', (req, res) =>{
         },
         email: 'user email',
         friendsList: [getRandomInts(10, 0, 1000)],
-        comments: ['foobar', 'foobaz'],
+        comments: [{
+            userId: 343,
+            comment: 'foobar'
+        },{
+            userId: 2,
+            comment: 'foobaz',
+        }
+        ],
     };
     return res.send({
         userInfo: userInfo,
