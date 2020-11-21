@@ -3,6 +3,13 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import Joi from 'joi';
+import stravaApi from 'strava-v3';
+import cookieParser from 'cookie-parser';
+import jwt from 'jsonwebtoken';
+import decodePolyline from 'decode-google-map-polyline';
+import mongo from 'mongodb';
+
+import minicrypt from './miniCrypt.js'; 
 import passport from  'passport';
 import LocalStrategy from 'passport-local';
 import expressSession from 'express-session';
@@ -10,8 +17,6 @@ import minicrypt from './miniCrypt.js';
 import MongoClient from 'mongodb';
 
 // The environment variable DATABASE_URL should be defined (through Heroku / locally / both)
-
-const client = new MongoClient(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const strategy = new LocalStrategy(
     async (username, password, done) => {
@@ -137,16 +142,36 @@ function validateBody(schema) {
     };
 }
 
-//checks to see if a user is logged in
-function checkLoggedIn(req, res, next) {
-    if (req.isAuthenticated()) {
-        // If we are authenticated, run the next route.
-        next();
-    } else {
-        // Otherwise, redirect to the login page.
-        res.redirect('/login');
+/**
+ * Middleware which ensures a valid Strava JWT authentication token exists then sets
+ * req.stravaAuthToken to the decoded value. Additionally creates a Strava client for
+ * that user in req.userStrava.
+ */
+const verifyStravaAuthToken = async (req, res, next) => {
+    // Check authentication cookie exists
+    if (req.cookies[STRAVA_AUTH_COOKIE] === undefined) {
+        // If not then redirect user to authenticate with Strava
+        return res.redirect(`http://www.strava.com/oauth/authorize?client_id=${config.strava.client_id}&response_type=code&redirect_uri=${config.strava.redirect_uri}&approval_prompt=force&scope=read,activity:read`);
     }
-}
+
+    // Verify JWT
+    const authCookie = req.cookies[STRAVA_AUTH_COOKIE];
+    try {
+        req.authToken = await jwt.verify(
+            authCookie, config.strava.authentication_token_secret, {
+                algorithm: STRAVA_AUTH_ALGORITHM,
+            });
+    } catch (e) {
+        console.error(`Failed to verify an authentication token JWT: ${e}`);
+        return res.status(401).json({
+            error: 'Not authorized',
+        });
+    }
+
+    req.userStrava = new stravaApi.client(req.authToken.payload.strava.authentication.access_token);
+
+    next();
+};
 
 app.get('/', 
     checkLoggedIn,
@@ -461,12 +486,11 @@ app.post('/login', (req, res) => {
         username: Joi.string().required(),
         password: Joi.string().required()
     }));
-    console.log('in post(/login)');
-    res.redirect('/areas');
-    /*passport.authenticate('local', {
-        'successRedirect' : '/area.html',   // when we login, go to /areas 
-	     'failureRedirect' : '/login.html'    
-    });*/ 
+    passport.authenticate('local' , {     // use username/password authentication
+        'successRedirect' : '/private',   // when we login, go to /private 
+        'failureRedirect' : '/login'      // otherwise, back to login
+    });
+    //res.redirect('/areas');
 });
 
 //get login
@@ -481,7 +505,14 @@ app.post('/register', (req, res) => {
         username: Joi.string().required(),
         password: Joi.string().required()
     }));
-    res.send({
+    const username = req.body['username'];
+    const password = req.body['password'];
+    if(addUser(username, password)){
+        res.redirect('/login')
+    } else {
+        res.redirect('/register');
+    }
+    /*res.send({
         user : {
             id: getRandomInt(0, 1000),
             userName: 'user name',
@@ -496,8 +527,7 @@ app.post('/register', (req, res) => {
             friendsList: [],
             comments: []
         }
-    });
-    res.redirect('/login');
+    });*/
 });
 
 //get register
@@ -558,38 +588,58 @@ app.get('/track/:trackId([0-9]+)', (req, res) => {
     });
 });
 
-///////////////Authentication Stuff//////////////////
-//always returning true right now
-function findUser(username){
-    // if(username in database){
-    username = username;
-    return true;
-    // }
-    //return false;
+/**
+ * Run the server.
+ */
+export function runApp() {
+    app.listen(config.port, () => {
+        console.log(`\
+Server listening on port ${config.port}. View in your web browser:
+
+    http://127.0.0.1:${config.port} or http://localhost:${config.port}`);
+    });
+}
+//User Database and Authentication Stuff
+async function checkLoggedIn(req, res, next) {
+    if (req.isAuthenticated()) {
+        // If we are authenticated, run the next route.
+        next();
+    } else {
+        // Otherwise, redirect to the login page.
+        res.redirect('/login');
+    }
 }
 
-function validatePassword(username, password) {
-    if(!findUser(username)){
+async function findUser(username){
+    if(!(dbUsers.findOne({username : username}))){
+        return true;
+    }
+    return false;
+}
+
+async function validatePassword(username, password) {
+    if(!(dbUsers.findOne({ username : username }))){
+        return false;
+    }
+    //have to add checks for the salt and hash
+    if(mc.check(password, dbUsers.findOne({username : username}).hash, dbUsers.findOne({username : username}).salt)){
         return false;
     }
     return true;
 }
 
 async function addUser(username, password){
-    if(findUser(username)){
+    if(dbUsers.findOne(username)){
         return false;
     } else {
         const [salt, hash] = mc.hash(password);
+        const user = {
+            username : username,
+            salt : salt,
+            hash : hash
+        }
         //add user to data base
-        await client.db('Fitness.io').collection('users').instertOne(username);
+        await dbUsers.insert(user);
         return true;
     }
 }
-//////////////////////
-
-app.listen(port, () => {
-    console.log(`\
-Server listening on port ${port}. View in your web browser:
-
-    http://127.0.0.1:${port} or http://localhost:${port}`);
-});

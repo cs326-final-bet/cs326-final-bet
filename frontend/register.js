@@ -1,10 +1,6 @@
 //get elements by id that you need 
-
-
-
 const username = document.getElementById('username').value;
 const password = document.getElementById('password').value;
-const email = document.getElementById('email').value;
 const registerBtn = document.getElementById('register-button').value;
 
 
@@ -18,9 +14,6 @@ registerBtn.onclick = async () => {
     } else if (password === undefined || password.length === 0){
         alert('A valid password was not entered. Try Again');
         return;
-    } else if (email === undefined || email.length === 0){
-        alert('A valid email was not entered. Try Again');
-        return;
     }
 
     await fetch('/register', {
@@ -31,7 +24,6 @@ registerBtn.onclick = async () => {
         body: JSON.stringify({
             username: username,
             password: password,
-            email: email
         })
     });
     alert('User: ' + username + ' created!');
