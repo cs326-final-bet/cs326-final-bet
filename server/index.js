@@ -535,6 +535,7 @@ app.put('/users/:userId([0-9]+)/comments',
     validateBody(Joi.object({
         comment: Joi.string().required(),
     })),
+    
     (req, res) => {
         res.send({
             user:  {
@@ -582,8 +583,9 @@ app.put('/user/:userId([0-9]+)/addFriend',
         });
     });
 //get user stats
-app.get('/user/userStats', (req, res) => {
-    const userIdStr = req.query.userId;
+app.get('/user/:userIDs([0-9]+)/userStats', async (req, res) => {
+    let userStats = null;
+    const userIdStr = req.query.userId;  
     if(userIdStr === undefined){
         return res
             .status(400)
@@ -599,7 +601,7 @@ app.get('/user/userStats', (req, res) => {
                 error: 'userId must be an integer'
             });
     }
-    //Generate fake user
+    //Generate fake user TO DO TO DO TO DO
     const userInfo = {
         id: userId,
         userName: 'user name',
