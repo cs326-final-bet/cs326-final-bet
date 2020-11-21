@@ -1,0 +1,105 @@
+@import "./bootstrap.scss";
+.page{
+    background-color: #444444;
+    color: white;
+}
+#header{
+    font-size: 50px;
+}
+#tabs{
+    display: flex;
+    padding: 5px;
+    outline: black solid;
+    gap: 2px;
+    position: absolute;
+    text-align: center;
+}
+#info-panel.info-panel-hidden {
+    display: none;
+}
+#map{
+    color: white;
+    background-color: #444444;
+    font-size: 25px;
+    outline: black solid;
+}#userMap{
+    width: 400px;
+    height: 300px;
+    outline: black solid;
+}
+#info-panel {
+    max-width: 400px;
+    display: fixed;
+    position: absolute;
+    top: $header-height + 10px;
+    right: 20px;
+    padding-top: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+    box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.2);
+
+    .info-group {
+        margin-left: 20px;
+        font-size: 20px;
+        
+        b {
+            width: 70px;
+            display: inline-block;
+        }
+    }
+}
+
+
+.buttons{
+    background-color: #AF51F5;
+    padding: 5px;
+    flex: auto;
+}#editProfile{
+    padding: 5px;
+    margin-bottom: 2px;
+    background-color: #777777;
+}#followUser{
+    padding: 5px;
+    background-color: #777777;
+}#homeButton{
+    padding: 5px;
+    background-color: #777777;
+}#compareProfile{
+    padding: 5px;
+    background-color: #777777;
+}#shareComment{
+    padding: 5px;
+    background-color: #777777;
+}#placeHolder{
+    background-color: #AF51F5;
+    padding: 5px;
+    flex: auto;
+}
+
+#stats{
+    color: white;
+    background-color: #444444;
+    font-size: 25px;
+    outline: black solid;
+}#userStats{
+    color: white;
+    font-size: 15px;
+    outline: black solid;
+    height: 300px;
+    font-size: 20px;
+}
+
+#comments{
+    color: white;
+    background-color: #444444;
+    font-size: 25px;
+    outline: black solid;
+}#userComments{
+    color: white;
+    background-color: #666666;
+    font-size: 15px;
+    outline: black solid;
+    height: 300px;
+    font-size: 20px;
+}

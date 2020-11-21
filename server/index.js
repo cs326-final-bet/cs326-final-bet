@@ -139,7 +139,7 @@ const STRAVA_AUTH_COOKIE = 'authenticationToken';
 // endpoint we will define in our express API, I make this mistake all the
 // time so I'm gonna catch it this time...
 const STRAVA_OAUTH_REDIRECT_ENDPOINT = '/strava_oauth_callback';
-if (config.strava.redirect_uri.indexOf(STRAVA_OAUTH_REDIRECT_ENDPOINT) === -1) {
+if (config.strava.redirect_uri.indexOf(STRAVA_OAUTH_REDIRECT_ENDPOINT) === -1 ) {
     throw 'The configured Strava OAuth redirect URI and this app\'s API endpoint do not match, this will cause problems and you must fix it';
 }
 
@@ -484,10 +484,11 @@ app.post('/strava',
     });
 
 // Comment on user
-app.put('/users/:userId([0-9]+)/comments',
+app.put('/users/:userIDs([0-9]+)/comments',
     validateBody(Joi.object({
         comment: Joi.string().required(),
     })),
+    
     (req, res) => {
         res.send({
             user:  {
@@ -502,7 +503,7 @@ app.put('/users/:userId([0-9]+)/comments',
                 },
                 email: 'user email',
                 friendsList: [getRandomInts(10, 0, 1000)],
-                comments: [ req.body.comment ],
+                comments: [ {user: req.body.comment } ],
             },
         });
     });
@@ -535,7 +536,7 @@ app.put('/user/:userId([0-9]+)/addFriend',
         });
     });
 //get user stats
-app.get('/user/userStats', async (req, res) => {
+app.get('/user/:userID([0-9]+)/userStats', async (req, res) => {
     let userStats = null;
     const userIdStr = req.query.userId;  
     if(userIdStr === undefined){

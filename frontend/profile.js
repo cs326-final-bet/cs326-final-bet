@@ -30,6 +30,8 @@ const userNameHeader = document.getElementById('header');
 const leaveCommentButtonEl = document.getElementById('shareComment');
 const leaveCommentValueEl = document.getElementById('leaveAComment');
 const commentBox = document.getElementById('userComments');
+const addUser = document.getElementById('followUser');
+
 
 backToArea.onclick = async () => {
     window.location = './area.html'
@@ -48,6 +50,9 @@ editProfileButton.onclick = async () =>{
 }
 cancelEditProfileButton.onclick = async ()=> {
     panelEl.classList.add('info-panel-hidden');
+}
+addUser.onclick = async () => {
+    const friendsList = await fetch('user/:userId([0-9]+)/addFriend').friendsList;
 }
 
 leaveCommentButtonEl.onclick = async () => {
@@ -71,6 +76,7 @@ leaveCommentButtonEl.onclick = async () => {
         user: userNameHeader.innerHTML,
         value: leaveCommentValueEl.value,
     });
+    
 
     leaveCommentValueEl.value = '';
 }
