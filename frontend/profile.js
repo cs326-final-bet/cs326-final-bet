@@ -60,13 +60,13 @@ async function loadUserDetails(userId) {
     userNameHeader.innerHTML = body.userInfo.userName + 's Profile';
 
     const currentDistance = body.userInfo.userStats.currentDistance;
-    document.getElementById('currentDist').innerText = "Current Distance:" + currentDistance;
+    document.getElementById('currentDist').innerText = 'Current Distance:' + currentDistance;
     const currentArea = body.userInfo.userStats.currentTime;
-    document.getElementById('currentArea').innerText = "Current Area:" + currentArea;
+    document.getElementById('currentArea').innerText = 'Current Area:' + currentArea;
     const totalDistance = body.userInfo.userStats.totalDistance;
-    document.getElementById('totalDist').innerText = "Total Distance:" + totalDistance;
+    document.getElementById('totalDist').innerText = 'Total Distance:' + totalDistance;
     const totalArea = body.userInfo.userStats.totalTime;
-    document.getElementById('totalArea').innerText = "Total Area:" + totalArea; 
+    document.getElementById('totalArea').innerText = 'Total Area:' + totalArea; 
 
 }
 
@@ -80,38 +80,40 @@ if (userId === null) {
 
 
 backToArea.onclick = async () => {
-    window.location = './area.html'
+    window.location = './area.html';
 };
 saveChangesToProfileButton.onclick = async ()=>{
     if(newUsernameText.value === ''){
-        alert("Username cannot be blank");
+        alert('Username cannot be blank');
         return;
     } else {
         userNameHeader.innerHTML = newUsernameText.value + '`s Profile';
     }
     panelEl.classList.add('info-panel-hidden');
-}
+};
 editProfileButton.onclick = async () =>{
     panelEl.classList.remove('info-panel-hidden');
-}
+};
 cancelEditProfileButton.onclick = async ()=> {
     panelEl.classList.add('info-panel-hidden');
-}
+};
 addUser.onclick = async () => {
-    const friendsList = await fetch('user/:userId([0-9]+)/addFriend').friendsList;
-}
+    // const friendsList = await fetch('user/:userId([0-9]+)/addFriend').friendsList;
+};
 getUserStats.onclick = async () => {
-    let userIDs = [0];
+    const userIDs = [0];
     await fetch(`/user/${userIDs[0]}/userStats`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
         },
-        
+        body: JSON.stringify({
+            //userStats: userInfo.userStats,
+        }),
     });
     getUserStats({
-        user: userInfo.id,
-        stats: userInfo.userStats,
+        //user: userInfo.id,;
+        //stats: userInfo.userStats,;
     })
 }
 
@@ -120,7 +122,7 @@ leaveCommentButtonEl.onclick = async () => {
         alert('Cannot leave empty comment');
         return;
     }
-    let userIDs = [0];
+    const userIDs = [0];
     await fetch(`/users/${userIDs[0]}/comments`, {
         method: 'PUT',
         headers: {
@@ -139,7 +141,7 @@ leaveCommentButtonEl.onclick = async () => {
     
 
     leaveCommentValueEl.value = '';
-}
+};
 function addComment(comment) {
     const container = document.createElement('div');
     
