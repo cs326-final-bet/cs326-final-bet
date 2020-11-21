@@ -11,21 +11,19 @@ import mongo from 'mongodb';
 import passport from  'passport';
 import LocalStrategy from 'passport-local';
 import expressSession from 'express-session';
-
-//import minicrypt from './miniCrypt.js';
-// import * as minicrypt from './miniCrypt'
-// const mc = new minicrypt();
+import minicrypt from './miniCrypt.js';
+import MongoClient from 'mongodb';
 
 const strategy = new LocalStrategy(
     async (username, password, done) => {
-        // if (!findUser(username)) {
-        //     return done(null, false, { 'message' : 'Wrong username' });
-        // }
-        // if (!validatePassword(username, password)) {
-        // // invalid password
-        //     await new Promise((r) => setTimeout(r, 2000)); // two second delay
-        //     return done(null, false, { 'message' : 'Wrong password' });
-        // }
+        if (!findUser(username)) {
+            return done(null, false, { 'message' : 'Wrong username' });
+        }
+        if (!validatePassword(username, password)) {
+        // invalid password
+            await new Promise((r) => setTimeout(r, 2000)); // two second delay
+            return done(null, false, { 'message' : 'Wrong password' });
+        }
         // should create a user object here, associated with a unique identifier
         return done(null, username);
     }
@@ -216,10 +214,10 @@ export const app = express();
 
 app.use(bodyParser.json()); // Parse HTTP body as JSON
 app.use(express.static('dist')); // Serve dist/ directory
-app.use(express.static('frontend'));
+app.use(express.static('frontend')); // Serve dist/ directory
 app.use(cookieParser()); // Parse cookies
 
-//const mc = new minicrypt();
+const mc = new minicrypt();
 app.use(expressSession(session));
 passport.use(strategy);
 app.use(passport.initialize());
@@ -246,16 +244,6 @@ function validateBody(schema) {
 
         next();
     };
-}
-
-function checkLoggedIn(req, res, next) {
-    if (req.isAuthenticated()) {
-        // If we are authenticated, run the next route.
-        next();
-    } else {
-        // Otherwise, redirect to the login page.
-        res.redirect('/login');
-    }
 }
 
 app.get('/', 
@@ -731,8 +719,10 @@ app.post('/login',(req, res) => {
         username: Joi.string().required(),
         password: Joi.string().required()
     }));
-    res.send('Login Successful');
-    //res.redirect('area.html');
+    passport.authenticate('local' , {     // use username/password authentication
+        'successRedirect' : '/private',   // when we login, go to /private 
+        'failureRedirect' : '/login'      // otherwise, back to login
+    });
 });
 
 //get login
@@ -743,11 +733,17 @@ app.get('/login',
 //register
 app.post('/register', (req, res) => {
     validateBody(Joi.object({
-        //email: Joi.string().required(),
         username: Joi.string().required(),
         password: Joi.string().required()
     }));
-    res.send({
+    const username = req.body['username'];
+    const password = req.body['password'];
+    if(addUser(username, password)){
+        res.redirect('/login');
+    } else {
+        res.redirect('/register');
+    }
+    /*res.send({
         user : {
             id: getRandomInt(0, 1000),
             userName: 'user name',
@@ -762,8 +758,7 @@ app.post('/register', (req, res) => {
             friendsList: [],
             comments: []
         }
-    });
-    res.redirect('/login');
+    });*/
 });
 
 //get register
@@ -823,6 +818,52 @@ app.get('/track/:trackId([0-9]+)', (req, res) => {
     });
 });
 
+//User Database and Authentication Stuff
+async function checkLoggedIn(req, res, next) {
+    if (req.isAuthenticated()) {
+        // If we are authenticated, run the next route.
+        next();
+    } else {
+        // Otherwise, redirect to the login page.
+        res.redirect('/login');
+    }
+}
+
+async function findUser(username){
+    if(!(dbUsers.findOne({username : username}))){
+        return true;
+    }
+    return false;
+}
+
+async function validatePassword(username, password) {
+    if(!(dbUsers.findOne({ username : username }))){
+        return false;
+    }
+    //have to add checks for the salt and hash
+    if(mc.check(password, dbUsers.findOne({username : username}).hash, dbUsers.findOne({username : username}).salt)){
+        return false;
+    }
+    return true;
+}
+
+async function addUser(username, password){
+    if(dbUsers.findOne(username)){
+        return false;
+    } else {
+        const [salt, hash] = mc.hash(password);
+        const user = {
+            id : getRandomInt(0 - 100000000),
+            username : username,
+            salt : salt,
+            hash : hash
+        };
+        //add user to data base
+        await dbUsers.insert(user);
+        return true;
+    }
+}
+
 /**
  * Run the server.
  */
@@ -834,36 +875,3 @@ Server listening on port ${config.port}. View in your web browser:
     http://127.0.0.1:${config.port} or http://localhost:${config.port}`);
     });
 }
-
-///////////////Authentication Stuff//////////////////
-//always returning true right now
-
-
-
-// function findUser(username){
-//     // if(username in database){
-//     username = username;
-//     return true;
-//     // }
-//     //return false;
-// }
-
-// function validatePassword(username, password) {
-//     password = password;
-//     if(!findUser(username)){
-//         return false;
-//     }
-//     return true;
-// }
-
-// function addUser(username, password){
-//     if(findUser(username)){
-//         return false;
-//     } else {
-//         const [salt, hash] = mc.hash(password);
-//         //add user to data base
-//         //db.users.insertOne
-//         return true;
-//     }
-// }
-//////////////////////
