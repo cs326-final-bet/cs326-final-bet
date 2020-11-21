@@ -31,6 +31,52 @@ const leaveCommentButtonEl = document.getElementById('shareComment');
 const leaveCommentValueEl = document.getElementById('leaveAComment');
 const commentBox = document.getElementById('userComments');
 const addUser = document.getElementById('followUser');
+const getUserStats = document.getElementById('compareProfile');
+
+// Load user info
+/**
+ * Removes all children from a DOM element.
+ * @param e {DOM Element} To remove children from within.
+ */
+function removeChildren(el) {
+    while (el.firstChild !== null) {
+        el.removeChild(el.firstChild);
+    }
+}
+
+async function loadUserDetails(userId) {
+    const resp = await fetch(`/user?userId=${userId}`);
+    const body = await resp.json();
+
+    removeChildren(commentsEl);
+
+    body.userInfo.comments.forEach((comment) => {
+        const el = document.createElement('div');
+        const txt = document.createTextNode(comment.comment);
+        el.appendChild(txt);
+        commentBox.appendChild(el);
+    });
+
+    userNameHeader.innerHTML = body.userInfo.userName + 's Profile';
+
+    const currentDistance = body.userInfo.userStats.currentDistance;
+    document.getElementById('currentDist').appendChild(currentDistance);
+    const currentArea = body.userInfo.userStats.currentTime;
+    document.getElementById('currentArea').append(currentArea);
+    const totalDistance = body.userInfo.userStats.totalDistance;
+    document.getElementById('totalDist').appendChild(totalDistance);
+    const totalArea = bodu.userInfo.userStats.totalTime;
+    document.getElementById('totalArea').appendChild(totalArea);
+
+}
+
+const urlParams = new URLSearchParams(window.location.search);
+const userId = urlParams.get('userId');
+if (userId === null) {
+    alert('You must provide a userId query parameter');
+} else {
+    loadUserDetails(userId);
+}
 
 
 backToArea.onclick = async () => {
@@ -53,6 +99,21 @@ cancelEditProfileButton.onclick = async ()=> {
 }
 addUser.onclick = async () => {
     const friendsList = await fetch('user/:userId([0-9]+)/addFriend').friendsList;
+}
+getUserStats.onclick = async () => {
+    await fetch(`/user/${userIDs[0]}/userStats`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            userStats: userInfo.userStats,
+        }),
+    });
+    getUserStats({
+        user: userInfo.id,
+        stats: userInfo.userStats,
+    })
 }
 
 leaveCommentButtonEl.onclick = async () => {
