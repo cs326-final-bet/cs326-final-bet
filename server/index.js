@@ -737,7 +737,7 @@ app.post('/register', (req, res) => {
     const username = req.body['username'];
     const password = req.body['password'];
     if(addUser(username, password)){
-        res.redirect('/login')
+        res.redirect('/login');
     } else {
         res.redirect('/register');
     }
@@ -855,7 +855,7 @@ async function addUser(username, password){
             username : username,
             salt : salt,
             hash : hash
-        }
+        };
         //add user to data base
         await dbUsers.insert(user);
         return true;
