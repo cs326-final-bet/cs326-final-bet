@@ -659,7 +659,14 @@ app.get('/user', (req, res) =>{
         },
         email: 'user email',
         friendsList: [getRandomInts(10, 0, 1000)],
-        comments: ['foobar', 'foobaz'],
+        comments: [{
+            userId: 343,
+            comment: 'foobar'
+        },{
+            userId: 2,
+            comment: 'foobaz',
+        }
+        ],
     };
     return res.send({
         userInfo: userInfo,
