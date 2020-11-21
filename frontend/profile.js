@@ -114,8 +114,8 @@ getUserStats.onclick = async () => {
     getUserStats({
         //user: userInfo.id,;
         //stats: userInfo.userStats,;
-    })
-}
+    });
+};
 
 leaveCommentButtonEl.onclick = async () => {
     if (leaveCommentValueEl.value.length === 0) {
