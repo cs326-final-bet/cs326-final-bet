@@ -48,11 +48,11 @@ async function loadUserDetails(userId) {
     const resp = await fetch(`/user?userId=${userId}`);
     const body = await resp.json();
 
-    removeChildren(commentsEl);
+    removeChildren(commentBox);
 
     body.userInfo.comments.forEach((comment) => {
         const el = document.createElement('div');
-        const txt = document.createTextNode(comment.comment);
+        const txt = document.createTextNode(comment.userId + ': ' + comment.comment);
         el.appendChild(txt);
         commentBox.appendChild(el);
     });
@@ -60,13 +60,13 @@ async function loadUserDetails(userId) {
     userNameHeader.innerHTML = body.userInfo.userName + 's Profile';
 
     const currentDistance = body.userInfo.userStats.currentDistance;
-    document.getElementById('currentDist').appendChild(currentDistance);
+    document.getElementById('currentDist').innerText = "Current Distance:" + currentDistance;
     const currentArea = body.userInfo.userStats.currentTime;
-    document.getElementById('currentArea').append(currentArea);
+    document.getElementById('currentArea').innerText = "Current Area:" + currentArea;
     const totalDistance = body.userInfo.userStats.totalDistance;
-    document.getElementById('totalDist').appendChild(totalDistance);
-    const totalArea = bodu.userInfo.userStats.totalTime;
-    document.getElementById('totalArea').appendChild(totalArea);
+    document.getElementById('totalDist').innerText = "Total Distance:" + totalDistance;
+    const totalArea = body.userInfo.userStats.totalTime;
+    document.getElementById('totalArea').innerText = "Total Area:" + totalArea; 
 
 }
 
@@ -101,14 +101,13 @@ addUser.onclick = async () => {
     const friendsList = await fetch('user/:userId([0-9]+)/addFriend').friendsList;
 }
 getUserStats.onclick = async () => {
+    let userIDs = [0];
     await fetch(`/user/${userIDs[0]}/userStats`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-            userStats: userInfo.userStats,
-        }),
+        
     });
     getUserStats({
         user: userInfo.id,
@@ -171,37 +170,37 @@ new Map({
     }),
 });
 
-// Load user info
-/**
- * Removes all children from a DOM element.
- * @param e {DOM Element} To remove children from within.
- */
-function removeChildren(el) {
-    while (el.firstChild !== null) {
-        el.removeChild(el.firstChild);
-    }
-}
+// // Load user info
+// /**
+//  * Removes all children from a DOM element.
+//  * @param e {DOM Element} To remove children from within.
+//  */
+// function removeChildren(el) {
+//     while (el.firstChild !== null) {
+//         el.removeChild(el.firstChild);
+//     }
+// }
 
-const commentsEl = document.getElementById('userComments');
+// const commentsEl = document.getElementById('userComments');
 
-async function loadUserDetails(userId) {
-    const resp = await fetch(`/user?userId=${userId}`);
-    const body = await resp.json();
+// async function loadUserDetails(userId) {
+//     const resp = await fetch(`/user?userId=${userId}`);
+//     const body = await resp.json();
 
-    removeChildren(commentsEl);
+//     removeChildren(commentsEl);
 
-    body.userInfo.comments.forEach((comment) => {
-        const el = document.createElement('div');
-        const txt = document.createTextNode(comment.comment);
-        el.appendChild(txt);
-        commentsEl.appendChild(el);
-    });
-}
+//     body.userInfo.comments.forEach((comment) => {
+//         const el = document.createElement('div');
+//         const txt = document.createTextNode(comment.comment);
+//         el.appendChild(txt);
+//         commentsEl.appendChild(el);
+//     });
+// }
 
-const urlParams = new URLSearchParams(window.location.search);
-const userId = urlParams.get('userId');
-if (userId === null) {
-    alert('You must provide a userId query parameter');
-} else {
-    loadUserDetails(userId);
-}
+// const urlParams = new URLSearchParams(window.location.search);
+// const userId = urlParams.get('userId');
+// if (userId === null) {
+//     alert('You must provide a userId query parameter');
+// } else {
+//     loadUserDetails(userId);
+// }

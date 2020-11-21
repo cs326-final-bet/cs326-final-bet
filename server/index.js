@@ -216,6 +216,7 @@ export const app = express();
 
 app.use(bodyParser.json()); // Parse HTTP body as JSON
 app.use(express.static('dist')); // Serve dist/ directory
+app.use(express.static('frontend'));
 app.use(cookieParser()); // Parse cookies
 
 //const mc = new minicrypt();
@@ -594,7 +595,7 @@ app.put('/user/:userId([0-9]+)/addFriend',
         });
     });
 //get user stats
-app.get('/user/:userID([0-9]+)/userStats', async (req, res) => {
+app.get('/user/:userIDs([0-9]+)/userStats', async (req, res) => {
     let userStats = null;
     const userIdStr = req.query.userId;  
     if(userIdStr === undefined){
