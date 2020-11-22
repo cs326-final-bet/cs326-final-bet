@@ -533,10 +533,35 @@ app.post('/strava',
 // Comment on user
 app.put('/users/:userId([0-9]+)/comments',
     validateBody(Joi.object({
+        user: Joi.number.required(),
         comment: Joi.string().required(),
-    })),
+    })), 
     
     (req, res) => {
+        const userIdStr = req.query.userId;
+        if(userIdStr === undefined){
+            return res
+                .status(400)
+                .send({
+                    error: '"userId" URL query parameter required'
+                });
+        }
+        const userId = parseInt(userIdStr);
+        if(isNaN(userId)){
+            return res  
+                .status(400)
+                .send({
+                    error: 'userId must be an integer'
+                });
+        }
+        const user = dbUsers.findOne({
+            id: req.query.userId,
+        });
+        let comments = user.comments;
+        const user = await req.body.user;
+        const comment = await req.body.comment;
+        comments.push({user : comment});
+
         res.send({
             user:  {
                 id: req.userId,
@@ -584,8 +609,8 @@ app.put('/user/:userId([0-9]+)/addFriend',
     });
 //get user stats
 app.get('/user/:userIDs([0-9]+)/userStats', async (req, res) => {
-    let userStats = null;
-    const userIdStr = req.query.userId;  
+    const userIdStr = req.query.userId;
+    
     if(userIdStr === undefined){
         return res
             .status(400)
@@ -601,22 +626,14 @@ app.get('/user/:userIDs([0-9]+)/userStats', async (req, res) => {
                 error: 'userId must be an integer'
             });
     }
-    //Generate fake user TO DO TO DO TO DO
-    const userInfo = {
-        id: userId,
-        userName: 'user name',
-        userPassword: 'user password',
-        userStats: {
-            currentDistance: getRandomInt(0, 1000),
-            currentTime: getRandomInt(0, 1000),
-            totalDistance: getRandomInt(0 ,1000),
-            totalTime: getRandomInt(0, 1000)
-        },
-        email: 'user email',
-        friendsList: [getRandomInts(10, 0, 1000)]
-    };
+    //Get the user from the DB
+    const user = dbUsers.findOne({
+        id: req.query.userId,
+    });
+    const userStats = user.userStats;
+    //return the user stats
     return res.send({
-        userStats: userInfo.userStats,
+        userStats: userStats,
     });
 });
 //get user profile
@@ -637,30 +654,14 @@ app.get('/user', (req, res) =>{
                 error: 'userId must be an integer'
             });
     }
+    //Get the user
+    const user = dbUsers.findOne({
+        id: req.query.userId,
+    });
     //Generate fake user
-    const userInfo = {
-        id: userId,
-        userName: 'user name',
-        userPassword: 'user password',
-        userStats: {
-            currentDistance: getRandomInt(0, 1000),
-            currentTime: getRandomInt(0, 1000),
-            totalDistance: getRandomInt(0 ,1000),
-            totalTime: getRandomInt(0, 1000)
-        },
-        email: 'user email',
-        friendsList: [getRandomInts(10, 0, 1000)],
-        comments: [{
-            userId: 343,
-            comment: 'foobar'
-        },{
-            userId: 2,
-            comment: 'foobaz',
-        }
-        ],
-    };
+    
     return res.send({
-        userInfo: userInfo,
+        userInfo: user,
     });
 });
 //update user information
