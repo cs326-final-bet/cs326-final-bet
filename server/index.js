@@ -617,7 +617,7 @@ app.get('/user/:userIDs([0-9]+)/userStats', async (req, res) => {
     });
 });
 //get user profile
-app.get('/user', (req, res) =>{
+app.get('/user', async (req, res) =>{
     const userIdStr = req.query.userId;
     if(userIdStr === undefined){
         return res
@@ -626,19 +626,11 @@ app.get('/user', (req, res) =>{
                 error: '"userId" URL query parameter required'
             });
     }
-    const userId = parseInt(userIdStr);
-    if(isNaN(userId)){
-        return res  
-            .status(400)
-            .send({
-                error: 'userId must be an integer'
-            });
-    }
+    
     //Get the user
-    const user = dbUsers.findOne({
-        id: req.query.userId,
-    });
-    //Generate fake user
+    const user = await dbUsers.findOne({
+        _id: new mongo.ObjectID(userIdStr),
+    }, { _id: true, userName: true, userStats: true, friendsList: true, comments: true});
     
     return res.send({
         userInfo: user,
@@ -679,8 +671,6 @@ app.put('/user/updateInfo',(req, res) => {
         userName: 'user name',
         userPassword: 'user password',
         userStats: {
-            currentDistance: getRandomInt(0, 1000),
-            currentTime: getRandomInt(0, 1000),
             totalDistance: getRandomInt(0 ,1000),
             totalTime: getRandomInt(0, 1000)
         },
