@@ -9,8 +9,9 @@ const map = new AreasMap(mapBoxEl);
 
 const resizeMap = () => {
     mapBoxEl.style.height = `${window.innerHeight - headerEl.offsetHeight}px`;
+    map.map.updateSize();
 };
-//resizeMap();
+resizeMap();
 window.onresize = resizeMap;
 
 /*
