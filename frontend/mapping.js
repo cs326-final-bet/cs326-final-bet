@@ -150,7 +150,7 @@ export class AreasMap {
         this.tracksVecSrc.clear();
         this.tracksVecSrc.addFeatures(tracksFeats);
 
-        console.log("Updated map");
+        console.log('Updated map');
 
     }
 }
