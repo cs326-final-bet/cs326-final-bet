@@ -91,7 +91,7 @@ export class AreasMap {
             this.fetchAndDraw();
         });
 
-        this.fetchAndDraw();
+        //this.fetchAndDraw();
     }
 
     /**
