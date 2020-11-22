@@ -588,9 +588,9 @@ app.put('/user/:userId([0-9]+)/addFriend',
         });
     });
 //get user stats
-app.get('/user/:userIDs([0-9]+)/userStats', async (req, res) => {
+app.get('/user/userStats', async (req, res) => {
     const userIdStr = req.query.userId;
-    
+    console.log(req.user);
     if(userIdStr === undefined){
         return res
             .status(400)
@@ -598,17 +598,9 @@ app.get('/user/:userIDs([0-9]+)/userStats', async (req, res) => {
                 error: '"userId" URL query parameter required'
             });
     }
-    const userId = parseInt(userIdStr);
-    if(isNaN(userId)){
-        return res  
-            .status(400)
-            .send({
-                error: 'userId must be an integer'
-            });
-    }
     //Get the user from the DB
     const user = dbUsers.findOne({
-        _id: req.query.userId,
+        _id: new mongo.ObjectID(userIdStr),
     });
     const userStats = user.userStats;
     //return the user stats
@@ -634,53 +626,6 @@ app.get('/user', async (req, res) =>{
     
     return res.send({
         userInfo: user,
-    });
-});
-//update user information
-app.put('/user/updateInfo',(req, res) => {
-    const userIdStr = req.query.userId;
-    const newUsername = req.query.newUsername;
-    if(userIdStr === undefined){
-        return res
-            .status(400)
-            .send({
-                error: '"userId" URL query parameter required'
-            });
-    }
-    if(newUsername === undefined){
-        return res
-            .status(400)
-            .send({
-                error: '"username" URL query parameter required'
-            });
-    }
-    const userId = parseInt(userIdStr);
-    if(isNaN(userId)){
-        return res  
-            .status(400)
-            .send({
-                error: 'userId must be an integer'
-            });
-    }
-    validateBody(Joi.object({
-        username: Joi.string().required(),
-    }));
-    //Generate fake user
-    const userInfo = {
-        id: userId,
-        userName: 'user name',
-        userPassword: 'user password',
-        userStats: {
-            totalDistance: getRandomInt(0 ,1000),
-            totalTime: getRandomInt(0, 1000)
-        },
-        email: 'user email',
-        friendsList: [getRandomInts(10, 0, 1000)],
-        comments: ['foobar', 'foobaz'],
-    };
-    userInfo.userName = newUsername;
-    req.send({
-        userInfo: userInfo,
     });
 });
 
