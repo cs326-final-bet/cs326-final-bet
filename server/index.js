@@ -16,16 +16,17 @@ import MongoClient from 'mongodb';
 
 const strategy = new LocalStrategy(
     async (username, password, done) => {
-        if (!findUser(username)) {
+        let user = await findUser(username);
+        if (user === null) {
             return done(null, false, { 'message' : 'Wrong username' });
         }
-        if (!validatePassword(username, password)) {
+        if (!(await validatePassword(user, password))) {
         // invalid password
             await new Promise((r) => setTimeout(r, 2000)); // two second delay
             return done(null, false, { 'message' : 'Wrong password' });
         }
         // should create a user object here, associated with a unique identifier
-        return done(null, username);
+        return done(null, user);
     }
 );
 
@@ -35,6 +36,14 @@ const session = {
     saveUninitialized: false
 };
 
+// Convert user object to a unique identifier.
+passport.serializeUser((user, done) => {
+    done(null, user);
+});
+// Convert a unique identifier to a user object.
+passport.deserializeUser((uid, done) => {
+    done(null, uid);
+});
 
 /**
  * Generates random number.
@@ -213,8 +222,9 @@ let dbTracks = null;
 export const app = express();
 
 app.use(bodyParser.json()); // Parse HTTP body as JSON
+app.use(express.urlencoded({extended : true}));
 app.use(express.static('dist')); // Serve dist/ directory
-app.use(express.static('frontend')); // Serve dist/ directory
+// app.use(express.static('frontend')); // Serve dist/ directory
 app.use(cookieParser()); // Parse cookies
 
 const mc = new minicrypt();
@@ -563,7 +573,20 @@ app.put('/users/:userId([0-9]+)/comments',
         comments.push({userIdBody : comment});
 
         res.send({
-            comments: comments,
+            user:  {
+                id: req.userId,
+                userName: 'user name',
+                userPassword: 'user password',
+                userStats: {
+                    currentDistance: getRandomInt(0, 1000),
+                    currentTime: getRandomInt(0, 1000),
+                    totalDistance: getRandomInt(0 ,1000),
+                    totalTime: getRandomInt(0, 1000)
+                },
+                email: 'user email',
+                friendsList: [getRandomInts(10, 0, 1000)],
+                comments: [ req.body.comment ],
+            },
         });
     });
 
@@ -695,59 +718,39 @@ app.put('/user/updateInfo',(req, res) => {
 });
 
 //post login 
-app.post('/login',(req, res) => {
-    validateBody(Joi.object({
-        username: Joi.string().required(),
-        password: Joi.string().required()
-    }));
-    passport.authenticate('local' , {     // use username/password authentication
-        'successRedirect' : '/private',   // when we login, go to /private 
-        'failureRedirect' : '/login'      // otherwise, back to login
-    });
-});
-
-//get login
-app.get('/login',
-    (req, res) => res.sendFile(process.cwd() + '/frontend/login.html')
+app.post('/login', validateBody(Joi.object({
+    username: Joi.string().required(),
+    password: Joi.string().required()
+})),
+passport.authenticate('local' , {     // use username/password authentication
+    'successRedirect' : '/area.html',   // when we login, go to /private 
+    'failureRedirect' : '/login.html'      // otherwise, back to login
+})
 );
+
 
 //register
-app.post('/register', 
-    validateBody(Joi.object({
-        username: Joi.string().required(),
-        password: Joi.string().required()
-    })), 
-    (req, res) => {
-    
-        const username = req.body['username'];
-        const password = req.body['password'];
-        if(addUser(username, password)){
-            res.redirect('/login');
-        } else {
-            res.redirect('/register');
-        }
-
-    // res.send({
-    //     user : {
-    //         id: getRandomInt(0, 1000),
-    //         userName: username,
-    //         userPassword: password,
-    //         userStats: {
-    //             currentDistance: 0,
-    //             currentTime: 0,
-    //             totalDistance: 0,
-    //             totalTime: 0
-    //         },
-    //         friendsList: [],
-    //         comments: []
-    //     }
-    // });
-    });
-
-//get register
-app.get('/register',
-    (req, res) => res.sendFile(process.cwd() + '/frontend/register.html')
+app.post('/register', validateBody(Joi.object({
+    username: Joi.string().required(),
+    password: Joi.string().required()
+})),
+async (req, res) => {
+    const username = req.body['username'];
+    const password = req.body['password'];
+    //console.log(username + " " + password);
+    //console.log("blah blah" + await addUser(username, password) + "tex");
+    if(await addUser(username, password)){
+        res.redirect('/login.html');
+    } else {
+        res.redirect('/register.html');
+    }
+}
 );
+
+// //get register
+// app.get('/register',
+//     (req, res) => res.sendFile(process.cwd() + '/frontend/register.html')
+// );
 
 //get workout Data
 app.get('/workout/:workoutId([0-9]+)', (req, res) => {
@@ -776,29 +779,8 @@ app.get('/workout/:workoutId([0-9]+)', (req, res) => {
 });
 
 //get track Data
-app.get('/track/:trackId([0-9]+)', (req, res) => {
-    const trackIdStr = req.query.trackId;
-    if(trackIdStr === undefined){
-        return res
-            .status(400)
-            .send({
-                error: 'TrackID not included in URL'
-            });
-    }
-    const trackID = parseInt(trackIdStr);
-    if(isNaN(trackID)){
-        return res  
-            .status(400)
-            .send({
-                error: 'trackID must be an integer'
-            });
-    }
-    return res.send({
-        trackId: getRandomInt(0, 1000),
-        longitude: getRandomInt(-80, 80),
-        latitude: getRandomInt(-80, 80),
-        likes: getRandomInts(10, 0, 1000),
-    });
+app.get('/track/:trackId', async (req, res) => {
+    const track = await dbTracks.findOne();
 });
 
 //User Database and Authentication Stuff
@@ -808,37 +790,37 @@ async function checkLoggedIn(req, res, next) {
         next();
     } else {
         // Otherwise, redirect to the login page.
-        res.redirect('/login');
+        res.redirect('/login.html');
     }
 }
 
 async function findUser(username){
-    if(!(dbUsers.findOne({userName : username}))){
-        return true;
-    }
-    return false;
+    return await dbUsers.findOne({userName : username});
 }
 
-async function validatePassword(username, password) {
-    if(!(dbUsers.findOne({ username : username }))){
-        return false;
-    }
+async function validatePassword(user, enteredPassword) {
     //have to add checks for the salt and hash
-    if(mc.check(password, dbUsers.findOne({userName : username}).hash, dbUsers.findOne({username : username}).salt)){
+    if(mc.check(enteredPassword, user.hash, user.salt)){
         return false;
     }
     return true;
 }
 
 async function addUser(username, password){
-    if(dbUsers.findOne({userName: username})){
+    if(await dbUsers.findOne({ userName : username })){
         return false;
     } else {
         const [salt, hash] = mc.hash(password);
         const user = {
-            username : username,
+            userName : username,
             salt : salt,
-            hash : hash
+            hash : hash,
+            userStats : {
+                totalDistance : 0,
+                totalTime : 0
+            },
+            friendsList : [],
+            comments : [{}]
         };
         //add user to data base
         await dbUsers.insert(user);
