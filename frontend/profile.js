@@ -90,9 +90,6 @@ closeCompareProfileButton.onclick = async ()=> {
     const userId = urlParams.get('userId');
     await fetch(`/user/${userId}/userStats`, {
         method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
     });
 };
 
