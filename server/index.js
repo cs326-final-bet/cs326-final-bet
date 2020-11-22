@@ -116,7 +116,7 @@ db.get().catch((err) => {
  * Details on saving user session details via cookies.
  */
 const appSessionStore = new MongoDBStore({
-    uri: config.mongo.url,
+    uri: config.mongo.uri,
     databaseName: config.mongo.db,
     collection: 'expressSessions',
 });
