@@ -151,19 +151,19 @@ const map = new Map({
     ],
     target: 'mapbox',
     view: new View({
-        center: [-71, 42],
+        center: [-71.455554, 42.387689],
         projection: PROJ,
         zoom: 13,
     }),
 });
 
 // Retrieve areas from API
-const src = new VectorSource({
+const areasVecSrc = new VectorSource({
     features: [],
 });
 
-const lay = new VectorLayer({
-    source: src,
+const areasLay = new VectorLayer({
+    source: areasVecSrc,
     style: new Style({
         fill: new Fill({
             color: 'rgba(175, 81, 245, 0.4)',
@@ -175,7 +175,27 @@ const lay = new VectorLayer({
     }),
 });
 
-map.addLayer(lay);
+map.addLayer(areasLay);
+
+const tracksVecSrc = new VectorSource({
+    features: [],
+});
+
+const tracksLay = new VectorLayer({
+    source: tracksVecSrc,
+    style: new Style({
+        fill: new Fill({
+            color: 'rgba(0, 0, 0, 0)',
+        }),
+        stroke: new Stroke({
+            color: 'rgba(0, 255, 245, 1)',
+            width: 1,
+        }),
+    }),
+});
+
+map.addLayer(tracksLay);
+
 
 /**
  * Get areas from the API which are visible on the map and draw them.
@@ -186,8 +206,9 @@ async function getAndDrawAreas(map) {
     
     const resp = await fetch(`/areas?extent=${ext.join(',')}`);
     const body = await resp.json();
-    
-    const feats = body.areas.map(area => {
+
+    // Load areas onto map
+    const areasFeats = body.areas.map(area => {
         const feat = new Feature({
             geometry: new Polygon([area.polygon]),
         });
@@ -196,15 +217,30 @@ async function getAndDrawAreas(map) {
             area_id: area.id,
             user: area.ownerId,
             score: area.score,
-            comments: [],
             trackIds: area.trackIds,
         };
 
         return feat;
     });
 
-    src.clear();
-    src.addFeatures(feats);
+    areasVecSrc.clear();
+    areasVecSrc.addFeatures(areasFeats);
+
+    // Load tracks onto map
+    const tracksFeats = body.tracks.map(track => {
+        const points = track.points.map((point) => {
+            return [point.longitude, point.latitude];
+        });
+        
+        const feat = new Feature({
+            geometry: new Polygon([ points ]),
+        });
+
+        return feat;
+    });
+
+    tracksVecSrc.clear();
+    tracksVecSrc.addFeatures(tracksFeats);
 }
 
 map.on('moveend', () => {
