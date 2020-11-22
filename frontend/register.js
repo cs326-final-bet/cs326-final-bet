@@ -1,6 +1,7 @@
-//get elements by id that you need 
-const username = document.getElementById('username');
-const password = document.getElementById('password');
-const registerBtn = document.getElementById('register-button');
+// Tell the server where to send the user after they login
+const urlParams = new URLSearchParams(window.location.search);
+const fromURI = urlParams.get('from');
 
+const fromFormEl = document.getElementById('from');
+fromFormEl.value = fromURI;
 

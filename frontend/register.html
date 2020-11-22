@@ -3,10 +3,9 @@
     <head>
         <meta charset="UTF-8" />
         <title>Fitness.io Create Profile Page</title>
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-        <link rel="stylesheet" href="loginAndRegisterForm.css">
-
+        <link rel="stylesheet" href="loginAndRegisterForm.scss">
     </head>
+    
     <body class="bg">
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <a class="navbar-brand" href="#">Fitness.io</a>
@@ -24,9 +23,10 @@
                         <input type="text" id="password" class="fadeIn second" name="password" placeholder="Enter password:">
                         <br>
                         <br>
-                        <input type="submit" id="register-button" class="login-button font-weight-bold"></input>
+                        <input type="submit" id="register-button" class="login-button font-weight-bold" value="Register"></input>
                         <br>
                         <br>
+                        <input type="text" name="from" id="from" class="hidden">
                     </div>
                 </form>
             </div>

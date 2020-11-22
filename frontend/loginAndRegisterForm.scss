@@ -1,3 +1,5 @@
+@import "./bootstrap.scss";
+
 .login-container {
     width: 340px;
     margin: 200px auto;
@@ -9,14 +11,7 @@
     background-color: #444444;
     color: #777777;
 }
-.login-button{
-    background-color: #AF51F5;  
-    color: white;  
-}
-.register-button{
-    background-color: #777777;
-    color: white;
-}
+
 .bg {
     /* The image used */
     background-color: #AF51F5;
@@ -31,4 +26,8 @@
 }
 .card-border{
     border-color: #AF51F5;
+}
+
+.hidden {
+    display: none;
 }
