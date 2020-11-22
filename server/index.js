@@ -587,36 +587,44 @@ app.put('/users/:userId/comments',
 
 //add friend
 app.put('/user/:userId/addFriend',
-    validateBody(Joi.object({
-        friendsList: Joi.array().required(),
-        userId: Joi.string().required(),
-    })),
-    (req, res) => {
-        const user = dbUsers.findOne({
-            _id: req.query.userId,
+    async (req, res) => {
+        const userIdStr = req.params.userId;
+
+        const user = await dbUsers.findOne({
+            _id: new mongo.ObjectID(userIdStr),
         });
+
         const friendsList = user.friendsList;
-        if(friendsList.includes(req.body._id)){
-            user.friendsList.pop(req.body._id);
+
+        if(friendsList.includes(req.user._id)){
+            user.friendsList.splice(user.friendsList.indexOf(req.user._id), 1);
         } else {
-            user.friendsList.push(req.body._id);
+            user.friendsList.push(req.user._id);
         }
+        await dbUsers.update({
+            _id: new mongo.ObjectID(userIdStr),
+        },user);
         res.send({
             friendsList: friendsList,
         });
     });
 //get user stats
-app.get('/user/:userId/userStats', passport.authenticate('local'), async (req, res) => {
+app.get('/user/:userId/userStats',  async (req, res) => {
     const userIdStr = req.params.userId;
     console.log(req.user);
     //Get the user from the DB
-    const user = dbUsers.findOne({
+    const user = await dbUsers.findOne({
         _id: new mongo.ObjectID(userIdStr),
     });
     const userStats = user.userStats;
     //return the user stats
+    console.log(user);
+    console.log(userStats);
+    const timeDifference = req.user.userStats.currentTime - user.userStats.currentTime;
+    const distanceDifference = req.user.userStats.currentDistance - user.userStats.currentDistance;
     return res.send({
-        userStats: userStats,
+        timeDiff: timeDifference,
+        distDiff: distanceDifference,
     });
 });
 //get user profile

@@ -88,34 +88,23 @@ closeCompareProfileButton.onclick = async ()=> {
 
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('userId');
-    await fetch(`/user/${userId}/userStats`, {
+    const result = await fetch(`/user/${userId}/userStats`, {
         method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
     });
+
+    const body = await result.json();
+    console.log(body);
+    document.getElementById('distDifference').innerText = body.distDiff;
+    document.getElementById('timeDifference').innerText = body.timeDiff;
+
 };
 
 addUser.onclick = async () => {
-    const resp = await fetch('user/:userId([0-9]+)/addFriend', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            friendsList: friendsList,
-        })
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('userId');
+    await fetch(`/user/${userId}/addFriend`, {
+        method: 'PUT',
     });
-
-    const body = await resp.json();
-    const friendsList = body.friendsList;
-    const userId = body._id;
-
-    if(friendsList.includes(userId)){
-        friendsList.pop(userId);
-    } else {
-        friendsList.push(userId);
-    }
 };
 
 leaveCommentButtonEl.onclick = async () => {
