@@ -731,22 +731,22 @@ app.post('/register', (req, res) => {
     } else {
         res.redirect('/register');
     }
-    /*res.send({
-        user : {
-            id: getRandomInt(0, 1000),
-            userName: 'user name',
-            userPassword: 'user password',
-            userStats: {
-                currentDistance: 0,
-                currentTime: 0,
-                totalDistance: 0,
-                totalTime: 0
-            },
-            email: 'user email',
-            friendsList: [],
-            comments: []
-        }
-    });*/
+
+    // res.send({
+    //     user : {
+    //         id: getRandomInt(0, 1000),
+    //         userName: username,
+    //         userPassword: password,
+    //         userStats: {
+    //             currentDistance: 0,
+    //             currentTime: 0,
+    //             totalDistance: 0,
+    //             totalTime: 0
+    //         },
+    //         friendsList: [],
+    //         comments: []
+    //     }
+    // });
 });
 
 //get register
@@ -836,7 +836,7 @@ async function validatePassword(username, password) {
 }
 
 async function addUser(username, password){
-    if(dbUsers.findOne(username)){
+    if(dbUsers.findOne({userName: username})){
         return false;
     } else {
         const [salt, hash] = mc.hash(password);
