@@ -558,9 +558,9 @@ app.put('/users/:userId([0-9]+)/comments',
             id: req.query.userId,
         });
         let comments = user.comments;
-        const userId = await req.body.user;
+        const userIdBody = await req.body.user;
         const comment = await req.body.comment;
-        comments.push({userId : comment});
+        comments.push({userIdBody : comment});
 
         res.send({
             user:  {
