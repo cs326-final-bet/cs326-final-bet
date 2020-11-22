@@ -1,36 +1,31 @@
 //get elements by id that you need 
-
-
-
-const username = document.getElementById('username').value;
-const password = document.getElementById('password').value;
-const email = document.getElementById('email').value;
-const registerBtn = document.getElementById('register-button').value;
+const username = document.getElementById('username');
+const password = document.getElementById('password');
+const registerBtn = document.getElementById('register-button');
 
 
 registerBtn.onclick = async () => {
-    if(username === undefined || username.length === 0){
+
+    console.log('register Button Clicked');
+
+    if(username.value === undefined || username.value.length === 0){
         alert('A valid username was not entered. Try Again');
         return;
-    } else if (password === undefined || password.length === 0){
+    } else if (password.value === undefined || password.value.length === 0){
         alert('A valid password was not entered. Try Again');
-        return;
-    } else if (email === undefined || email.length === 0){
-        alert('A valid email was not entered. Try Again');
         return;
     }
 
     await fetch('/register', {
-        method: 'PUT',
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            username: username,
-            password: password,
-            email: email
+            username: username.value,
+            password: password.value
         })
     });
-    alert('User: ' + username + ' created!');
-    window.location.href = 'area.html';
+    alert('User: ' + username.value + ' created!');
+    //window.location.href = 'area.html';
 };

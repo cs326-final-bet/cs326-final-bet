@@ -11,21 +11,19 @@ import mongo from 'mongodb';
 import passport from  'passport';
 import LocalStrategy from 'passport-local';
 import expressSession from 'express-session';
-
-//import minicrypt from './miniCrypt.js';
-// import * as minicrypt from './miniCrypt'
-// const mc = new minicrypt();
+import minicrypt from './miniCrypt.js';
+import MongoClient from 'mongodb';
 
 const strategy = new LocalStrategy(
     async (username, password, done) => {
-        // if (!findUser(username)) {
-        //     return done(null, false, { 'message' : 'Wrong username' });
-        // }
-        // if (!validatePassword(username, password)) {
-        // // invalid password
-        //     await new Promise((r) => setTimeout(r, 2000)); // two second delay
-        //     return done(null, false, { 'message' : 'Wrong password' });
-        // }
+        if (!findUser(username)) {
+            return done(null, false, { 'message' : 'Wrong username' });
+        }
+        if (!validatePassword(username, password)) {
+        // invalid password
+            await new Promise((r) => setTimeout(r, 2000)); // two second delay
+            return done(null, false, { 'message' : 'Wrong password' });
+        }
         // should create a user object here, associated with a unique identifier
         return done(null, username);
     }
@@ -216,9 +214,10 @@ export const app = express();
 
 app.use(bodyParser.json()); // Parse HTTP body as JSON
 app.use(express.static('dist')); // Serve dist/ directory
+app.use(express.static('frontend')); // Serve dist/ directory
 app.use(cookieParser()); // Parse cookies
 
-//const mc = new minicrypt();
+const mc = new minicrypt();
 app.use(expressSession(session));
 passport.use(strategy);
 app.use(passport.initialize());
@@ -245,16 +244,6 @@ function validateBody(schema) {
 
         next();
     };
-}
-
-function checkLoggedIn(req, res, next) {
-    if (req.isAuthenticated()) {
-        // If we are authenticated, run the next route.
-        next();
-    } else {
-        // Otherwise, redirect to the login page.
-        res.redirect('/login');
-    }
 }
 
 app.get('/', 
@@ -587,24 +576,37 @@ app.post('/strava',
 // Comment on user
 app.put('/users/:userId([0-9]+)/comments',
     validateBody(Joi.object({
+        user: Joi.number().required(),
         comment: Joi.string().required(),
-    })),
+    })), 
+    
     (req, res) => {
+        const userIdStr = req.query.userId;
+        if(userIdStr === undefined){
+            return res
+                .status(400)
+                .send({
+                    error: '"userId" URL query parameter required'
+                });
+        }
+        const userId = parseInt(userIdStr);
+        if(isNaN(userId)){
+            return res  
+                .status(400)
+                .send({
+                    error: 'userId must be an integer'
+                });
+        }
+        const user = dbUsers.findOne({
+            id: req.query.userId,
+        });
+        let comments = user.comments;
+        const userIdBody = req.body.user;
+        const comment = req.body.comment;
+        comments.push({userIdBody : comment});
+
         res.send({
-            user:  {
-                id: req.userId,
-                userName: 'user name',
-                userPassword: 'user password',
-                userStats: {
-                    currentDistance: getRandomInt(0, 1000),
-                    currentTime: getRandomInt(0, 1000),
-                    totalDistance: getRandomInt(0 ,1000),
-                    totalTime: getRandomInt(0, 1000)
-                },
-                email: 'user email',
-                friendsList: [getRandomInts(10, 0, 1000)],
-                comments: [ req.body.comment ],
-            },
+            comments: comments,
         });
     });
 
@@ -636,8 +638,9 @@ app.put('/user/:userId([0-9]+)/addFriend',
         });
     });
 //get user stats
-app.get('/user/userStats', (req, res) => {
+app.get('/user/:userIDs([0-9]+)/userStats', async (req, res) => {
     const userIdStr = req.query.userId;
+    
     if(userIdStr === undefined){
         return res
             .status(400)
@@ -653,22 +656,14 @@ app.get('/user/userStats', (req, res) => {
                 error: 'userId must be an integer'
             });
     }
-    //Generate fake user
-    const userInfo = {
-        id: userId,
-        userName: 'user name',
-        userPassword: 'user password',
-        userStats: {
-            currentDistance: getRandomInt(0, 1000),
-            currentTime: getRandomInt(0, 1000),
-            totalDistance: getRandomInt(0 ,1000),
-            totalTime: getRandomInt(0, 1000)
-        },
-        email: 'user email',
-        friendsList: [getRandomInts(10, 0, 1000)]
-    };
+    //Get the user from the DB
+    const user = dbUsers.findOne({
+        id: req.query.userId,
+    });
+    const userStats = user.userStats;
+    //return the user stats
     return res.send({
-        userStats: userInfo.userStats,
+        userStats: userStats,
     });
 });
 //get user profile
@@ -689,30 +684,14 @@ app.get('/user', (req, res) =>{
                 error: 'userId must be an integer'
             });
     }
+    //Get the user
+    const user = dbUsers.findOne({
+        id: req.query.userId,
+    });
     //Generate fake user
-    const userInfo = {
-        id: userId,
-        userName: 'user name',
-        userPassword: 'user password',
-        userStats: {
-            currentDistance: getRandomInt(0, 1000),
-            currentTime: getRandomInt(0, 1000),
-            totalDistance: getRandomInt(0 ,1000),
-            totalTime: getRandomInt(0, 1000)
-        },
-        email: 'user email',
-        friendsList: [getRandomInts(10, 0, 1000)],
-        comments: [{
-            userId: 343,
-            comment: 'foobar'
-        },{
-            userId: 2,
-            comment: 'foobaz',
-        }
-        ],
-    };
+    
     return res.send({
-        userInfo: userInfo,
+        userInfo: user,
     });
 });
 //update user information
@@ -771,8 +750,10 @@ app.post('/login',(req, res) => {
         username: Joi.string().required(),
         password: Joi.string().required()
     }));
-    res.send('Login Successful');
-    //res.redirect('area.html');
+    passport.authenticate('local' , {     // use username/password authentication
+        'successRedirect' : '/private',   // when we login, go to /private 
+        'failureRedirect' : '/login'      // otherwise, back to login
+    });
 });
 
 //get login
@@ -783,27 +764,32 @@ app.get('/login',
 //register
 app.post('/register', (req, res) => {
     validateBody(Joi.object({
-        //email: Joi.string().required(),
         username: Joi.string().required(),
         password: Joi.string().required()
     }));
-    res.send({
-        user : {
-            id: getRandomInt(0, 1000),
-            userName: 'user name',
-            userPassword: 'user password',
-            userStats: {
-                currentDistance: 0,
-                currentTime: 0,
-                totalDistance: 0,
-                totalTime: 0
-            },
-            email: 'user email',
-            friendsList: [],
-            comments: []
-        }
-    });
-    res.redirect('/login');
+    const username = req.body['username'];
+    const password = req.body['password'];
+    if(addUser(username, password)){
+        res.redirect('/login');
+    } else {
+        res.redirect('/register');
+    }
+
+    // res.send({
+    //     user : {
+    //         id: getRandomInt(0, 1000),
+    //         userName: username,
+    //         userPassword: password,
+    //         userStats: {
+    //             currentDistance: 0,
+    //             currentTime: 0,
+    //             totalDistance: 0,
+    //             totalTime: 0
+    //         },
+    //         friendsList: [],
+    //         comments: []
+    //     }
+    // });
 });
 
 //get register
@@ -863,6 +849,51 @@ app.get('/track/:trackId([0-9]+)', (req, res) => {
     });
 });
 
+//User Database and Authentication Stuff
+async function checkLoggedIn(req, res, next) {
+    if (req.isAuthenticated()) {
+        // If we are authenticated, run the next route.
+        next();
+    } else {
+        // Otherwise, redirect to the login page.
+        res.redirect('/login');
+    }
+}
+
+async function findUser(username){
+    if(!(dbUsers.findOne({username : username}))){
+        return true;
+    }
+    return false;
+}
+
+async function validatePassword(username, password) {
+    if(!(dbUsers.findOne({ username : username }))){
+        return false;
+    }
+    //have to add checks for the salt and hash
+    if(mc.check(password, dbUsers.findOne({username : username}).hash, dbUsers.findOne({username : username}).salt)){
+        return false;
+    }
+    return true;
+}
+
+async function addUser(username, password){
+    if(dbUsers.findOne({userName: username})){
+        return false;
+    } else {
+        const [salt, hash] = mc.hash(password);
+        const user = {
+            username : username,
+            salt : salt,
+            hash : hash
+        };
+        //add user to data base
+        await dbUsers.insert(user);
+        return true;
+    }
+}
+
 /**
  * Run the server.
  */
@@ -874,36 +905,3 @@ Server listening on port ${config.port}. View in your web browser:
     http://127.0.0.1:${config.port} or http://localhost:${config.port}`);
     });
 }
-
-///////////////Authentication Stuff//////////////////
-//always returning true right now
-
-
-
-// function findUser(username){
-//     // if(username in database){
-//     username = username;
-//     return true;
-//     // }
-//     //return false;
-// }
-
-// function validatePassword(username, password) {
-//     password = password;
-//     if(!findUser(username)){
-//         return false;
-//     }
-//     return true;
-// }
-
-// function addUser(username, password){
-//     if(findUser(username)){
-//         return false;
-//     } else {
-//         const [salt, hash] = mc.hash(password);
-//         //add user to data base
-//         //db.users.insertOne
-//         return true;
-//     }
-// }
-//////////////////////
