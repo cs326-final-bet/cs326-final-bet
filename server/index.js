@@ -503,21 +503,23 @@ app.get('/areas', async (req, res) => {
         },
     };
     const areas = await dbAreas.find(q).toArray();
-    console.log('/areas', JSON.stringify(q), areas);
 
     // Find associated tracks
-    const trackIds = new Set();
+    const trackIdsSet = new Set();
     areas.forEach((area) => {
         area.trackIds.forEach((trackId) => {
-            trackIds.add(trackId);
+            trackIdsSet.add(trackId.toString());
         });
     });
 
-    let tracks = dbTracks.find({
-        _id: {
-            $in: Array.from(trackIds),
-        },
-    }).toArray();
+    const trackIdsArr = Array.from(trackIdsSet).map((trackId) => {
+        return new mongo.ObjectID(trackId);
+    });
+
+    let tracks = await Promise.all(trackIdsArr.map(async (trackId) => {
+        return await dbTracks.findOne(trackId);
+    }));
+
 
     return res.send({
         areas: areas,
