@@ -570,28 +570,21 @@ app.put('/users/:userId([0-9]+)/comments',
 //add friend
 app.put('/user/:userId([0-9]+)/addFriend',
     validateBody(Joi.object({
-        isFriend: Joi.boolean().required(),
+        friendsList: Joi.array().required(),
+        userId: Joi.number().required(),
     })),
     (req, res) => {
-        const friendsList = [];
-        if(req.body.isFriend === true){
-            friendsList.push(getRandomInt(0, 1000));
+        const user = dbUsers.findOne({
+            _id: req.query.userId,
+        });
+        const friendsList = user.friendsList;
+        if(friendsList.includes(req.body._id)){
+            user.friendsList.pop(req.body._id);
+        } else {
+            user.friendsList.push(req.body._id);
         }
         res.send({
-            userInfo: {
-                id: getRandomInt(0, 1000),
-                userName: 'user name',
-                userPassword: 'user password',
-                userStats: {
-                    currentDistance: getRandomInt(0, 1000),
-                    currentTime: getRandomInt(0, 1000),
-                    totalDistance: getRandomInt(0 ,1000),
-                    totalTime: getRandomInt(0, 1000)
-                },
-                email: 'user email',
-                friendsList: [req.body.id],
-                comments: [ 'foobar', 'foobaz' ],
-            }
+            friendsList: friendsList,
         });
     });
 //get user stats
@@ -615,7 +608,7 @@ app.get('/user/:userIDs([0-9]+)/userStats', async (req, res) => {
     }
     //Get the user from the DB
     const user = dbUsers.findOne({
-        id: req.query.userId,
+        _id: req.query.userId,
     });
     const userStats = user.userStats;
     //return the user stats
@@ -719,18 +712,20 @@ app.get('/login',
 );
 
 //register
-app.post('/register', (req, res) => {
+app.post('/register', 
     validateBody(Joi.object({
         username: Joi.string().required(),
         password: Joi.string().required()
-    }));
-    const username = req.body['username'];
-    const password = req.body['password'];
-    if(addUser(username, password)){
-        res.redirect('/login');
-    } else {
-        res.redirect('/register');
-    }
+    })), 
+    (req, res) => {
+    
+        const username = req.body['username'];
+        const password = req.body['password'];
+        if(addUser(username, password)){
+            res.redirect('/login');
+        } else {
+            res.redirect('/register');
+        }
 
     // res.send({
     //     user : {
@@ -747,7 +742,7 @@ app.post('/register', (req, res) => {
     //         comments: []
     //     }
     // });
-});
+    });
 
 //get register
 app.get('/register',
@@ -818,7 +813,7 @@ async function checkLoggedIn(req, res, next) {
 }
 
 async function findUser(username){
-    if(!(dbUsers.findOne({username : username}))){
+    if(!(dbUsers.findOne({userName : username}))){
         return true;
     }
     return false;
@@ -829,7 +824,7 @@ async function validatePassword(username, password) {
         return false;
     }
     //have to add checks for the salt and hash
-    if(mc.check(password, dbUsers.findOne({username : username}).hash, dbUsers.findOne({username : username}).salt)){
+    if(mc.check(password, dbUsers.findOne({userName : username}).hash, dbUsers.findOne({username : username}).salt)){
         return false;
     }
     return true;
