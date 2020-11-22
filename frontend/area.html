@@ -11,67 +11,28 @@
         <nav id="header" class="navbar navbar-dark bg-primary">
             <a class="navbar-brand" href="#">Fitness.io</a>
 
-            <button type="button" class="btn btn-light">
-                <a href="/strava_sync">
+            <a href="/strava_sync">
+                <button type="button" class="btn btn-light">
                     Sync with Strava
-                </a>
-            </button>
+                </button>
+            </a>
 
+            <div>
             <a href="/my_profile">
                 <button type="button" class="btn btn-light">
                     My Profile
                 </button>
             </a>
 
-            <i>Due to bug you must resize your window for map to work</i>
-            <button id="logout" class="btn btn-light">
-                Log Out
-            </button>
+            <a href="/logout">
+                <button class="btn btn-light">
+                    Log Out
+                </button>
+            </a>
+            </div>
         </nav>
 
         <div class="map" id="mapbox">
-        </div>
-
-        <div class="card info-panel-hidden" id="info-panel">
-            <div class="card-body">
-                <h2 class="card-title">Area Details</h2>
-
-                <div class="info-group">
-                    <b>User</b>
-                    <span>
-                        <a id="info-user" href="./profile.html">VALUE HERE</a>
-                    </span>
-                </div>
-
-                <div class="info-group">
-                    <b>Score</b>
-                    <span id="info-score">VALUE HERE</span>
-                </div>
-
-                <div class="info-group">
-                    <b>Area</b>
-                    <span><span id="info-area">VALUE HERE</span> mi <sup>2</sup></span>
-                </div>
-
-                <div id="info-comments">
-                    <textarea
-                        id="leave-comment-value"
-                        class="form-control"
-                        placeholder="Leave a comment">
-                    </textarea>
-                    
-                    <button class="btn-dark" id="info-leave-comment">
-                        Comment
-                    </button>
-
-                    <button class="btn-dark" id="info-like">
-                        Like
-                    </button>
-
-                    <div id="info-existing-comments">
-                    </div>
-                </div>
-            </div>
         </div>
 
         <script src="./area.js"></script>

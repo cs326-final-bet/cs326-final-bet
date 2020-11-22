@@ -25,6 +25,7 @@
     },
     "dependencies": {
         "body-parser": "^1.19.0",
+        "connect-mongodb-session": "^2.4.1",
         "cookie-parser": "^1.4.5",
         "decode-google-map-polyline": "^1.0.1",
         "dotenv": "^8.2.0",
