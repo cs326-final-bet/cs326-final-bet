@@ -223,7 +223,6 @@ export const app = express();
 app.use(bodyParser.json()); // Parse HTTP body as JSON
 app.use(express.urlencoded({extended : true}));
 app.use(express.static('dist')); // Serve dist/ directory
-// app.use(express.static('frontend')); // Serve dist/ directory
 app.use(cookieParser()); // Parse cookies
 
 const mc = new minicrypt();
