@@ -223,7 +223,6 @@ export const app = express();
 app.use(bodyParser.json()); // Parse HTTP body as JSON
 app.use(express.urlencoded({extended : true}));
 app.use(express.static('dist')); // Serve dist/ directory
-// app.use(express.static('frontend')); // Serve dist/ directory
 app.use(cookieParser()); // Parse cookies
 
 const mc = new minicrypt();
@@ -554,70 +553,35 @@ app.put('/tracks/:trackId([0-9]+)/likes',
         });
     });
 
-app.post('/strava',
-    validateBody(Joi.object({
-        object_type: Joi.string()
-            .required()
-            .pattern(new RegExp('^activity$')),
-        object_id: Joi.number().required(),
-        aspect_type: Joi.string()
-            .required()
-            .pattern(new RegExp('^create$')),
-        owner_id: Joi.number().required(),
-        subscription_id: Joi.number().required(),
-        event_time: Joi.number().required(),
-    })),
-    (req, res) => {
-        res.send({});
-    });
-
 // Comment on user
-app.put('/users/:userId([0-9]+)/comments',
+app.put('/users/:userId/comments',
     validateBody(Joi.object({
-        user: Joi.number().required(),
+        targetUserId: Joi.string().required(),
         comment: Joi.string().required(),
     })), 
-    
-    (req, res) => {
-        const userIdStr = req.query.userId;
-        if(userIdStr === undefined){
-            return res
-                .status(400)
-                .send({
-                    error: '"userId" URL query parameter required'
-                });
-        }
-        const userId = parseInt(userIdStr);
-        if(isNaN(userId)){
-            return res  
-                .status(400)
-                .send({
-                    error: 'userId must be an integer'
-                });
-        }
-        const user = dbUsers.findOne({
-            id: req.query.userId,
+    async (req, res) => {
+        const user = await dbUsers.findOne({
+            _id: new mongo.ObjectID(req.body.targetUserId),
         });
+
+        console.log(`/usrs/:userId/comments req.user=${req.user}`);
+            
+        user.comments.push({
+            userId: req.body.user,
+            comment: req.body.comment,
+        });
+
+        await dbUsers.update({
+            _id: new mongo.ObjectID(req.body.targetUserId),
+        });
+        
         const comments = user.comments;
         const userIdBody = req.body.user;
         const comment = req.body.comment;
         comments.push({userIdBody : comment});
 
         res.send({
-            user:  {
-                id: req.userId,
-                userName: 'user name',
-                userPassword: 'user password',
-                userStats: {
-                    currentDistance: getRandomInt(0, 1000),
-                    currentTime: getRandomInt(0, 1000),
-                    totalDistance: getRandomInt(0 ,1000),
-                    totalTime: getRandomInt(0, 1000)
-                },
-                email: 'user email',
-                friendsList: [getRandomInts(10, 0, 1000)],
-                comments: [ req.body.comment ],
-            },
+            user: user,
         });
     });
 
