@@ -570,10 +570,19 @@ app.put('/users/:userId([0-9]+)/comments',
 //add friend
 app.put('/user/:userId([0-9]+)/addFriend',
     validateBody(Joi.object({
-        isFriend: Joi.boolean().required(),
+        friendsList: Joi.array().required(),
+        userId: Joi.number().required(),
     })),
     (req, res) => {
-        const friendsList = req.body.friendsList;
+        const user = dbUsers.findOne({
+            _id: req.query.userId,
+        });
+        const friendsList = user.friendsList;
+        if(friendsList.includes(req.body._id)){
+            user.friendsList.pop(req.body._id);
+        } else {
+            user.friendsList.push(req.body._id);
+        }
         res.send({
             friendsList: friendsList,
         })
@@ -599,7 +608,7 @@ app.get('/user/:userIDs([0-9]+)/userStats', async (req, res) => {
     }
     //Get the user from the DB
     const user = dbUsers.findOne({
-        id: req.query.userId,
+        _id: req.query.userId,
     });
     const userStats = user.userStats;
     //return the user stats
