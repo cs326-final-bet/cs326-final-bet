@@ -533,7 +533,7 @@ app.post('/strava',
 // Comment on user
 app.put('/users/:userId([0-9]+)/comments',
     validateBody(Joi.object({
-        user: Joi.number.required(),
+        user: Joi.number().required(),
         comment: Joi.string().required(),
     })), 
     
@@ -563,20 +563,7 @@ app.put('/users/:userId([0-9]+)/comments',
         comments.push({userIdBody : comment});
 
         res.send({
-            user:  {
-                id: req.userId,
-                userName: 'user name',
-                userPassword: 'user password',
-                userStats: {
-                    currentDistance: getRandomInt(0, 1000),
-                    currentTime: getRandomInt(0, 1000),
-                    totalDistance: getRandomInt(0 ,1000),
-                    totalTime: getRandomInt(0, 1000)
-                },
-                email: 'user email',
-                friendsList: [getRandomInts(10, 0, 1000)],
-                comments: [ req.body.comment ],
-            },
+            comments: comments,
         });
     });
 
