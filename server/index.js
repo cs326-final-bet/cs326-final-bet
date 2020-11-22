@@ -16,6 +16,8 @@ import jwt from 'jsonwebtoken';
 import LocalStrategy from 'passport-local';
 
 import expressSession from 'express-session';
+import connectMongoDBSession from 'connect-mongodb-session';
+const MongoDBStore = connectMongoDBSession(expressSession);
 
 import minicrypt from './miniCrypt.js';
 const mc = new minicrypt();
@@ -111,122 +113,26 @@ db.get().catch((err) => {
 });
 
 /**
- * Setup a Passport local strategy. The "local" means "we'll handle the user stuff with
- * our own database".
- */
-const passportStrategy = new LocalStrategy(
-    /**
-     * Determines if a login request is valid.
-     * @param username {string} The username provided by the client attempting to login.
-     * @param password {string} The plain-text password given by the client.
-     * @param done {function(error, ok, msg)} To be called when the login request has
-     *     been fully evaluated and its outcome has been determined. Provide an error
-     *     when calling if an error occurred, the value of the ok argument indicates if
-     *     the user should be let in, and msg provides additional details.
-     */
-    async (username, password, done) => {
-        // Lookup user in the database
-        const user = await findUser(username);
-        if (user === null) {
-            // No user
-            return done(null, false, { 'message' : 'Wrong username' });
-        }
-
-        // Validate password
-        if (!(await validatePassword(user, password))) {
-            // Invalid password
-            await new Promise((r) => setTimeout(r, 2000)); // two second delay
-            
-            return done(null, false, { 'message' : 'Wrong password' });
-        }
-
-        // User is valid
-        return done(null, user, true);
-    }
-);
-
-/**
- * Middleware which checks that a user is authenticated. If they are not they are 
- * redirect to the login page and then back.
- */
-async function checkLoggedIn(req, res, next) {
-    if (req.isAuthenticated() === true) {
-        // If we are authenticated, run the next route.
-        return next();
-    } else {
-        // Otherwise, redirect to the login page.
-        return res.redirect(`/login.html?from=${req.path}`);
-    }
-}
-
-/**
- * Find user by username.
- */
-async function findUser(username){
-    const collections = await db.get();
-    return await collections.users.findOne({userName : username});
-}
-
-async function validatePassword(user, enteredPassword) {
-    //have to add checks for the salt and hash
-    if(mc.check(enteredPassword, user.hash, user.salt)){
-        return false;
-    }
-    return true;
-}
-
-/**
- * Registers a user to the database.
- * @param username {string} Username.
- * @param password {string} Plain text password to be hashed and stored.
- * @returns {boolean} True if a user created, false if user with username already exists.
- */
-async function addUser(username, password){
-    const collections = await db.get();
-    if(await collections.users.findOne({ userName : username }) !== null){
-        return false;
-    } else {
-        const [salt, hash] = mc.hash(password);
-        const user = {
-            userName : username,
-            salt : salt,
-            hash : hash,
-            userStats : {
-                totalDistance : 0,
-                totalTime : 0
-            },
-            friendsList : [],
-            comments : []
-        };
-        //add user to data base
-        await collections.users.insert(user);
-        return true;
-    }
-}
-
-
-/**
  * Details on saving user session details via cookies.
  */
+const appSessionStore = new MongoDBStore({
+    uri: config.mongo.url,
+    databaseName: config.mongo.db,
+    collection: 'expressSessions',
+});
+appSessionStore.on('error', (err) => {
+    console.error(`connect-mongodb-session error: ${err}`);
+});
+
 const appSession = {
     secret : process.env.SECRET || 'SECRET', // set this encryption key in Heroku config (never in GitHub)!
     resave : false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    store: appSessionStore,
+    cookie: {
+        secure: false,
+    },
 };
-
-/**
- * Convert user object to a unique identifier.
- */
-passport.serializeUser((user, done) => {
-    done(null, user);
-});
-
-/**
- * Convert a unique identifier to a user object.
- */
-passport.deserializeUser((uid, done) => {
-    done(null, uid);
-});
 
 /* eslint-disable no-unused-vars */
 /**
@@ -379,19 +285,174 @@ if (config.strava.redirect_uri.indexOf(STRAVA_OAUTH_REDIRECT_ENDPOINT) === -1) {
 // API
 export const app = express();
 
+function currentDateTime() {
+    const now = new Date();
+    let milliseconds = now.getMilliseconds().toString();
+    while (milliseconds.length < 4) {
+        milliseconds = `0${milliseconds}`;
+    }
+    return `${now.getMonth()+1}-${now.getDate()}-${now.getFullYear()} ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}:${milliseconds}`;
+}
+
+app.use((req, res, next) => {
+    console.log(`${currentDateTime()} ${req.method} ${req.url}`);
+
+    return next();
+}); // Log all requests to the console
+
 app.use(db.middleware()); // Database available at req.db
 
 app.use(bodyParser.json()); // Parse HTTP body as JSON
 app.use(express.urlencoded({extended : true})); // Handle HTTP bodies from HTML forms
-app.use(express.static('dist')); // Serve dist directory
+
 app.use(cookieParser()); // Parse cookies
 
 app.use(expressSession(appSession)); // Keep track of cookies
 
 // Passport authentication (req.isAuthenticated() and req.user)
-passport.use(passportStrategy);
 app.use(passport.initialize());
 app.use(passport.session());
+
+/**
+ * Setup a Passport local strategy. The "local" means "we'll handle the user stuff with
+ * our own database".
+ */
+const passportStrategy = new LocalStrategy(
+    /**
+     * Determines if a login request is valid.
+     * @param username {string} The username provided by the client attempting to login.
+     * @param password {string} The plain-text password given by the client.
+     * @param done {function(error, ok, msg)} To be called when the login request has
+     *     been fully evaluated and its outcome has been determined. Provide an error
+     *     when calling if an error occurred, the value of the ok argument indicates if
+     *     the user should be let in, and msg provides additional details.
+     */
+    async (username, password, done) => {
+        // Lookup user in the database
+        const user = await findUser(username);
+        if (user === null) {
+            // No user
+            console.error(`passport login: attempt with non-existant username "${username}"`);
+            return done(null, false, { 'message' : 'Wrong username' });
+        }
+
+        // Validate password
+        if (!(await validatePassword(user, password))) {
+            // Invalid password
+            await new Promise((r) => setTimeout(r, 2000)); // two second delay
+
+            console.log(`passport login: attempt with wrong password for username "${username}"`);
+            return done(null, false, { 'message' : 'Wrong password' });
+        }
+
+        // User is valid
+        console.log(`passport login: successful login for username "${username}"`);
+        return done(null, user, true);
+    }
+);
+
+/**
+ * Middleware which checks that a user is authenticated. If they are not they are 
+ * redirect to the login page and then back.
+ */
+async function checkLoggedIn(req, res, next) {
+    if (req.isAuthenticated() === true) {
+        // If we are authenticated, run the next route.
+        return next();
+    } else {
+        // Otherwise, redirect to the login page.
+        return res.redirect(`/login.html?from=${req.url}`);
+    }
+}
+
+/**
+ * Find user by username.
+ */
+async function findUser(username){
+    const collections = await db.get();
+    return await collections.users.findOne({userName : username});
+}
+
+async function validatePassword(user, enteredPassword) {
+    //have to add checks for the salt and hash
+    if(mc.check(enteredPassword, user.hash, user.salt)){
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Registers a user to the database.
+ * @param username {string} Username.
+ * @param password {string} Plain text password to be hashed and stored.
+ * @returns {boolean} True if a user created, false if user with username already exists.
+ */
+async function addUser(username, password){
+    const collections = await db.get();
+    if(await collections.users.findOne({ userName : username }) !== null){
+        return false;
+    } else {
+        const [salt, hash] = mc.hash(password);
+        const user = {
+            userName : username,
+            salt : salt,
+            hash : hash,
+            userStats : {
+                totalDistance : 0,
+                totalTime : 0
+            },
+            friendsList : [],
+            comments : []
+        };
+        //add user to data base
+        await collections.users.insert(user);
+        return true;
+    }
+}
+
+
+
+/**
+ * Convert user object to a unique identifier.
+ */
+passport.serializeUser((user, done) => {
+    done(null, user._id.toString());
+});
+
+/**
+ * Convert a unique identifier to a user object.
+ */
+passport.deserializeUser(async (uid, done) => {
+    const collections = await db.get();
+    
+    const user = await collections.users.findOne({
+        _id: new mongo.ObjectID(uid),
+    });
+
+    done(null, user);
+});
+
+passport.use(passportStrategy);
+
+app.use((req, res, next) => {
+    if (req.method !== 'GET') {
+        return next();
+    }
+    
+    // If we are getting an HTML page check if the user is logged in first
+    if (req.path.indexOf('.html') !== -1 && req.isAuthenticated() === false) {
+        // If serving a login or register page don't do any redirects bc then the
+        // user would never be able to login.
+        if (req.path.indexOf('login') !== -1 || req.path.indexOf('register') !== -1) {
+            return next();
+        }
+
+        return res.redirect(`/login.html?from=${req.url}`);
+    }
+
+    return next();
+});
+app.use(express.static('dist')); // Serve dist directory
 
 /**
  * Returns a middleware function to validate that a request body matches a 
@@ -549,7 +610,13 @@ app.get('/strava_sync',  (req, res, next) => {
     }
 
     // Add all user's tracks to database
+    let totalTime = 0;
+    let totalDistance = 0;
     await Promise.all(activities.map(async (act) => {
+        // Update totals
+        totalTime += act.moving_time;
+        totalDistance += act.distance;
+        
         // Check if we already have this track in the database
         const storedTrack = await req.db.tracks.findOne({
             strava: {
@@ -633,6 +700,16 @@ app.get('/strava_sync',  (req, res, next) => {
             await req.db.areas.update(areaQuery, area, { upsert: true });
         });
     }));
+
+    // Update user totals
+    await req.db.users.update({
+        _id: new mongo.ObjectID(req.user._id),
+    }, {
+        $set: {
+            'userStats.totalDistance': totalDistance,
+            'userStats.totalTime': totalTime,
+        },
+    });
     
     res.redirect('/area.html');
 });
@@ -710,14 +787,14 @@ app.get('/areas', async (req, res) => {
             return true;
         }
 
-        return tracks.userId === req.query.userId;
+        return track.userId.toString() === req.query.userId;
     });
     const filteredAreas = areas.filter((area) => {
         if (req.query.userId === undefined) {
             return true;
         }
 
-        return area.userIds.indexOf(req.query.userId) !== -1;
+        return area.userIds.map((o) => o.toString()).indexOf(req.query.userId) !== -1;
     });
 
     return res.send({
@@ -804,8 +881,8 @@ app.get('/user/:userId/userStats',  async (req, res) => {
     // const userStats = user.userStats;
     
     // Return the user stats
-    const timeDifference = req.user.userStats.currentTime - user.userStats.currentTime;
-    const distanceDifference = req.user.userStats.currentDistance - user.userStats.currentDistance;
+    const timeDifference = req.user.userStats.totalTime - user.userStats.totalTime;
+    const distanceDifference = req.user.userStats.totalDistance - user.userStats.totalDistance;
     return res.send({
         timeDiff: timeDifference,
         distDiff: distanceDifference,
@@ -825,7 +902,7 @@ app.get('/user', async (req, res) =>{
     //Get the user
     const user = await req.db.users.findOne({
         _id: new mongo.ObjectID(userIdStr),
-    }, { _id: true, userName: true, userStats: true, friendsList: true, comments: true});
+    }, { projection: { _id: 1, userName: 1, userStats: 1, friendsList: 1, comments: 1 } });
     
     return res.send({
         userInfo: user,
@@ -836,10 +913,10 @@ app.get('/user', async (req, res) =>{
 app.post('/login', validateBody(Joi.object({
     username: Joi.string().required(),
     password: Joi.string().required(),
-    from: Joi.string().optional(),
+    from: Joi.string().optional().allow(''),
 })), (req, res, next) => {
     let successRedirect = '/';
-    if (req.body.from !== undefined) {
+    if (req.body.from !== undefined && req.body.from.length > 0) {
         successRedirect = req.body.from;
     }
     
@@ -849,11 +926,16 @@ app.post('/login', validateBody(Joi.object({
     })(req, res, next);
 });
 
+app.get('/logout', (req, res) => {
+    req.logout();
+    res.redirect('/');
+});
+
 //register
 app.post('/register', validateBody(Joi.object({
     username: Joi.string().required(),
     password: Joi.string().required(),
-    from: Joi.string().optional(),
+    from: Joi.string().optional().allow(''),
 })),
 async (req, res) => {
     const username = req.body['username'];

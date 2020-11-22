@@ -1,11 +1,8 @@
-import Map from 'ol/Map';
-import TileLayer from 'ol/layer/Tile';
-import View from 'ol/View';
-import { OSM } from 'ol/source';
-import 'regenerator-runtime/runtime';
-import { AreasMap } from './mapping.js';
-
 'use strict';
+
+import 'regenerator-runtime/runtime';
+
+import { AreasMap } from './mapping.js';
 
 
 // const MongoClient = require('mongodb').MongoClient,
@@ -52,7 +49,7 @@ async function loadUserDetails(userId) {
 
     removeChildren(commentBox);
 
-    await Promise.all(body.userInfo.comments.forEach(async (comment) => {
+    await Promise.all(body.userInfo.comments.map(async (comment) => {
         if (Object.keys(userNames).indexOf(comment.userId) === -1) {
             const cmtUsrResp = await fetch(`/user?userId=${comment.userId}`);
             const cmtUsrBody = await cmtUsrResp.json();
@@ -78,7 +75,7 @@ async function loadUserDetails(userId) {
 const urlParams = new URLSearchParams(window.location.search);
 const userId = urlParams.get('userId');
 if (userId === null) {
-    alert('You must provide a userId query parameter');
+    window.location.href = '/my_profile';
 } else {
     loadUserDetails(userId);
 }
@@ -90,13 +87,7 @@ backToArea.onclick = async () => {
 
 compareProfileButton.onclick = async () =>{
     panelEl.classList.remove('info-panel-hidden');
-};
 
-closeCompareProfileButton.onclick = async ()=> {
-    panelEl.classList.add('info-panel-hidden');
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('userId');
     const result = await fetch(`/user/${userId}/userStats`, {
         method: 'GET',
     });
@@ -105,7 +96,10 @@ closeCompareProfileButton.onclick = async ()=> {
     console.log(body);
     document.getElementById('distDifference').innerText = body.distDiff;
     document.getElementById('timeDifference').innerText = body.timeDiff;
+};
 
+closeCompareProfileButton.onclick = async ()=> {
+    panelEl.classList.add('info-panel-hidden');
 };
 
 addUser.onclick = async () => {
