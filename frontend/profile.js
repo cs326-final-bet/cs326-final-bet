@@ -21,17 +21,17 @@ import { PROJ } from './mapping.js';
 // db.post()
 
 const backToArea = document.getElementById('homeButton');
-const editProfileButton = document.getElementById('editProfile');
-const saveChangesToProfileButton = document.getElementById('info-save-changes');
-const newUsernameText = document.getElementById('update-username');
-const cancelEditProfileButton = document.getElementById('info-cancel');
+const compareProfileButton = document.getElementById('compareProfile');
+const closeCompareProfileButton = document.getElementById('info-close');
 const panelEl = document.getElementById('info-panel');
 const userNameHeader = document.getElementById('header');
 const leaveCommentButtonEl = document.getElementById('shareComment');
 const leaveCommentValueEl = document.getElementById('leaveAComment');
 const commentBox = document.getElementById('userComments');
 const addUser = document.getElementById('followUser');
-const getUserStats = document.getElementById('compareProfile');
+
+const yourStats = document.getElementById('yourStats');
+const userStats = document.getElementById('userStats');
 
 // Load user info
 /**
@@ -59,14 +59,10 @@ async function loadUserDetails(userId) {
 
     userNameHeader.innerHTML = 'User ' + body.userInfo.id + 's Profile';
 
-    const currentDistance = body.userInfo.userStats.currentDistance;
-    document.getElementById('currentDist').innerText = 'Current Distance:' + currentDistance;
-    const currentArea = body.userInfo.userStats.currentTime;
-    document.getElementById('currentArea').innerText = 'Current Area:' + currentArea;
     const totalDistance = body.userInfo.userStats.totalDistance;
     document.getElementById('totalDist').innerText = 'Total Distance:' + totalDistance;
     const totalArea = body.userInfo.userStats.totalTime;
-    document.getElementById('totalArea').innerText = 'Total Area:' + totalArea; 
+    document.getElementById('totalTime').innerText = 'Total Time:' + totalArea; 
 
 }
 
@@ -83,21 +79,23 @@ backToArea.onclick = async () => {
     window.location = './area.html';
 };
 
-saveChangesToProfileButton.onclick = async ()=>{
-    if(newUsernameText.value === ''){
-        alert('Username cannot be blank');
-        return;
-    } else {
-        userNameHeader.innerHTML = newUsernameText.value + '`s Profile';
-    }
-    panelEl.classList.add('info-panel-hidden');
-};
-editProfileButton.onclick = async () =>{
+compareProfileButton.onclick = async () =>{
     panelEl.classList.remove('info-panel-hidden');
 };
-cancelEditProfileButton.onclick = async ()=> {
+
+closeCompareProfileButton.onclick = async ()=> {
     panelEl.classList.add('info-panel-hidden');
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('userId');
+    await fetch(`/user/${userId}/userStats`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
 };
+
 addUser.onclick = async () => {
     const resp = await fetch('user/:userId([0-9]+)/addFriend', {
         method: 'GET',
@@ -118,24 +116,6 @@ addUser.onclick = async () => {
     } else {
         friendsList.push(userId);
     }
-
-
-};
-getUserStats.onclick = async () => {
-    const userIDs = [0];
-    await fetch(`/user/${userIDs[0]}/userStats`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            //userStats: userInfo.userStats,
-        }),
-    });
-    getUserStats({
-        //user: userInfo.id,;
-        //stats: userInfo.userStats,;
-    });
 };
 
 leaveCommentButtonEl.onclick = async () => {
@@ -143,8 +123,9 @@ leaveCommentButtonEl.onclick = async () => {
         alert('Cannot leave empty comment');
         return;
     }
-    const userIDs = [0];
-    await fetch(`/users/${userIDs[0]}/comments`, {
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('userId');
+    await fetch(`/users/${userId}/comments`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -164,6 +145,7 @@ leaveCommentButtonEl.onclick = async () => {
 
     leaveCommentValueEl.value = '';
 };
+
 function addComment(comment) {
     const container = document.createElement('div');
     
