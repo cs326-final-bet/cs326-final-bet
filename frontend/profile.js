@@ -41,7 +41,7 @@ function removeChildren(el) {
     }
 }
 
-let userNames = {};
+const userNames = {};
 
 async function loadUserDetails(userId) {
     const resp = await fetch(`/user?userId=${userId}`);
