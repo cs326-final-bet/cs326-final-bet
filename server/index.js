@@ -742,7 +742,7 @@ app.post('/register',
     //         comments: []
     //     }
     // });
-});
+    });
 
 //get register
 app.get('/register',
