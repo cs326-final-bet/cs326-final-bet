@@ -151,7 +151,7 @@ const map = new Map({
     ],
     target: 'mapbox',
     view: new View({
-        center: [-71, 42],
+        center: [-71.455554, 42.387689],
         projection: PROJ,
         zoom: 13,
     }),
