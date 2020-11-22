@@ -854,7 +854,6 @@ async function addUser(username, password){
     } else {
         const [salt, hash] = mc.hash(password);
         const user = {
-            id : getRandomInt(0 - 100000000),
             username : username,
             salt : salt,
             hash : hash

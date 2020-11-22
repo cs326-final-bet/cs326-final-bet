@@ -17,7 +17,7 @@ loginBtn.onclick = async () => {
     }
 
     await fetch('/login', {
-        method: 'PUT',
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
