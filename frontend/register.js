@@ -1,17 +1,17 @@
 //get elements by id that you need 
-const username = document.getElementById('username').value;
-const password = document.getElementById('password').value;
-const registerBtn = document.getElementById('register-button').value;
+const username = document.getElementById('username');
+const password = document.getElementById('password');
+const registerBtn = document.getElementById('register-button');
 
 
 registerBtn.onclick = async () => {
 
     console.log('register Button Clicked');
 
-    if(username === undefined || username.length === 0){
+    if(username.value === undefined || username.value.length === 0){
         alert('A valid username was not entered. Try Again');
         return;
-    } else if (password === undefined || password.length === 0){
+    } else if (password.value === undefined || password.value.length === 0){
         alert('A valid password was not entered. Try Again');
         return;
     }
@@ -22,8 +22,8 @@ registerBtn.onclick = async () => {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            username: username,
-            password: password,
+            username: username.value,
+            password: password.value
         })
     });
     alert('User: ' + username + ' created!');
