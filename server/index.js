@@ -533,7 +533,7 @@ app.post('/strava',
 // Comment on user
 app.put('/users/:userId([0-9]+)/comments',
     validateBody(Joi.object({
-        user: Joi.number.required(),
+        user: Joi.number().required(),
         comment: Joi.string().required(),
     })), 
     
@@ -739,27 +739,12 @@ app.post('/register', (req, res) => {
     }));
     const username = req.body['username'];
     const password = req.body['password'];
+    console.log(username + " " + password);
     if(addUser(username, password)){
         res.redirect('/login');
     } else {
         res.redirect('/register');
     }
-    /*res.send({
-        user : {
-            id: getRandomInt(0, 1000),
-            userName: 'user name',
-            userPassword: 'user password',
-            userStats: {
-                currentDistance: 0,
-                currentTime: 0,
-                totalDistance: 0,
-                totalTime: 0
-            },
-            email: 'user email',
-            friendsList: [],
-            comments: []
-        }
-    });*/
 });
 
 //get register
