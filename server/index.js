@@ -588,16 +588,9 @@ app.put('/user/:userId([0-9]+)/addFriend',
         });
     });
 //get user stats
-app.get('/user/userStats', async (req, res) => {
-    const userIdStr = req.query.userId;
+app.get('/user/:userId/userStats', passport.authenticate('local'), async (req, res) => {
+    const userIdStr = req.params.userId;
     console.log(req.user);
-    if(userIdStr === undefined){
-        return res
-            .status(400)
-            .send({
-                error: '"userId" URL query parameter required'
-            });
-    }
     //Get the user from the DB
     const user = dbUsers.findOne({
         _id: new mongo.ObjectID(userIdStr),
