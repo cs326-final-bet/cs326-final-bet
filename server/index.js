@@ -12,7 +12,6 @@ import passport from  'passport';
 import LocalStrategy from 'passport-local';
 import expressSession from 'express-session';
 import minicrypt from './miniCrypt.js';
-import MongoClient from 'mongodb';
 
 const strategy = new LocalStrategy(
     async (username, password, done) => {
@@ -120,9 +119,9 @@ function polysForExt(extent) {
  */
 function extentForPolygon(polys) {
     if (polys.length === 0) {
-        throw 'Polygon cannot by empty';
+        throw 'Polygon cannot be empty';
     }
-    
+
     const topLeft = polys[0];
     const bottomRight = polys[0];
 
@@ -395,8 +394,9 @@ app.get('/strava_sync',
                     latitude: pnt.lat,
                 };
             });
+
             const pointsArr = points.map((point) => {
-                return [points.longitude, points.latitude];
+                return [point.longitude, point.latitude];
             });
                 
             // Insert into database
@@ -408,20 +408,67 @@ app.get('/strava_sync',
                 likes: [],
             };
                 
-            await dbTracks.insert(track);
+            const trackInsertRes = await dbTracks.insert(track);
+            if (trackInsertRes.insertedCount !== 1) {
+                throw `Inserted 1 track but mongodb result said we inserted ${trackInsertRes.insertedCount}`;
+            }
+            const trackId = trackInsertRes.insertedIds[0];
 
             // Determine what areas track is within
             const trackExt = extentForPolygon(pointsArr);
             const extPolys = polysForExt(trackExt);
-            // TODO: These extPolys are now in step 2 of the finding areas algorithm.
-            //       Now all we must do is find if their center's are in the polygon
-            //       Then add the track's ID to the area!
+
+            extPolys.forEach(async (poly) => {
+                // See if an area exists yet
+                const areaQuery = {
+                    position: {
+                        topLeft: {
+                            latitude: poly[0][0],
+                            longitude: poly[0][1],
+                        },
+                        bottomRight: {
+                            latitude: poly[2][0],
+                            longitude: poly[2][1],
+                        },
+                    },
+                };
+                
+                let area = await dbAreas.findOne(areaQuery);
+
+                // If no area exists yet
+                if (area === null) {
+                    // Initialize area
+                    area = {
+                        score: 0,
+                        position: {
+                            topLeft: {
+                                latitude: poly[0][0],
+                                longitude: poly[0][1],
+                            },
+                            bottomRight: {
+                                latitude: poly[2][0],
+                                longitude: poly[2][1],
+                            },
+                        },
+                        polygon: poly,
+                        trackIds: [],
+                        ownerId: null,
+                        likes: [],
+                    };
+                }
+
+                // Update area with track
+                area.trackIds.push(trackId);
+
+                // Upsert area
+                await dbAreas.update(areaQuery, area, { upsert: true });
+            });
         }));
             
         res.redirect('/area.html');
     });
 
-app.get('/areas', (req, res) => {
+app.get('/areas', async (req, res) => {
     // Check extent parameter
     const extStr = req.query.extent;
 
@@ -453,50 +500,34 @@ app.get('/areas', (req, res) => {
             });
     }
 
-    // Generate fake extent
-    const polys = polysForExt(extent);
-    const areas = polys.map((poly) => {
-        const trackIds = getRandomInts(10, 0, 1000);
-        
-        return {
-            id: getRandomInt(0, 1000),
-            score: getRandomInt(0, 1000),
-            position: {
-                topLeft: {
-                    latitude: poly[0][0],
-                    longitude: poly[0][1],
-                },
-                bottomRight: {
-                    latitude: poly[2][0],
-                    longitude: poly[2][1],
-                },
-            },
-            polygon: poly,
-            trackIds: trackIds,
-            ownerId: getRandomInt(0, 1000),
-        };
-    });
-    const tracks = polys.map((poly) => {
-        return {
-            trackId: getRandomInt(0, 1000),
-            longitude: poly[0][0][0],
-            latitude: poly[0][0][1],
-            likes: getRandomInts(10, 0, 1000),
-        };
+    // Query database for areas in the extent
+    const q = {
+        'position.topLeft.latitude': {
+            $gte: extent[0],
+            $lte: extent[2],
+        },
+        'position.topLeft.longitude': {
+            $gte: extent[1],
+            $lte: extent[3],
+        },
+    };
+    const areas = await dbAreas.find(q).toArray();
+
+    // Find associated tracks
+    const trackIdsSet = new Set();
+    areas.forEach((area) => {
+        area.trackIds.forEach((trackId) => {
+            trackIdsSet.add(trackId.toString());
+        });
     });
 
-    // Remove some areas so the entire screen isn't just full
-    let maxRemoveNum = areas.length;
-    if (maxRemoveNum > 5) {
-        maxRemoveNum -= 5;
-    }
-    
-    const removeNum = getRandomInt(Math.round(areas.length / 2), maxRemoveNum);
-    for (let i = 0; i < removeNum; i++) {
-        const removeIndex = getRandomInt(0, areas.length-1);
-        areas.splice(removeIndex, 1);
-        tracks.splice(removeIndex, 1);
-    }
+    const trackIdsArr = Array.from(trackIdsSet).map((trackId) => {
+        return new mongo.ObjectID(trackId);
+    });
+
+    const tracks = await Promise.all(trackIdsArr.map(async (trackId) => {
+        return await dbTracks.findOne(trackId);
+    }));
 
     return res.send({
         areas: areas,
