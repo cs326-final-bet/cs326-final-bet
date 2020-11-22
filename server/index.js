@@ -533,7 +533,7 @@ app.post('/strava',
 // Comment on user
 app.put('/users/:userId([0-9]+)/comments',
     validateBody(Joi.object({
-        user: Joi.number.required(),
+        user: Joi.number().required(),
         comment: Joi.string().required(),
     })), 
     
