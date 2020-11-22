@@ -401,7 +401,7 @@ app.get('/strava_sync',
             });
                 
             // Insert into database
-            const track = {
+            let track = {
                 strava: {
                     activityId: act.id,
                 },
@@ -409,14 +409,57 @@ app.get('/strava_sync',
                 likes: [],
             };
                 
-            await dbTracks.insert(track);
+            track = await dbTracks.insert(track);
 
             // Determine what areas track is within
             const trackExt = extentForPolygon(pointsArr);
             const extPolys = polysForExt(trackExt);
-            // TODO: These extPolys are now in step 2 of the finding areas algorithm.
-            //       Now all we must do is find if their center's are in the polygon
-            //       Then add the track's ID to the area!
+
+            extPolys.forEach(async (poly) => {
+                // See if an area exists yet
+                const areaQuery = {
+                    position: {
+                        topLeft: {
+                            latitude: poly[0][0],
+                            longitude: poly[0][1],
+                        },
+                        bottomRight: {
+                            latitude: poly[2][0],
+                            longitude: poly[2][1],
+                        },
+                    },
+                };
+                let area = await dbAreas.findOne(areaQuery);
+
+                // If no area exists yet
+                if (area === null) {
+                    // Initialize area
+                    area = {
+                        score: 0,
+                        position: {
+                            topLeft: {
+                                latitude: poly[0][0],
+                                longitude: poly[0][1],
+                            },
+                            bottomRight: {
+                                latitude: poly[2][0],
+                                longitude: poly[2][1],
+                            },
+                        },
+                        polygon: poly,
+                        trackIds: [],
+                        ownerId: null,
+                        likes: [],
+                    };
+                }
+
+                // Update area with track
+                area.trackIds.push(track._id);
+            });
+
+            // Upsert area
+            await dbAreas.update(areaQuery, area, { upsert: true });
+            console.log(area);
         }));
             
         res.redirect('/area.html');
