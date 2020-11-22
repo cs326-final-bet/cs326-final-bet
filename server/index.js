@@ -719,32 +719,32 @@ app.put('/user/updateInfo',(req, res) => {
 
 //post login 
 app.post('/login', validateBody(Joi.object({
-        username: Joi.string().required(),
-        password: Joi.string().required()
-    })),
-    passport.authenticate('local' , {     // use username/password authentication
-        'successRedirect' : '/area.html',   // when we login, go to /private 
-        'failureRedirect' : '/login.html'      // otherwise, back to login
-    })
+    username: Joi.string().required(),
+    password: Joi.string().required()
+})),
+passport.authenticate('local' , {     // use username/password authentication
+    'successRedirect' : '/area.html',   // when we login, go to /private 
+    'failureRedirect' : '/login.html'      // otherwise, back to login
+})
 );
 
 
 //register
 app.post('/register', validateBody(Joi.object({
-        username: Joi.string().required(),
-        password: Joi.string().required()
-    })),
-    async (req, res) => {
-        const username = req.body['username'];
-        const password = req.body['password'];
-        //console.log(username + " " + password);
-        //console.log("blah blah" + await addUser(username, password) + "tex");
-        if(await addUser(username, password)){
-            res.redirect('/login.html');
-        } else {
-            res.redirect('/register.html');
-        }
+    username: Joi.string().required(),
+    password: Joi.string().required()
+})),
+async (req, res) => {
+    const username = req.body['username'];
+    const password = req.body['password'];
+    //console.log(username + " " + password);
+    //console.log("blah blah" + await addUser(username, password) + "tex");
+    if(await addUser(username, password)){
+        res.redirect('/login.html');
+    } else {
+        res.redirect('/register.html');
     }
+}
 );
 
 // //get register
@@ -780,7 +780,7 @@ app.get('/workout/:workoutId([0-9]+)', (req, res) => {
 
 //get track Data
 app.get('/track/:trackId', async (req, res) => {
-    const track = await dbTracks.findOne()
+    const track = await dbTracks.findOne();
 });
 
 //User Database and Authentication Stuff
