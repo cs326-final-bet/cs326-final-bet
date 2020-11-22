@@ -82,6 +82,7 @@ if (userId === null) {
 backToArea.onclick = async () => {
     window.location = './area.html';
 };
+
 saveChangesToProfileButton.onclick = async ()=>{
     if(newUsernameText.value === ''){
         alert('Username cannot be blank');
@@ -98,7 +99,27 @@ cancelEditProfileButton.onclick = async ()=> {
     panelEl.classList.add('info-panel-hidden');
 };
 addUser.onclick = async () => {
-    // const friendsList = await fetch('user/:userId([0-9]+)/addFriend').friendsList;
+    const resp = await fetch('user/:userId([0-9]+)/addFriend', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            friendsList: friendsList,
+        })
+    });
+
+    const body = await resp.json();
+    const friendsList = body.friendsList;
+    const userId = body._id;
+
+    if(friendsList.includes(userId)){
+        friendsList.pop(userId);
+    } else {
+        friendsList.push(userId);
+    }
+
+
 };
 getUserStats.onclick = async () => {
     const userIDs = [0];
