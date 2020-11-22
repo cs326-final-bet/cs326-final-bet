@@ -622,21 +622,24 @@ app.put('/users/:userId([0-9]+)/comments',
     });
 
 //add friend
-app.put('/user/:userId([0-9]+)/addFriend',
-    validateBody(Joi.object({
-        friendsList: Joi.array().required(),
-        userId: Joi.number().required(),
-    })),
-    (req, res) => {
-        const user = dbUsers.findOne({
-            _id: req.query.userId,
+app.put('/user/:userId/addFriend',
+    async (req, res) => {
+        const userIdStr = req.params.userId;
+
+        const user = await dbUsers.findOne({
+            _id: new mongo.ObjectID(userIdStr),
         });
+
         const friendsList = user.friendsList;
-        if(friendsList.includes(req.body._id)){
-            user.friendsList.pop(req.body._id);
+
+        if(friendsList.includes(req.user._id)){
+            user.friendsList.splice(user.friendsList.indexOf(req.user._id), 1);
         } else {
-            user.friendsList.push(req.body._id);
+            user.friendsList.push(req.user._id);
         }
+        await dbUsers.update({
+            _id: new mongo.ObjectID(userIdStr),
+        },user);
         res.send({
             friendsList: friendsList,
         });
