@@ -15,7 +15,7 @@ import minicrypt from './miniCrypt.js';
 
 const strategy = new LocalStrategy(
     async (username, password, done) => {
-        let user = await findUser(username);
+        const user = await findUser(username);
         if (user === null) {
             return done(null, false, { 'message' : 'Wrong username' });
         }
