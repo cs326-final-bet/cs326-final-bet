@@ -778,37 +778,6 @@ async (req, res) => {
 }
 );
 
-// //get register
-// app.get('/register',
-//     (req, res) => res.sendFile(process.cwd() + '/frontend/register.html')
-// );
-
-//get workout Data
-app.get('/workout/:workoutId([0-9]+)', (req, res) => {
-    const workoutIdStr = req.query.workoutId;
-    if(workoutIdStr === undefined){
-        return res
-            .status(400)
-            .send({
-                error: 'workoutID is not included in URL'
-            });
-    }
-    const workoutID = parseInt(workoutIdStr);
-    if(isNaN(workoutID)){
-        return res  
-            .status(400)
-            .send({
-                error: 'workoutID must be an integer'
-            });
-    }
-    return res.send({
-        workoutId: getRandomInt(0, 1000),
-        totalTime: getRandomInt(0, 10000),
-        movingTime: getRandomInt(0,10000),
-        date: '11-01-2020'
-    });
-});
-
 //get track Data
 app.get('/track/:trackId', async (req, res) => {
     const track = await dbTracks.findOne();
