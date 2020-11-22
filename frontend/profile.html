@@ -14,7 +14,6 @@
     <div id='header'>User's Profile</div>
 </div>
 <div class="buttons">
-    <input type="button" id ='editProfile' value="Change username">
     <input type="button" id= "followUser" value="Follow User">
 </div>
 
@@ -25,16 +24,13 @@
         </div> 
     </div>
     <div class="buttons">
-        <input type="button" id='compareProfile' value="Compare Profile">
     </div>
     </div>
     
     <div id="stats">User's STATS:<div>
         <div id="userStats">
-            <div id="currentDist">Current Distance Traveled: <span></span></div> 
-            <div id="currentArea">Current Area Filled: <span></span></div>
             <div id="totalDist">Total Distance Traveled:<span></span></div>
-            <div id="totalArea">Total Area Filled: <span></span></div>  
+            <div id="totalTime">Total Time Traveled: <span></span></div>  
         </div>
         <div class="buttons">
             <input type="button" id='compareProfile' value="Compare Profile">
@@ -54,19 +50,15 @@
 </div>
 <div class="card info-panel-hidden" id="info-panel">
     <div class="card-body">
-        <h2 class="card-title">Edit Profile:</h2>
+        <h2 class="card-title">Stats:</h2>
 
         <div id="info-comments">
-            Update username: <input type="text" id="update-username" value="New username">
+            Your Stats: 
+            <div id="yourStats"></div>
             <br>
-            
-            <button class="btn-dark" id="info-save-changes">
-                Save Changes
-            </button>
-
-            <button class="btn-dark" id="info-cancel">
-                Cancel
-            </button>
+            User Stats:
+            <div id="userStats"></div>
+            close:<button class="btn-dark" id="info-close" value="close"></button>
 
             <div id="info-existing-comments">
             </div>

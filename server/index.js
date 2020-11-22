@@ -575,6 +575,11 @@ app.put('/users/:userId/comments',
         await dbUsers.update({
             _id: new mongo.ObjectID(req.body.targetUserId),
         });
+        
+        const comments = user.comments;
+        const userIdBody = req.body.user;
+        const comment = req.body.comment;
+        comments.push({userIdBody : comment});
 
         res.send({
             user: user,
@@ -602,27 +607,12 @@ app.put('/user/:userId/addFriend',
         });
     });
 //get user stats
-app.get('/user/:userIDs([0-9]+)/userStats', async (req, res) => {
-    const userIdStr = req.query.userId;
-    
-    if(userIdStr === undefined){
-        return res
-            .status(400)
-            .send({
-                error: '"userId" URL query parameter required'
-            });
-    }
-    const userId = parseInt(userIdStr);
-    if(isNaN(userId)){
-        return res  
-            .status(400)
-            .send({
-                error: 'userId must be an integer'
-            });
-    }
+app.get('/user/:userId/userStats', passport.authenticate('local'), async (req, res) => {
+    const userIdStr = req.params.userId;
+    console.log(req.user);
     //Get the user from the DB
     const user = dbUsers.findOne({
-        _id: req.query.userId,
+        _id: new mongo.ObjectID(userIdStr),
     });
     const userStats = user.userStats;
     //return the user stats
@@ -631,7 +621,7 @@ app.get('/user/:userIDs([0-9]+)/userStats', async (req, res) => {
     });
 });
 //get user profile
-app.get('/user', (req, res) =>{
+app.get('/user', async (req, res) =>{
     const userIdStr = req.query.userId;
     if(userIdStr === undefined){
         return res
@@ -640,71 +630,14 @@ app.get('/user', (req, res) =>{
                 error: '"userId" URL query parameter required'
             });
     }
-    const userId = parseInt(userIdStr);
-    if(isNaN(userId)){
-        return res  
-            .status(400)
-            .send({
-                error: 'userId must be an integer'
-            });
-    }
+    
     //Get the user
-    const user = dbUsers.findOne({
-        id: req.query.userId,
-    });
-    //Generate fake user
+    const user = await dbUsers.findOne({
+        _id: new mongo.ObjectID(userIdStr),
+    }, { _id: true, userName: true, userStats: true, friendsList: true, comments: true});
     
     return res.send({
         userInfo: user,
-    });
-});
-//update user information
-app.put('/user/updateInfo',(req, res) => {
-    const userIdStr = req.query.userId;
-    const newUsername = req.query.newUsername;
-    if(userIdStr === undefined){
-        return res
-            .status(400)
-            .send({
-                error: '"userId" URL query parameter required'
-            });
-    }
-    if(newUsername === undefined){
-        return res
-            .status(400)
-            .send({
-                error: '"username" URL query parameter required'
-            });
-    }
-    const userId = parseInt(userIdStr);
-    if(isNaN(userId)){
-        return res  
-            .status(400)
-            .send({
-                error: 'userId must be an integer'
-            });
-    }
-    validateBody(Joi.object({
-        username: Joi.string().required(),
-    }));
-    //Generate fake user
-    const userInfo = {
-        id: userId,
-        userName: 'user name',
-        userPassword: 'user password',
-        userStats: {
-            currentDistance: getRandomInt(0, 1000),
-            currentTime: getRandomInt(0, 1000),
-            totalDistance: getRandomInt(0 ,1000),
-            totalTime: getRandomInt(0, 1000)
-        },
-        email: 'user email',
-        friendsList: [getRandomInts(10, 0, 1000)],
-        comments: ['foobar', 'foobaz'],
-    };
-    userInfo.userName = newUsername;
-    req.send({
-        userInfo: userInfo,
     });
 });
 
@@ -737,37 +670,6 @@ async (req, res) => {
     }
 }
 );
-
-// //get register
-// app.get('/register',
-//     (req, res) => res.sendFile(process.cwd() + '/frontend/register.html')
-// );
-
-//get workout Data
-app.get('/workout/:workoutId([0-9]+)', (req, res) => {
-    const workoutIdStr = req.query.workoutId;
-    if(workoutIdStr === undefined){
-        return res
-            .status(400)
-            .send({
-                error: 'workoutID is not included in URL'
-            });
-    }
-    const workoutID = parseInt(workoutIdStr);
-    if(isNaN(workoutID)){
-        return res  
-            .status(400)
-            .send({
-                error: 'workoutID must be an integer'
-            });
-    }
-    return res.send({
-        workoutId: getRandomInt(0, 1000),
-        totalTime: getRandomInt(0, 10000),
-        movingTime: getRandomInt(0,10000),
-        date: '11-01-2020'
-    });
-});
 
 //get track Data
 app.get('/track/:trackId', async (req, res) => {
