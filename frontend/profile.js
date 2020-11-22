@@ -57,7 +57,7 @@ async function loadUserDetails(userId) {
         commentBox.appendChild(el);
     });
 
-    userNameHeader.innerHTML = 'User ' + body.userInfo.id + 's Profile';
+    userNameHeader.innerText = body.userInfo.userName;
 
     const totalDistance = body.userInfo.userStats.totalDistance;
     document.getElementById('totalDist').innerText = 'Total Distance:' + totalDistance;
@@ -114,20 +114,20 @@ leaveCommentButtonEl.onclick = async () => {
     }
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('userId');
+    
     await fetch(`/users/${userId}/comments`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            user: userNameHeader.value,
             comment: leaveCommentValueEl.value,
         }),
         
     });
     
     addComment({
-        user: userNameHeader.innerHTML,
+        user: userNameHeader.innerText,
         value: leaveCommentValueEl.value,
     });
     

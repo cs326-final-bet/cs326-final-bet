@@ -553,32 +553,33 @@ app.put('/tracks/:trackId([0-9]+)/likes',
         });
     });
 
+app.get('/my_profile', (req, res) => {
+    if (req.user === undefined) {
+        return res.redirect('/login.html');
+    }
+
+    return res.redirect(`/profile.html?userId=${req.user._id}`);
+});
+
 // Comment on user
 app.put('/users/:userId/comments',
     validateBody(Joi.object({
-        targetUserId: Joi.string().required(),
         comment: Joi.string().required(),
     })), 
     async (req, res) => {
         const user = await dbUsers.findOne({
-            _id: new mongo.ObjectID(req.body.targetUserId),
+            _id: new mongo.ObjectID(req.params.userId),
         });
 
-        console.log(`/usrs/:userId/comments req.user=${req.user}`);
-            
         user.comments.push({
-            userId: req.body.user,
+            userId: req.user._id,
             comment: req.body.comment,
         });
 
         await dbUsers.update({
-            _id: new mongo.ObjectID(req.body.targetUserId),
-        });
-        
-        const comments = user.comments;
-        const userIdBody = req.body.user;
-        const comment = req.body.comment;
-        comments.push({userIdBody : comment});
+            _id: new mongo.ObjectID(req.params.userId),
+        }, user);
+
 
         res.send({
             user: user,
@@ -611,15 +612,14 @@ app.put('/user/:userId/addFriend',
 //get user stats
 app.get('/user/:userId/userStats',  async (req, res) => {
     const userIdStr = req.params.userId;
-    console.log(req.user);
+
     //Get the user from the DB
     const user = await dbUsers.findOne({
         _id: new mongo.ObjectID(userIdStr),
     });
     const userStats = user.userStats;
     //return the user stats
-    console.log(user);
-    console.log(userStats);
+
     const timeDifference = req.user.userStats.currentTime - user.userStats.currentTime;
     const distanceDifference = req.user.userStats.currentDistance - user.userStats.currentDistance;
     return res.send({
@@ -668,8 +668,7 @@ app.post('/register', validateBody(Joi.object({
 async (req, res) => {
     const username = req.body['username'];
     const password = req.body['password'];
-    //console.log(username + " " + password);
-    //console.log("blah blah" + await addUser(username, password) + "tex");
+
     if(await addUser(username, password)){
         res.redirect('/login.html');
     } else {
@@ -720,7 +719,7 @@ async function addUser(username, password){
                 totalTime : 0
             },
             friendsList : [],
-            comments : [{}]
+            comments : []
         };
         //add user to data base
         await dbUsers.insert(user);
