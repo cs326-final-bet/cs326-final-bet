@@ -3,7 +3,7 @@ import TileLayer from 'ol/layer/Tile';
 import View from 'ol/View';
 import { OSM } from 'ol/source';
 import 'regenerator-runtime/runtime';
-import { PROJ } from './mapping.js';
+import { AreasMap } from './mapping.js';
 
 'use strict';
 
@@ -30,8 +30,8 @@ const leaveCommentValueEl = document.getElementById('leaveAComment');
 const commentBox = document.getElementById('userComments');
 const addUser = document.getElementById('followUser');
 
-const yourStats = document.getElementById('yourStats');
-const userStats = document.getElementById('userStats');
+//const yourStats = document.getElementById('yourStats');
+//const userStats = document.getElementById('userStats');
 
 // Load user info
 /**
@@ -44,20 +44,29 @@ function removeChildren(el) {
     }
 }
 
+let userNames = {};
+
 async function loadUserDetails(userId) {
     const resp = await fetch(`/user?userId=${userId}`);
     const body = await resp.json();
 
     removeChildren(commentBox);
 
-    body.userInfo.comments.forEach((comment) => {
+    await Promise.all(body.userInfo.comments.forEach(async (comment) => {
+        if (Object.keys(userNames).indexOf(comment.userId) === -1) {
+            const cmtUsrResp = await fetch(`/user?userId=${comment.userId}`);
+            const cmtUsrBody = await cmtUsrResp.json();
+
+            userNames[comment.userId] = cmtUsrBody.userInfo.userName;
+        }
+        
         const el = document.createElement('div');
-        const txt = document.createTextNode(comment.userId + ': ' + comment.comment);
+        const txt = document.createTextNode(userNames[comment.userId] + ': ' + comment.comment);
         el.appendChild(txt);
         commentBox.appendChild(el);
-    });
+    }));
 
-    userNameHeader.innerHTML = 'User ' + body.userInfo.id + 's Profile';
+    userNameHeader.innerText = body.userInfo.userName;
 
     const totalDistance = body.userInfo.userStats.totalDistance;
     document.getElementById('totalDist').innerText = 'Total Distance:' + totalDistance;
@@ -114,20 +123,20 @@ leaveCommentButtonEl.onclick = async () => {
     }
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('userId');
+    
     await fetch(`/users/${userId}/comments`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            user: userNameHeader.value,
             comment: leaveCommentValueEl.value,
         }),
         
     });
     
     addComment({
-        user: userNameHeader.innerHTML,
+        user: userNameHeader.innerText,
         value: leaveCommentValueEl.value,
     });
     
@@ -151,19 +160,8 @@ function addComment(comment) {
 }
 
 // Show map
-new Map({
-    layers: [
-        new TileLayer({
-            source: new OSM()
-        }),
-    ],
-    target: 'userMap',
-    view: new View({
-        center: [-71, 42],
-        projection: PROJ,
-        zoom: 13,
-    }),
-});
+const mapBoxEl = document.getElementById('userMap');
+new AreasMap(mapBoxEl, { userId: userId });
 
 // // Load user info
 // /**

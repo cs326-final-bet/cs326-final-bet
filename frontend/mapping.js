@@ -1,3 +1,15 @@
+import 'regenerator-runtime/runtime';
+
+import 'ol/ol.css';
+import Map from 'ol/Map';
+import TileLayer from 'ol/layer/Tile';
+import View from 'ol/View';
+import { OSM, Vector as VectorSource } from 'ol/source';
+import { Vector as VectorLayer } from 'ol/layer';
+import Feature from 'ol/Feature';
+import { Polygon } from 'ol/geom';
+import {Fill, Stroke, Style} from 'ol/style';
+
 /**
  * The geographical projection used in this project. What us laymen usually
  * refer to as "normal" or latitude longitude.
@@ -139,5 +151,6 @@ export class AreasMap {
         this.tracksVecSrc.addFeatures(tracksFeats);
 
         console.log("Updated map");
+
     }
 }
