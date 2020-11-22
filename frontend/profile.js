@@ -57,7 +57,7 @@ async function loadUserDetails(userId) {
         commentBox.appendChild(el);
     });
 
-    userNameHeader.innerHTML = body.userInfo.userName + 's Profile';
+    userNameHeader.innerHTML = 'User ' + body.userInfo.id + 's Profile';
 
     const currentDistance = body.userInfo.userStats.currentDistance;
     document.getElementById('currentDist').innerText = 'Current Distance:' + currentDistance;
@@ -129,6 +129,7 @@ leaveCommentButtonEl.onclick = async () => {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+            user: userNameHeader.value,
             comment: leaveCommentValueEl.value,
         }),
         
