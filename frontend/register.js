@@ -26,6 +26,6 @@ registerBtn.onclick = async () => {
             password: password.value
         })
     });
-    alert('User: ' + username + ' created!');
+    alert('User: ' + username.value + ' created!');
     //window.location.href = 'area.html';
 };

@@ -533,7 +533,7 @@ app.post('/strava',
 // Comment on user
 app.put('/users/:userId([0-9]+)/comments',
     validateBody(Joi.object({
-        user: Joi.number.required(),
+        user: Joi.number().required(),
         comment: Joi.string().required(),
     })), 
     
@@ -563,20 +563,7 @@ app.put('/users/:userId([0-9]+)/comments',
         comments.push({userIdBody : comment});
 
         res.send({
-            user:  {
-                id: req.userId,
-                userName: 'user name',
-                userPassword: 'user password',
-                userStats: {
-                    currentDistance: getRandomInt(0, 1000),
-                    currentTime: getRandomInt(0, 1000),
-                    totalDistance: getRandomInt(0 ,1000),
-                    totalTime: getRandomInt(0, 1000)
-                },
-                email: 'user email',
-                friendsList: [getRandomInts(10, 0, 1000)],
-                comments: [ req.body.comment ],
-            },
+            comments: comments,
         });
     });
 
@@ -744,22 +731,22 @@ app.post('/register', (req, res) => {
     } else {
         res.redirect('/register');
     }
-    /*res.send({
-        user : {
-            id: getRandomInt(0, 1000),
-            userName: 'user name',
-            userPassword: 'user password',
-            userStats: {
-                currentDistance: 0,
-                currentTime: 0,
-                totalDistance: 0,
-                totalTime: 0
-            },
-            email: 'user email',
-            friendsList: [],
-            comments: []
-        }
-    });*/
+
+    // res.send({
+    //     user : {
+    //         id: getRandomInt(0, 1000),
+    //         userName: username,
+    //         userPassword: password,
+    //         userStats: {
+    //             currentDistance: 0,
+    //             currentTime: 0,
+    //             totalDistance: 0,
+    //             totalTime: 0
+    //         },
+    //         friendsList: [],
+    //         comments: []
+    //     }
+    // });
 });
 
 //get register
@@ -849,7 +836,7 @@ async function validatePassword(username, password) {
 }
 
 async function addUser(username, password){
-    if(dbUsers.findOne(username)){
+    if(dbUsers.findOne({userName: username})){
         return false;
     } else {
         const [salt, hash] = mc.hash(password);
