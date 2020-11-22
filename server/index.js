@@ -2,47 +2,86 @@
 
 import express from 'express';
 import bodyParser from 'body-parser';
-import Joi from 'joi';
-import stravaApi from 'strava-v3';
 import cookieParser from 'cookie-parser';
-import jwt from 'jsonwebtoken';
-import decodePolyline from 'decode-google-map-polyline';
-import mongo from 'mongodb';
-import passport from  'passport';
-import LocalStrategy from 'passport-local';
-import expressSession from 'express-session';
-import minicrypt from './miniCrypt.js';
 
-const strategy = new LocalStrategy(
+import Joi from 'joi';
+
+import stravaApi from 'strava-v3';
+import decodePolyline from 'decode-google-map-polyline';
+
+import mongo from 'mongodb';
+
+import passport from  'passport';
+import jwt from 'jsonwebtoken';
+import LocalStrategy from 'passport-local';
+
+import expressSession from 'express-session';
+
+import minicrypt from './miniCrypt.js';
+const mc = new minicrypt();
+
+/**
+ * Setup a Passport local strategy. The "local" means "we'll handle the user stuff with
+ * our own database".
+ */
+const passportStrategy = new LocalStrategy(
+    /**
+     * Determines if a login request is valid.
+     * @param username {string} The username provided by the client attempting to login.
+     * @param password {string} The plain-text password given by the client.
+     * @param done {function(error, ok, msg)} To be called when the login request has
+     *     been fully evaluated and its outcome has been determined. Provide an error
+     *     when calling if an error occurred, the value of the ok argument indicates if
+     *     the user should be let in, and msg provides additional details.
+     */
     async (username, password, done) => {
+        // Lookup user in the database
         const user = await findUser(username);
         if (user === null) {
+            // No user
             return done(null, false, { 'message' : 'Wrong username' });
         }
+
+        // Validate password
         if (!(await validatePassword(user, password))) {
-        // invalid password
+            // Invalid password
             await new Promise((r) => setTimeout(r, 2000)); // two second delay
+            
             return done(null, false, { 'message' : 'Wrong password' });
         }
-        // should create a user object here, associated with a unique identifier
-        return done(null, user);
+
+        // User is valid
+        return done(null, user, true);
     }
 );
 
-const session = {
+/**
+ * Details on saving user session details via cookies.
+ */
+const appSession = {
     secret : process.env.SECRET || 'SECRET', // set this encryption key in Heroku config (never in GitHub)!
     resave : false,
     saveUninitialized: false
 };
 
-// Convert user object to a unique identifier.
+/**
+ * Convert user object to a unique identifier.
+ */
 passport.serializeUser((user, done) => {
     done(null, user);
 });
-// Convert a unique identifier to a user object.
+
+/**
+ * Convert a unique identifier to a user object.
+ */
 passport.deserializeUser((uid, done) => {
     done(null, uid);
 });
+
+/* eslint-disable no-unused-vars */
+/**
+ * Don't use anymore but they are useful.
+ */
 
 /**
  * Generates random number.
@@ -81,6 +120,18 @@ function getRandomInts(numMax, min, max) {
 }
 
 /**
+ * Returns the center of any box.
+ */
+function extCenter(ext) {
+    return [
+        ext[0] + ((ext[2] - ext[0]) / 2),
+        ext[1] + ((ext[3] - ext[1]) /2 )
+    ];
+}
+
+/* eslint-enable no-unused-vars */
+
+/**
  * Break any area up into 0.01 mile square boxes.
  * @params extent {number[4]} Map extent, latitude and longitude pairs in the format
  *     [upper left lat, upper left long, bottom right lat, bottom right long].
@@ -90,13 +141,23 @@ function getRandomInts(numMax, min, max) {
 function polysForExt(extent) {
     const polys = [];
 
+    /**
+     * Rounds to the nearest hundredths place.
+     */
     function r(v) {
         return Math.round((v + Number.EPSILON) * 100) / 100;
     }
-    
+
+    // Define two corners across from each other. First we round all values, otherwise
+    // could could end up with some sort of "9999999" which we wouldn't really care
+    // about (way too precise). Then we add and subtract 0.01 miles on either side of
+    // the previously defined and rounded corner as to not miss anything. If the caller
+    // of this function needs only polygons which overlap their provided extent they
+    // can do that.
     const extBegin = [ extent[0], extent[1] ].map(r).map(v => v - 0.01);
     const extEnd = [ extent[2], extent[3] ].map(r).map(v => v + 0.01);
 
+    // Make the boxes
     for (let x = extBegin[0]; x < extEnd[0]; x += 0.01) {
         for (let y = extBegin[1]; y < extEnd[1]; y += 0.01) {
             polys.push([
@@ -147,16 +208,6 @@ function extentForPolygon(polys) {
 }
 
 /**
- * Returns the center of any box.
- */
-function extCenter(ext) {
-    return [
-        ext[0] + ((ext[2] - ext[0]) / 2),
-        ext[1] + ((ext[3] - ext[1]) /2 )
-    ];
-}
-
-/**
  * Application configuration, all values set via environment variables.
  */
 const config = {
@@ -175,12 +226,13 @@ const config = {
 };
 
 /**
- * Algorithm used to construct JWT authentication tokens.
+ * Algorithm used to construct JWT authentication tokens to strore Strava API 
+ * credentials only.
  */
 const STRAVA_AUTH_ALGORITHM ='HS256';
 
 /**
- * Name of cookie in which authentication tokens are stored.
+ * Name of cookie in which Strava authentication tokens are stored.
  */
 const STRAVA_AUTH_COOKIE = 'stravaAuthenticationToken';
 
@@ -193,41 +245,86 @@ if (config.strava.redirect_uri.indexOf(STRAVA_OAUTH_REDIRECT_ENDPOINT) === -1) {
 }
 
 // Database
-let dbClient = null;
-let db = null;
-let dbUsers = null;
-let dbAreas = null;
-let dbTracks = null;
+class DatabaseConnection {
+    /**
+     * @param uri {string} Connection URI.
+     * @param db {string} Name of database.
+     */
+    constructor(uri, db) {
+        this.uri = uri;
+        this.dbName = db;
+        
+        this.dbClient = null;
+        this.db = null;
+        this.users = null;
+        this.areas = null;
+        this.tracks = null;
 
-(async function () {
-    try {
-        dbClient = await mongo.MongoClient.connect(config.mongo.uri, {
-            useUnifiedTopology: true
-        });
-    } catch (e) {
-        console.error(`Failed to connect to MongoDB: ${e}`);
-        process.exit(1);
+        this.connected = false;
     }
 
-    db = dbClient.db(config.mongo.db);
-    dbUsers = db.collection('users');
-    dbAreas = db.collection('areas');
-    dbTracks = db.collection('tracks');
+    /**
+     * Connects to the database, if already connected does nothing.
+     * @returns {Object} With 'db', 'users', 'areas', and 'tracks' properties.
+     * @throws {string} If failed to connect to MongoDB
+     */
+    async get() {
+        if (this.connected === false) {
+            try {
+                this.dbClient = await mongo.MongoClient.connect(this.uri, {
+                    useUnifiedTopology: true
+                });
+            } catch (e) {
+                throw `Failed to connect to MongoDB: ${e}`;
+            }
 
-    console.log('Connected to MongoDB');
-})();
+            this.db = this.dbClient.db(this.dbName);
+            this.users = db.collection('users');
+            this.areas = db.collection('areas');
+            this.tracks = db.collection('tracks');
+
+            this.connected = true;
+        }
+
+        return {
+            db: this.db,
+            areas: this.areas,
+            tracks: this.tracks,
+            users: this.users,
+        };
+    }
+
+    /**
+     * @returns {function(req, res, next)} Express middleware which injects this class
+     *     instance into req.db.
+     */
+    async middleware(req, res, next) {
+        const newConn = await this.connect();
+        if (newConn === true) {
+            console.log('Connected to MongoDB');
+        }
+        
+        req.db = this;
+
+        return next();
+    }
+}
 
 // API
 export const app = express();
 
+const db = new DatabaseConnection(config.mongo.uri, config.mongo.db);
+app.use(db.middleware); // Database available at req.db
+
 app.use(bodyParser.json()); // Parse HTTP body as JSON
-app.use(express.urlencoded({extended : true}));
-app.use(express.static('dist')); // Serve dist/ directory
+app.use(express.urlencoded({extended : true})); // Handle HTTP bodies from HTML forms
+app.use(express.static('dist')); // Serve dist directory
 app.use(cookieParser()); // Parse cookies
 
-const mc = new minicrypt();
-app.use(expressSession(session));
-passport.use(strategy);
+app.use(expressSession(appSession)); // Keep track of cookies
+
+// Passport authentication (req.isAuthenticated() and req.user)
+passport.use(passportStrategy);
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -254,6 +351,10 @@ function validateBody(schema) {
     };
 }
 
+/**
+ * Redirects the user to login page if not logged in. Otherwise redirects them to the
+ * map area page.
+ */
 app.get('/', 
     checkLoggedIn,
     (req, res) => {
@@ -264,7 +365,8 @@ app.get('/',
 /**
  * Users will be redirected to this endpoint when they complete the Strava
  * OAuth flow. We then store their Strava credentials in a cookie and redirect
- * them to the homepage.
+ * them to the /strava_sync endpoint. This imports all their Strava activities into
+ * our database.
  */
 app.get(STRAVA_OAUTH_REDIRECT_ENDPOINT, async (req, res) => {
     // After the user agrees to give us access to their Strava account we should
@@ -321,151 +423,138 @@ app.get(STRAVA_OAUTH_REDIRECT_ENDPOINT, async (req, res) => {
     return res.redirect('/strava_sync');
 });
 
-app.get('/strava_sync',
+/**
+ * Redirects the user through the Strava OAuth flow if we have not previously logged
+ * them into strava.
+ */
+app.get('/strava_sync', async (req, res, next) => {
     /**
-         * Middleware which ensures a valid Strava JWT authentication token exists.
-         * This gives us access to a user's Strava account. If the user is not logged
-         * in we redirect them through the strava OAuth flow. Then we set the 
-         * req.stravaAuthToken to the decoded value. Additionally creates a Strava 
-         * client for that user in req.userStrava.
-         */
+     * Middleware which ensures a valid Strava JWT authentication token exists.
+     * This gives us access to a user's Strava account. If the user is not logged
+     * in we redirect them through the strava OAuth flow. Then we set the 
+     * req.stravaAuthToken to the decoded value. Additionally creates a Strava 
+     * client for that user in req.userStrava.
+     */
+    // Check authentication cookie exists
+    if (req.cookies[STRAVA_AUTH_COOKIE] === undefined) {
+        // If not then redirect user to authenticate with Strava
+        return res.redirect(`http://www.strava.com/oauth/authorize?client_id=${config.strava.client_id}&response_type=code&redirect_uri=${config.strava.redirect_uri}&approval_prompt=force&scope=read,activity:read`);
+    }
 
-    async (req, res, next) => {
-        // Check authentication cookie exists
-        if (req.cookies[STRAVA_AUTH_COOKIE] === undefined) {
-            // If not then redirect user to authenticate with Strava
-            return res.redirect(`http://www.strava.com/oauth/authorize?client_id=${config.strava.client_id}&response_type=code&redirect_uri=${config.strava.redirect_uri}&approval_prompt=force&scope=read,activity:read`);
-        }
-
-        // Verify JWT
-        const authCookie = req.cookies[STRAVA_AUTH_COOKIE];
-        try {
-            req.authToken = await jwt.verify(
-                authCookie, config.strava.authentication_token_secret, {
-                    algorithm: STRAVA_AUTH_ALGORITHM,
-                });
-        } catch (e) {
-            console.error(`Failed to verify an authentication token JWT: ${e}`);
-            return res.status(401).json({
-                error: 'Not authorized',
+    // Verify JWT
+    const authCookie = req.cookies[STRAVA_AUTH_COOKIE];
+    try {
+        req.authToken = await jwt.verify(
+            authCookie, config.strava.authentication_token_secret, {
+                algorithm: STRAVA_AUTH_ALGORITHM,
             });
-        }
+    } catch (e) {
+        console.error(`Failed to verify an authentication token JWT: ${e}`);
+        return res.status(401).json({
+            error: 'Not authorized',
+        });
+    }
 
-        req.userStrava = new stravaApi.client(req.authToken.payload.strava.authentication.access_token);
+    req.userStrava = new stravaApi.client(req.authToken.payload.strava.authentication.access_token);
 
-        next();
-    },
+    next();
+}, async (req, res) => {
     /**
-         * Actual handler which does the activity fetching. It get's all activities in 
-         * the user's strava account.
-         */
-    async (req, res) => {
-        // Get activities
-        let activities = null;
-            
-        try {
-            activities = await req.userStrava.athlete.listActivities({});
-        } catch (e) {
-            console.error(`Failed to get Strava user activities: ${e}`);
-            return res.status(500).json({
-                error: 'Failed to get Strava user activities',
-            });
+     * Actual handler which does the activity fetching. It get's all activities in 
+     * the user's strava account.
+     */
+    // Get activities
+    let activities = null;
+    
+    try {
+        activities = await req.userStrava.athlete.listActivities({});
+    } catch (e) {
+        console.error(`Failed to get Strava user activities: ${e}`);
+        return res.status(500).json({
+            error: 'Failed to get Strava user activities',
+        });
+    }
+
+    // Add all user's tracks to database
+    await Promise.all(activities.map(async (act) => {
+        // Check if we already have this track in the database
+        const storedTrack = await req.db.get().tracks.findOne({
+            strava: {
+                activityId: act.id,
+            },
+        });
+
+        if (storedTrack !== null) {
+            // We already have this activity synced into our database so just skip
+            return;
         }
 
-        // Add all user's tracks to database
-        await Promise.all(activities.map(async (act) => {
-            // Check if we already have this track in the database
-            const storedTrack = await dbTracks.findOne({
-                strava: {
-                    activityId: act.id,
-                },
-            });
-
-            if (storedTrack !== null) {
-                // We already have this activity synced into our database so just skip
-                return;
-            }
-
-            // Get the points of the workout
-            const points = decodePolyline(act.map.summary_polyline).map((pnt) => {
-                return {
-                    longitude: pnt.lng,
-                    latitude: pnt.lat,
-                };
-            });
-
-            const pointsArr = points.map((point) => {
-                return [point.longitude, point.latitude];
-            });
-                
-            // Insert into database
-            const track = {
-                strava: {
-                    activityId: act.id,
-                },
-                points: points,
-                likes: [],
+        // Get the points of the workout
+        const points = decodePolyline(act.map.summary_polyline).map((pnt) => {
+            return {
+                longitude: pnt.lng,
+                latitude: pnt.lat,
             };
-                
-            const trackInsertRes = await dbTracks.insert(track);
-            if (trackInsertRes.insertedCount !== 1) {
-                throw `Inserted 1 track but mongodb result said we inserted ${trackInsertRes.insertedCount}`;
-            }
-            const trackId = trackInsertRes.insertedIds[0];
+        });
 
-            // Determine what areas track is within
-            const trackExt = extentForPolygon(pointsArr);
-            const extPolys = polysForExt(trackExt);
+        const pointsArr = points.map((point) => {
+            return [point.longitude, point.latitude];
+        });
+        
+        // Insert into database
+        const track = {
+            strava: {
+                activityId: act.id,
+            },
+            points: points,
+            likes: [],
+        };
+        
+        const trackInsertRes = await req.db.get().tracks.insert(track);
+        if (trackInsertRes.insertedCount !== 1) {
+            throw `Inserted 1 track but mongodb result said we inserted ${trackInsertRes.insertedCount}`;
+        }
+        const trackId = trackInsertRes.insertedIds[0];
 
-            extPolys.forEach(async (poly) => {
-                // See if an area exists yet
-                const areaQuery = {
-                    position: {
-                        topLeft: {
-                            latitude: poly[0][0],
-                            longitude: poly[0][1],
-                        },
-                        bottomRight: {
-                            latitude: poly[2][0],
-                            longitude: poly[2][1],
-                        },
-                    },
-                };
-                
-                let area = await dbAreas.findOne(areaQuery);
+        // Determine what areas track is within
+        const trackExt = extentForPolygon(pointsArr);
+        const extPolys = polysForExt(trackExt);
 
-                // If no area exists yet
-                if (area === null) {
-                    // Initialize area
-                    area = {
-                        score: 0,
-                        position: {
-                            topLeft: {
-                                latitude: poly[0][0],
-                                longitude: poly[0][1],
-                            },
-                            bottomRight: {
-                                latitude: poly[2][0],
-                                longitude: poly[2][1],
-                            },
-                        },
-                        polygon: poly,
-                        trackIds: [],
-                        ownerId: null,
-                        likes: [],
-                    };
-                }
-
-                // Update area with track
-                area.trackIds.push(trackId);
-
-                // Upsert area
-                await dbAreas.update(areaQuery, area, { upsert: true });
-            });
-        }));
+        extPolys.forEach(async (poly) => {
+            // See if an area exists yet
+            const areaQuery = {
+                beginPosition: {
+                    latitude: poly[0][0],
+                    longitude: poly[0][1],
+                },
+            };
             
-        res.redirect('/area.html');
-    });
+            let area = await req.db.get().areas.findOne(areaQuery);
+
+            // If no area exists yet
+            if (area === null) {
+                // Initialize area
+                area = {
+                    score: 0,
+                    beginPosition: {
+                        latitude: poly[0][0],
+                        longitude: poly[0][1],
+                    },
+                    polygon: poly,
+                    trackIds: [],
+                };
+            }
+
+            // Update area with track
+            area.trackIds.push(trackId);
+
+            // Upsert area
+            await req.db.get().areas.update(areaQuery, area, { upsert: true });
+        });
+    }));
+    
+    res.redirect('/area.html');
+});
 
 app.get('/areas', async (req, res) => {
     // Check extent parameter
@@ -501,16 +590,16 @@ app.get('/areas', async (req, res) => {
 
     // Query database for areas in the extent
     const q = {
-        'position.topLeft.latitude': {
+        'beginPosition.latitude': {
             $gte: extent[0],
             $lte: extent[2],
         },
-        'position.topLeft.longitude': {
+        'beginPosition.longitude': {
             $gte: extent[1],
             $lte: extent[3],
         },
     };
-    const areas = await dbAreas.find(q).toArray();
+    const areas = await req.db.get().areas.find(q).toArray();
 
     // Find associated tracks
     const trackIdsSet = new Set();
@@ -525,7 +614,7 @@ app.get('/areas', async (req, res) => {
     });
 
     const tracks = await Promise.all(trackIdsArr.map(async (trackId) => {
-        return await dbTracks.findOne(trackId);
+        return await req.db.get().tracks.findOne(trackId);
     }));
 
     return res.send({
@@ -533,25 +622,6 @@ app.get('/areas', async (req, res) => {
         tracks: tracks,
     });
 });
-
-// Like area
-app.put('/tracks/:trackId([0-9]+)/likes',
-    validateBody(Joi.object({
-        liked: Joi.boolean().required(),
-    })),
-    (req, res) => {
-        const likes = [];
-        if (req.body.liked === true) {
-            likes.push(getRandomInt(0, 1000));
-        }
-
-        res.send({
-            trackId: getRandomInt(0, 1000),
-            longitude: getRandomInt(-80, 80),
-            latitude: getRandomInt(-80, 80),
-            likes: likes,
-        });
-    });
 
 app.get('/my_profile', (req, res) => {
     if (req.user === undefined) {
@@ -567,7 +637,7 @@ app.put('/users/:userId/comments',
         comment: Joi.string().required(),
     })), 
     async (req, res) => {
-        const user = await dbUsers.findOne({
+        const user = await req.db.get().users.findOne({
             _id: new mongo.ObjectID(req.params.userId),
         });
 
@@ -576,7 +646,7 @@ app.put('/users/:userId/comments',
             comment: req.body.comment,
         });
 
-        await dbUsers.update({
+        await req.db.get().users.update({
             _id: new mongo.ObjectID(req.params.userId),
         }, user);
 
@@ -591,7 +661,7 @@ app.put('/user/:userId/addFriend',
     async (req, res) => {
         const userIdStr = req.params.userId;
 
-        const user = await dbUsers.findOne({
+        const user = await req.db.get().users.findOne({
             _id: new mongo.ObjectID(userIdStr),
         });
 
@@ -602,7 +672,7 @@ app.put('/user/:userId/addFriend',
         } else {
             user.friendsList.push(req.user._id);
         }
-        await dbUsers.update({
+        await req.db.get().users.update({
             _id: new mongo.ObjectID(userIdStr),
         },user);
         res.send({
@@ -614,12 +684,13 @@ app.get('/user/:userId/userStats',  async (req, res) => {
     const userIdStr = req.params.userId;
 
     //Get the user from the DB
-    const user = await dbUsers.findOne({
+    const user = await req.db.get().users.findOne({
         _id: new mongo.ObjectID(userIdStr),
     });
-    const userStats = user.userStats;
-    //return the user stats
-
+    
+    // const userStats = user.userStats;
+    
+    // Return the user stats
     const timeDifference = req.user.userStats.currentTime - user.userStats.currentTime;
     const distanceDifference = req.user.userStats.currentDistance - user.userStats.currentDistance;
     return res.send({
@@ -639,7 +710,7 @@ app.get('/user', async (req, res) =>{
     }
     
     //Get the user
-    const user = await dbUsers.findOne({
+    const user = await req.db.get().users.findOne({
         _id: new mongo.ObjectID(userIdStr),
     }, { _id: true, userName: true, userStats: true, friendsList: true, comments: true});
     
@@ -679,7 +750,13 @@ async (req, res) => {
 
 //get track Data
 app.get('/track/:trackId', async (req, res) => {
-    const track = await dbTracks.findOne();
+    const track = await req.db.get().tracks.findOne({
+        _id: new mongo.ObjectID(req.params.trackId),
+    });
+
+    return res.send({
+        track: track,
+    });
 });
 
 //User Database and Authentication Stuff
@@ -694,7 +771,7 @@ async function checkLoggedIn(req, res, next) {
 }
 
 async function findUser(username){
-    return await dbUsers.findOne({userName : username});
+    return await db.get().users.findOne({userName : username});
 }
 
 async function validatePassword(user, enteredPassword) {
@@ -706,7 +783,7 @@ async function validatePassword(user, enteredPassword) {
 }
 
 async function addUser(username, password){
-    if(await dbUsers.findOne({ userName : username })){
+    if(await db.get().users.findOne({ userName : username })){
         return false;
     } else {
         const [salt, hash] = mc.hash(password);
@@ -722,7 +799,7 @@ async function addUser(username, password){
             comments : []
         };
         //add user to data base
-        await dbUsers.insert(user);
+        await db.get().users.insert(user);
         return true;
     }
 }

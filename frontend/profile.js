@@ -30,8 +30,8 @@ const leaveCommentValueEl = document.getElementById('leaveAComment');
 const commentBox = document.getElementById('userComments');
 const addUser = document.getElementById('followUser');
 
-const yourStats = document.getElementById('yourStats');
-const userStats = document.getElementById('userStats');
+//const yourStats = document.getElementById('yourStats');
+//const userStats = document.getElementById('userStats');
 
 // Load user info
 /**
