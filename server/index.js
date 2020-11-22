@@ -821,7 +821,13 @@ async function addUser(username, password){
         const user = {
             userName : username,
             salt : salt,
-            hash : hash
+            hash : hash,
+            userStats : {
+                totalDistance : 0,
+                totalTime : 0
+            },
+            friendsList : [],
+            comments : [{}]
         };
         //add user to data base
         await dbUsers.insert(user);
