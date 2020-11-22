@@ -573,26 +573,10 @@ app.put('/user/:userId([0-9]+)/addFriend',
         isFriend: Joi.boolean().required(),
     })),
     (req, res) => {
-        const friendsList = [];
-        if(req.body.isFriend === true){
-            friendsList.push(getRandomInt(0, 1000));
-        }
+        const friendsList = req.body.friendsList;
         res.send({
-            userInfo: {
-                id: getRandomInt(0, 1000),
-                userName: 'user name',
-                userPassword: 'user password',
-                userStats: {
-                    currentDistance: getRandomInt(0, 1000),
-                    currentTime: getRandomInt(0, 1000),
-                    totalDistance: getRandomInt(0 ,1000),
-                    totalTime: getRandomInt(0, 1000)
-                },
-                email: 'user email',
-                friendsList: [req.body.id],
-                comments: [ 'foobar', 'foobaz' ],
-            }
-        });
+            friendsList: friendsList,
+        })
     });
 //get user stats
 app.get('/user/:userIDs([0-9]+)/userStats', async (req, res) => {
@@ -719,11 +703,13 @@ app.get('/login',
 );
 
 //register
-app.post('/register', (req, res) => {
+app.post('/register', 
     validateBody(Joi.object({
         username: Joi.string().required(),
         password: Joi.string().required()
-    }));
+    })), 
+    (req, res) => {
+    
     const username = req.body['username'];
     const password = req.body['password'];
     if(addUser(username, password)){
@@ -818,7 +804,7 @@ async function checkLoggedIn(req, res, next) {
 }
 
 async function findUser(username){
-    if(!(dbUsers.findOne({username : username}))){
+    if(!(dbUsers.findOne({userName : username}))){
         return true;
     }
     return false;
@@ -829,7 +815,7 @@ async function validatePassword(username, password) {
         return false;
     }
     //have to add checks for the salt and hash
-    if(mc.check(password, dbUsers.findOne({username : username}).hash, dbUsers.findOne({username : username}).salt)){
+    if(mc.check(password, dbUsers.findOne({userName : username}).hash, dbUsers.findOne({username : username}).salt)){
         return false;
     }
     return true;
