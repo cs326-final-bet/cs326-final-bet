@@ -23,7 +23,7 @@ registerBtn.onclick = async () => {
         },
         body: JSON.stringify({
             username: username.value,
-            password: password.value,
+            password: password.value
         })
     });
     alert('User: ' + username.value + ' created!');
