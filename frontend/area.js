@@ -11,7 +11,7 @@ import {
     Pointer as PointerInteraction,
     defaults as defaultInteractions
 } from 'ol/interaction';
-import { Polygon, LineString, Point } from 'ol/geom';
+import { Polygon } from 'ol/geom';
 import {Fill, Stroke, Style} from 'ol/style';
 
 import { PROJ } from './mapping.js';

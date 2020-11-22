@@ -12,7 +12,6 @@ import passport from  'passport';
 import LocalStrategy from 'passport-local';
 import expressSession from 'express-session';
 import minicrypt from './miniCrypt.js';
-import MongoClient from 'mongodb';
 
 const strategy = new LocalStrategy(
     async (username, password, done) => {
@@ -391,7 +390,7 @@ app.get('/strava_sync',
             });
                 
             // Insert into database
-            let track = {
+            const track = {
                 strava: {
                     activityId: act.id,
                 },
@@ -449,7 +448,7 @@ app.get('/strava_sync',
                 }
 
                 // Update area with track
-                area.trackIds.push(track._id);
+                area.trackIds.push(trackId);
 
                 // Upsert area
                 await dbAreas.update(areaQuery, area, { upsert: true });
@@ -493,11 +492,11 @@ app.get('/areas', async (req, res) => {
 
     // Query database for areas in the extent
     const q = {
-        "position.topLeft.latitude": {
+        'position.topLeft.latitude': {
             $gte: extent[0],
             $lte: extent[2],
         },
-        "position.topLeft.longitude": {
+        'position.topLeft.longitude': {
             $gte: extent[1],
             $lte: extent[3],
         },
@@ -516,10 +515,9 @@ app.get('/areas', async (req, res) => {
         return new mongo.ObjectID(trackId);
     });
 
-    let tracks = await Promise.all(trackIdsArr.map(async (trackId) => {
+    const tracks = await Promise.all(trackIdsArr.map(async (trackId) => {
         return await dbTracks.findOne(trackId);
     }));
-
 
     return res.send({
         areas: areas,
