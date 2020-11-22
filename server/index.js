@@ -21,6 +21,96 @@ import minicrypt from './miniCrypt.js';
 const mc = new minicrypt();
 
 /**
+ * Application configuration, all values set via environment variables.
+ */
+const config = {
+    port: process.env.PORT, // Heroku sets this
+    strava: {
+        access_token: process.env.STRAVA_ACCESS_TOKEN,
+        client_id: process.env.STRAVA_CLIENT_ID,
+        client_secret: process.env.STRAVA_CLIENT_SECRET,
+        redirect_uri: process.env.STRAVA_REDIRECT_URI,
+        authentication_token_secret: process.env.STRAVA_AUTHENTICATION_TOKEN_SECRET,
+    },
+    mongo: {
+        uri: process.env.APP_MONGO_URI,
+        db: process.env.APP_MONGO_DB,
+    }
+};
+
+// Database
+class DatabaseConnection {
+    /**
+     * @param uri {string} Connection URI.
+     * @param db {string} Name of database.
+     */
+    constructor(uri, db) {
+        this.uri = uri;
+        this.dbName = db;
+        
+        this.dbClient = null;
+        this.db = null;
+        this.users = null;
+        this.areas = null;
+        this.tracks = null;
+
+        this.connected = false;
+    }
+
+    /**
+     * Connects to the database, if already connected does nothing.
+     * @returns {Object} With 'db', 'users', 'areas', and 'tracks' properties.
+     * @throws {string} If failed to connect to MongoDB
+     */
+    async get() {
+        if (this.connected === false) {
+            try {
+                this.dbClient = await mongo.MongoClient.connect(this.uri, {
+                    useUnifiedTopology: true
+                });
+            } catch (e) {
+                throw `Failed to connect to MongoDB: ${e}`;
+            }
+
+            this.db = await this.dbClient.db(this.dbName);
+            this.users = await this.db.collection('users');
+            this.areas = await this.db.collection('areas');
+            this.tracks = await this.db.collection('tracks');
+
+            this.connected = true;
+        }
+
+        return {
+            db: this.db,
+            areas: this.areas,
+            tracks: this.tracks,
+            users: this.users,
+        };
+    }
+
+    /**
+     * @returns {function(req, res, next)} Express middleware which injects this class
+     *     instance into req.db.
+     */
+    middleware() {
+        const self = this;
+        return async (req, res, next) => {
+            req.db = await self.get();
+            return next();
+        };
+    }
+}
+
+
+const db = new DatabaseConnection(config.mongo.uri, config.mongo.db);
+db.get().catch((err) => {
+    console.error(`Failed to connect to MongoDB: ${err}`);
+    process.exit(1);
+}).then(() => {
+    console.log('Connected to MongoDB');
+});
+
+/**
  * Setup a Passport local strategy. The "local" means "we'll handle the user stuff with
  * our own database".
  */
@@ -54,6 +144,66 @@ const passportStrategy = new LocalStrategy(
         return done(null, user, true);
     }
 );
+
+/**
+ * Middleware which checks that a user is authenticated. If they are not they are 
+ * redirect to the login page and then back.
+ */
+async function checkLoggedIn(req, res, next) {
+    if (req.isAuthenticated() === true) {
+        // If we are authenticated, run the next route.
+        return next();
+    } else {
+        // Otherwise, redirect to the login page.
+        return res.redirect(`/login.html?from=${req.path}`);
+    }
+}
+
+/**
+ * Find user by username.
+ */
+async function findUser(username){
+    const collections = await db.get();
+    return await collections.users.findOne({userName : username});
+}
+
+async function validatePassword(user, enteredPassword) {
+    //have to add checks for the salt and hash
+    if(mc.check(enteredPassword, user.hash, user.salt)){
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Registers a user to the database.
+ * @param username {string} Username.
+ * @param password {string} Plain text password to be hashed and stored.
+ * @returns {boolean} True if a user created, false if user with username already exists.
+ */
+async function addUser(username, password){
+    const collections = await db.get();
+    if(await collections.users.findOne({ userName : username }) !== null){
+        return false;
+    } else {
+        const [salt, hash] = mc.hash(password);
+        const user = {
+            userName : username,
+            salt : salt,
+            hash : hash,
+            userStats : {
+                totalDistance : 0,
+                totalTime : 0
+            },
+            friendsList : [],
+            comments : []
+        };
+        //add user to data base
+        await collections.users.insert(user);
+        return true;
+    }
+}
+
 
 /**
  * Details on saving user session details via cookies.
@@ -208,24 +358,6 @@ function extentForPolygon(polys) {
 }
 
 /**
- * Application configuration, all values set via environment variables.
- */
-const config = {
-    port: process.env.PORT, // Heroku sets this
-    strava: {
-        access_token: process.env.STRAVA_ACCESS_TOKEN,
-        client_id: process.env.STRAVA_CLIENT_ID,
-        client_secret: process.env.STRAVA_CLIENT_SECRET,
-        redirect_uri: process.env.STRAVA_REDIRECT_URI,
-        authentication_token_secret: process.env.STRAVA_AUTHENTICATION_TOKEN_SECRET,
-    },
-    mongo: {
-        uri: process.env.APP_MONGO_URI,
-        db: process.env.APP_MONGO_DB,
-    }
-};
-
-/**
  * Algorithm used to construct JWT authentication tokens to strore Strava API 
  * credentials only.
  */
@@ -244,77 +376,10 @@ if (config.strava.redirect_uri.indexOf(STRAVA_OAUTH_REDIRECT_ENDPOINT) === -1) {
     throw 'The configured Strava OAuth redirect URI and this app\'s API endpoint do not match, this will cause problems and you must fix it';
 }
 
-// Database
-class DatabaseConnection {
-    /**
-     * @param uri {string} Connection URI.
-     * @param db {string} Name of database.
-     */
-    constructor(uri, db) {
-        this.uri = uri;
-        this.dbName = db;
-        
-        this.dbClient = null;
-        this.db = null;
-        this.users = null;
-        this.areas = null;
-        this.tracks = null;
-
-        this.connected = false;
-    }
-
-    /**
-     * Connects to the database, if already connected does nothing.
-     * @returns {Object} With 'db', 'users', 'areas', and 'tracks' properties.
-     * @throws {string} If failed to connect to MongoDB
-     */
-    async get() {
-        if (this.connected === false) {
-            try {
-                this.dbClient = await mongo.MongoClient.connect(this.uri, {
-                    useUnifiedTopology: true
-                });
-            } catch (e) {
-                throw `Failed to connect to MongoDB: ${e}`;
-            }
-
-            this.db = this.dbClient.db(this.dbName);
-            this.users = db.collection('users');
-            this.areas = db.collection('areas');
-            this.tracks = db.collection('tracks');
-
-            this.connected = true;
-        }
-
-        return {
-            db: this.db,
-            areas: this.areas,
-            tracks: this.tracks,
-            users: this.users,
-        };
-    }
-
-    /**
-     * @returns {function(req, res, next)} Express middleware which injects this class
-     *     instance into req.db.
-     */
-    async middleware(req, res, next) {
-        const newConn = await this.connect();
-        if (newConn === true) {
-            console.log('Connected to MongoDB');
-        }
-        
-        req.db = this;
-
-        return next();
-    }
-}
-
 // API
 export const app = express();
 
-const db = new DatabaseConnection(config.mongo.uri, config.mongo.db);
-app.use(db.middleware); // Database available at req.db
+app.use(db.middleware()); // Database available at req.db
 
 app.use(bodyParser.json()); // Parse HTTP body as JSON
 app.use(express.urlencoded({extended : true})); // Handle HTTP bodies from HTML forms
@@ -343,7 +408,10 @@ function validateBody(schema) {
 
         if (result.error !== undefined) {
             return res.status(400).send({
-                error: result.error,
+                error: {
+                    overview: 'The request body was not properly formatted',
+                    details: result.error,
+                },
             });
         }
 
@@ -427,7 +495,12 @@ app.get(STRAVA_OAUTH_REDIRECT_ENDPOINT, async (req, res) => {
  * Redirects the user through the Strava OAuth flow if we have not previously logged
  * them into strava.
  */
-app.get('/strava_sync', async (req, res, next) => {
+app.get('/strava_sync',  (req, res, next) => {
+    /**
+     * First ensure user is logged into our system.
+     */
+    return checkLoggedIn(req, res, next);
+}, async (req, res, next) => {
     /**
      * Middleware which ensures a valid Strava JWT authentication token exists.
      * This gives us access to a user's Strava account. If the user is not logged
@@ -478,10 +551,11 @@ app.get('/strava_sync', async (req, res, next) => {
     // Add all user's tracks to database
     await Promise.all(activities.map(async (act) => {
         // Check if we already have this track in the database
-        const storedTrack = await req.db.get().tracks.findOne({
+        const storedTrack = await req.db.tracks.findOne({
             strava: {
                 activityId: act.id,
             },
+            userId: new mongo.ObjectID(req.user._id),
         });
 
         if (storedTrack !== null) {
@@ -506,11 +580,12 @@ app.get('/strava_sync', async (req, res, next) => {
             strava: {
                 activityId: act.id,
             },
+            userId: new mongo.ObjectID(req.user._id),
             points: points,
             likes: [],
         };
         
-        const trackInsertRes = await req.db.get().tracks.insert(track);
+        const trackInsertRes = await req.db.tracks.insert(track);
         if (trackInsertRes.insertedCount !== 1) {
             throw `Inserted 1 track but mongodb result said we inserted ${trackInsertRes.insertedCount}`;
         }
@@ -529,7 +604,7 @@ app.get('/strava_sync', async (req, res, next) => {
                 },
             };
             
-            let area = await req.db.get().areas.findOne(areaQuery);
+            let area = await req.db.areas.findOne(areaQuery);
 
             // If no area exists yet
             if (area === null) {
@@ -540,16 +615,22 @@ app.get('/strava_sync', async (req, res, next) => {
                         latitude: poly[0][0],
                         longitude: poly[0][1],
                     },
+                    endPosition: {
+                        latitude: poly[2][0],
+                        longitude: poly[2][1],
+                    },
                     polygon: poly,
                     trackIds: [],
+                    userIds: [],
                 };
             }
 
             // Update area with track
             area.trackIds.push(trackId);
+            area.userIds.push(req.user._id);
 
             // Upsert area
-            await req.db.get().areas.update(areaQuery, area, { upsert: true });
+            await req.db.areas.update(areaQuery, area, { upsert: true });
         });
     }));
     
@@ -599,12 +680,18 @@ app.get('/areas', async (req, res) => {
             $lte: extent[3],
         },
     };
-    const areas = await req.db.get().areas.find(q).toArray();
+    const areas = await req.db.areas.find(q).toArray();
 
     // Find associated tracks
     const trackIdsSet = new Set();
+    const tracksToAreas = {}; // Keys track ids, values set of area ids
     areas.forEach((area) => {
         area.trackIds.forEach((trackId) => {
+            if (Object.keys(tracksToAreas).indexOf(trackId) === -1) {
+                tracksToAreas[trackId] = new Set();
+            }
+
+            tracksToAreas[trackId].add(area._id.toString());
             trackIdsSet.add(trackId.toString());
         });
     });
@@ -614,12 +701,38 @@ app.get('/areas', async (req, res) => {
     });
 
     const tracks = await Promise.all(trackIdsArr.map(async (trackId) => {
-        return await req.db.get().tracks.findOne(trackId);
+        return await req.db.tracks.findOne(trackId);
     }));
 
+    // Filter results by userId query parameter if provided
+    const filteredTracks = tracks.filter((track) => {
+        if (req.query.userId === undefined) {
+            return true;
+        }
+
+        return tracks.userId === req.query.userId;
+    });
+    const filteredAreas = areas.filter((area) => {
+        if (req.query.userId === undefined) {
+            return true;
+        }
+
+        return area.userIds.indexOf(req.query.userId) !== -1;
+    });
+
     return res.send({
-        areas: areas,
-        tracks: tracks,
+        areas: filteredAreas,
+        tracks: filteredTracks,
+    });
+});
+
+app.get('/any_user_area', checkLoggedIn, async (req, res) => {
+    const area = await req.db.areas.findOne({
+        userIds: req.user._id,
+    });
+
+    return res.send({
+        area: area,
     });
 });
 
@@ -637,7 +750,7 @@ app.put('/users/:userId/comments',
         comment: Joi.string().required(),
     })), 
     async (req, res) => {
-        const user = await req.db.get().users.findOne({
+        const user = await req.db.users.findOne({
             _id: new mongo.ObjectID(req.params.userId),
         });
 
@@ -646,7 +759,7 @@ app.put('/users/:userId/comments',
             comment: req.body.comment,
         });
 
-        await req.db.get().users.update({
+        await req.db.users.update({
             _id: new mongo.ObjectID(req.params.userId),
         }, user);
 
@@ -661,7 +774,7 @@ app.put('/user/:userId/addFriend',
     async (req, res) => {
         const userIdStr = req.params.userId;
 
-        const user = await req.db.get().users.findOne({
+        const user = await req.db.users.findOne({
             _id: new mongo.ObjectID(userIdStr),
         });
 
@@ -672,7 +785,7 @@ app.put('/user/:userId/addFriend',
         } else {
             user.friendsList.push(req.user._id);
         }
-        await req.db.get().users.update({
+        await req.db.users.update({
             _id: new mongo.ObjectID(userIdStr),
         },user);
         res.send({
@@ -684,7 +797,7 @@ app.get('/user/:userId/userStats',  async (req, res) => {
     const userIdStr = req.params.userId;
 
     //Get the user from the DB
-    const user = await req.db.get().users.findOne({
+    const user = await req.db.users.findOne({
         _id: new mongo.ObjectID(userIdStr),
     });
     
@@ -710,7 +823,7 @@ app.get('/user', async (req, res) =>{
     }
     
     //Get the user
-    const user = await req.db.get().users.findOne({
+    const user = await req.db.users.findOne({
         _id: new mongo.ObjectID(userIdStr),
     }, { _id: true, userName: true, userStats: true, friendsList: true, comments: true});
     
@@ -722,26 +835,37 @@ app.get('/user', async (req, res) =>{
 //post login 
 app.post('/login', validateBody(Joi.object({
     username: Joi.string().required(),
-    password: Joi.string().required()
-})),
-passport.authenticate('local' , {     // use username/password authentication
-    'successRedirect' : '/area.html',   // when we login, go to /private 
-    'failureRedirect' : '/login.html'      // otherwise, back to login
-})
-);
-
+    password: Joi.string().required(),
+    from: Joi.string(),
+})), (req, res, next) => {
+    let successRedirect = '/';
+    if (req.body.from !== undefined) {
+        successRedirect = req.body.from;
+    }
+    
+    return passport.authenticate('local' , {     // use username/password authentication
+        'successRedirect' : successRedirect,
+        'failureRedirect' : '/login.html'      // otherwise, back to login
+    })(req, res, next);
+});
 
 //register
 app.post('/register', validateBody(Joi.object({
     username: Joi.string().required(),
-    password: Joi.string().required()
+    password: Joi.string().required(),
+    from: Joi.string(),
 })),
 async (req, res) => {
     const username = req.body['username'];
     const password = req.body['password'];
 
+    let successRedirect = '/';
+    if (req.body.from !== undefined) {
+        successRedirect = req.body.from;
+    }
+
     if(await addUser(username, password)){
-        res.redirect('/login.html');
+        res.redirect(`/login.html?from=${successRedirect}`);
     } else {
         res.redirect('/register.html');
     }
@@ -750,7 +874,7 @@ async (req, res) => {
 
 //get track Data
 app.get('/track/:trackId', async (req, res) => {
-    const track = await req.db.get().tracks.findOne({
+    const track = await req.db.tracks.findOne({
         _id: new mongo.ObjectID(req.params.trackId),
     });
 
@@ -758,51 +882,6 @@ app.get('/track/:trackId', async (req, res) => {
         track: track,
     });
 });
-
-//User Database and Authentication Stuff
-async function checkLoggedIn(req, res, next) {
-    if (req.isAuthenticated()) {
-        // If we are authenticated, run the next route.
-        next();
-    } else {
-        // Otherwise, redirect to the login page.
-        res.redirect('/login.html');
-    }
-}
-
-async function findUser(username){
-    return await db.get().users.findOne({userName : username});
-}
-
-async function validatePassword(user, enteredPassword) {
-    //have to add checks for the salt and hash
-    if(mc.check(enteredPassword, user.hash, user.salt)){
-        return false;
-    }
-    return true;
-}
-
-async function addUser(username, password){
-    if(await db.get().users.findOne({ userName : username })){
-        return false;
-    } else {
-        const [salt, hash] = mc.hash(password);
-        const user = {
-            userName : username,
-            salt : salt,
-            hash : hash,
-            userStats : {
-                totalDistance : 0,
-                totalTime : 0
-            },
-            friendsList : [],
-            comments : []
-        };
-        //add user to data base
-        await db.get().users.insert(user);
-        return true;
-    }
-}
 
 /**
  * Run the server.
@@ -812,6 +891,7 @@ export function runApp() {
         console.log(`\
 Server listening on port ${config.port}. View in your web browser:
 
-    http://127.0.0.1:${config.port} or http://localhost:${config.port}`);
+    http://127.0.0.1:${config.port} or http://localhost:${config.port}
+`);
     });
 }
