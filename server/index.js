@@ -557,7 +557,7 @@ app.put('/users/:userId([0-9]+)/comments',
         const user = dbUsers.findOne({
             id: req.query.userId,
         });
-        let comments = user.comments;
+        const comments = user.comments;
         const userIdBody = req.body.user;
         const comment = req.body.comment;
         comments.push({userIdBody : comment});
