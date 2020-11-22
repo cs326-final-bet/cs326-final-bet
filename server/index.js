@@ -585,7 +585,7 @@ app.put('/user/:userId([0-9]+)/addFriend',
         }
         res.send({
             friendsList: friendsList,
-        })
+        });
     });
 //get user stats
 app.get('/user/:userIDs([0-9]+)/userStats', async (req, res) => {
@@ -719,13 +719,13 @@ app.post('/register',
     })), 
     (req, res) => {
     
-    const username = req.body['username'];
-    const password = req.body['password'];
-    if(addUser(username, password)){
-        res.redirect('/login');
-    } else {
-        res.redirect('/register');
-    }
+        const username = req.body['username'];
+        const password = req.body['password'];
+        if(addUser(username, password)){
+            res.redirect('/login');
+        } else {
+            res.redirect('/register');
+        }
 
     // res.send({
     //     user : {
