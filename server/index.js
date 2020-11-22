@@ -836,7 +836,7 @@ app.get('/user', async (req, res) =>{
 app.post('/login', validateBody(Joi.object({
     username: Joi.string().required(),
     password: Joi.string().required(),
-    from: Joi.string(),
+    from: Joi.string().optional(),
 })), (req, res, next) => {
     let successRedirect = '/';
     if (req.body.from !== undefined) {
@@ -853,7 +853,7 @@ app.post('/login', validateBody(Joi.object({
 app.post('/register', validateBody(Joi.object({
     username: Joi.string().required(),
     password: Joi.string().required(),
-    from: Joi.string(),
+    from: Joi.string().optional(),
 })),
 async (req, res) => {
     const username = req.body['username'];
