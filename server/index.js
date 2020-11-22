@@ -642,17 +642,22 @@ app.put('/user/:userId([0-9]+)/addFriend',
         });
     });
 //get user stats
-app.get('/user/:userId/userStats', passport.authenticate('local'), async (req, res) => {
+app.get('/user/:userId/userStats',  async (req, res) => {
     const userIdStr = req.params.userId;
     console.log(req.user);
     //Get the user from the DB
-    const user = dbUsers.findOne({
+    const user = await dbUsers.findOne({
         _id: new mongo.ObjectID(userIdStr),
     });
     const userStats = user.userStats;
     //return the user stats
+    console.log(user);
+    console.log(userStats);
+    const timeDifference = req.user.userStats.currentTime - user.userStats.currentTime;
+    const distanceDifference = req.user.userStats.currentDistance - user.userStats.currentDistance;
     return res.send({
-        userStats: userStats,
+        timeDiff: timeDifference,
+        distDiff: distanceDifference,
     });
 });
 //get user profile

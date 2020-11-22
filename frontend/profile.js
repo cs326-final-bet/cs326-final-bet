@@ -88,9 +88,15 @@ closeCompareProfileButton.onclick = async ()=> {
 
     const urlParams = new URLSearchParams(window.location.search);
     const userId = urlParams.get('userId');
-    await fetch(`/user/${userId}/userStats`, {
+    const result = await fetch(`/user/${userId}/userStats`, {
         method: 'GET',
     });
+
+    const body = await result.json();
+
+    document.getElementById('distDifference').value = body.distDiff;
+    document.getElementById('timeDifference').value = body.timeDiff;
+
 };
 
 addUser.onclick = async () => {
