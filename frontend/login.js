@@ -1,4 +1,7 @@
 //get elements by id that you need 
+'use strict';
+
+import 'regenerator-runtime/runtime';
 
 const username = document.getElementById('username');
 const password = document.getElementById('password');
