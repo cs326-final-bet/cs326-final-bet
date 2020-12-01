@@ -5,6 +5,7 @@
 ### Overview: A brief overview of your application. This will be based on what you are submitting as your final web application artifact. You should also mention why your application is innovative.
 
 ### Team Members: A list of your team members, with names and GitHub aliases.
+
  - Patrick Goss - `pgoss`
  - Noah Huppert - `Noah-Huppert`
  - Dylan Toothaker - `DTooth`
@@ -60,4 +61,3 @@
 #### Noah
 
 ### Conclusion: A conclusion describing your team’s experience in working on this project. This should include what you learned through the design and implementation process, the difficulties you encountered, what your team would have liked to know before starting the project that would have helped you later, and any other technical hurdles that your team encountered
-
