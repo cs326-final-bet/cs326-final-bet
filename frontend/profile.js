@@ -4,19 +4,6 @@ import 'regenerator-runtime/runtime';
 
 import { AreasMap } from './mapping.js';
 
-
-// const MongoClient = require('mongodb').MongoClient,
-//       // hardcode local connection; should set programmatically
-//       url = 'mongodb://localhost:27017';
-
-// MongoClient.connect(url, { useUnifiedTopology: true }, (err, db) => {
-//   if (err) { throw err; }
-//   console.log("We're in!");
-//   db.close();
-// });
-
-// db.post()
-
 const backToArea = document.getElementById('homeButton');
 const compareProfileButton = document.getElementById('compareProfile');
 const closeCompareProfileButton = document.getElementById('info-close');
@@ -26,9 +13,6 @@ const leaveCommentButtonEl = document.getElementById('shareComment');
 const leaveCommentValueEl = document.getElementById('leaveAComment');
 const commentBox = document.getElementById('userComments');
 const addUser = document.getElementById('followUser');
-
-//const yourStats = document.getElementById('yourStats');
-//const userStats = document.getElementById('userStats');
 
 // Load user info
 /**
@@ -157,37 +141,4 @@ function addComment(comment) {
 const mapBoxEl = document.getElementById('userMap');
 new AreasMap(mapBoxEl, { userId: userId });
 
-// // Load user info
-// /**
-//  * Removes all children from a DOM element.
-//  * @param e {DOM Element} To remove children from within.
-//  */
-// function removeChildren(el) {
-//     while (el.firstChild !== null) {
-//         el.removeChild(el.firstChild);
-//     }
-// }
 
-// const commentsEl = document.getElementById('userComments');
-
-// async function loadUserDetails(userId) {
-//     const resp = await fetch(`/user?userId=${userId}`);
-//     const body = await resp.json();
-
-//     removeChildren(commentsEl);
-
-//     body.userInfo.comments.forEach((comment) => {
-//         const el = document.createElement('div');
-//         const txt = document.createTextNode(comment.comment);
-//         el.appendChild(txt);
-//         commentsEl.appendChild(el);
-//     });
-// }
-
-// const urlParams = new URLSearchParams(window.location.search);
-// const userId = urlParams.get('userId');
-// if (userId === null) {
-//     alert('You must provide a userId query parameter');
-// } else {
-//     loadUserDetails(userId);
-// }
