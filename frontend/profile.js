@@ -7,19 +7,6 @@ import { PROJ } from './mapping.js';
 
 'use strict';
 
-
-// const MongoClient = require('mongodb').MongoClient,
-//       // hardcode local connection; should set programmatically
-//       url = 'mongodb://localhost:27017';
-
-// MongoClient.connect(url, { useUnifiedTopology: true }, (err, db) => {
-//   if (err) { throw err; }
-//   console.log("We're in!");
-//   db.close();
-// });
-
-// db.post()
-
 const backToArea = document.getElementById('homeButton');
 const compareProfileButton = document.getElementById('compareProfile');
 const closeCompareProfileButton = document.getElementById('info-close');
@@ -30,9 +17,12 @@ const leaveCommentValueEl = document.getElementById('leaveAComment');
 const commentBox = document.getElementById('userComments');
 const addUser = document.getElementById('followUser');
 
+<<<<<<< Updated upstream
 const yourStats = document.getElementById('yourStats');
 const userStats = document.getElementById('userStats');
 
+=======
+>>>>>>> Stashed changes
 // Load user info
 /**
  * Removes all children from a DOM element.
@@ -151,6 +141,7 @@ function addComment(comment) {
 }
 
 // Show map
+<<<<<<< Updated upstream
 new Map({
     layers: [
         new TileLayer({
@@ -199,3 +190,7 @@ new Map({
 // } else {
 //     loadUserDetails(userId);
 // }
+=======
+const mapBoxEl = document.getElementById('userMap');
+new AreasMap(mapBoxEl, { userId: userId });
+>>>>>>> Stashed changes
