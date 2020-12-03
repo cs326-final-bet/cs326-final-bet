@@ -7,6 +7,7 @@ import { PROJ } from './mapping.js';
 
 'use strict';
 
+
 const backToArea = document.getElementById('homeButton');
 const compareProfileButton = document.getElementById('compareProfile');
 const closeCompareProfileButton = document.getElementById('info-close');
@@ -17,12 +18,6 @@ const leaveCommentValueEl = document.getElementById('leaveAComment');
 const commentBox = document.getElementById('userComments');
 const addUser = document.getElementById('followUser');
 
-<<<<<<< Updated upstream
-const yourStats = document.getElementById('yourStats');
-const userStats = document.getElementById('userStats');
-
-=======
->>>>>>> Stashed changes
 // Load user info
 /**
  * Removes all children from a DOM element.
@@ -141,7 +136,6 @@ function addComment(comment) {
 }
 
 // Show map
-<<<<<<< Updated upstream
 new Map({
     layers: [
         new TileLayer({
@@ -156,41 +150,4 @@ new Map({
     }),
 });
 
-// // Load user info
-// /**
-//  * Removes all children from a DOM element.
-//  * @param e {DOM Element} To remove children from within.
-//  */
-// function removeChildren(el) {
-//     while (el.firstChild !== null) {
-//         el.removeChild(el.firstChild);
-//     }
-// }
 
-// const commentsEl = document.getElementById('userComments');
-
-// async function loadUserDetails(userId) {
-//     const resp = await fetch(`/user?userId=${userId}`);
-//     const body = await resp.json();
-
-//     removeChildren(commentsEl);
-
-//     body.userInfo.comments.forEach((comment) => {
-//         const el = document.createElement('div');
-//         const txt = document.createTextNode(comment.comment);
-//         el.appendChild(txt);
-//         commentsEl.appendChild(el);
-//     });
-// }
-
-// const urlParams = new URLSearchParams(window.location.search);
-// const userId = urlParams.get('userId');
-// if (userId === null) {
-//     alert('You must provide a userId query parameter');
-// } else {
-//     loadUserDetails(userId);
-// }
-=======
-const mapBoxEl = document.getElementById('userMap');
-new AreasMap(mapBoxEl, { userId: userId });
->>>>>>> Stashed changes
