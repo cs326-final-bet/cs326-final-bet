@@ -20,10 +20,10 @@
 
 #### Profile:
 - A specific user's profile page including their stats, their map of claimed area, and comments other users have posted.
-[image]
+![Profile Page](./profilePageFinal.JPG)
 - Profile page has a follow button, that adds this user as your friend. It has a 'back to home' button that returns the user to the home page (area.html). It also includes a post comment area, to leave a comment on a user's profile, and a compare stats button to see the difference in you and another users stats.
 - Compare Stats Panel
-[image]
+![Profile Page](./compareStats.JPG)
 
 ### APIs: A final up-to-date list/table describing your application’s API
 
