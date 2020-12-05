@@ -54,6 +54,12 @@ Purple squares are claimed areas. Turquoise lines show excesses tracks.
 ##### PUT /users/${userId}/comments
 - PUT method to post a comment on a user's profile.
 
+#### Login/Register
+##### POST /login
+- POST method to retrieve user login credentials 
+##### POST /register
+- POST method to retrieve user register data and insert it into UserDB
+
 #### Area
 ##### GET /areas?extent=<extent>
 - Get areas and tracks for a given portion of the map. 
@@ -76,13 +82,13 @@ A database for the user's personal data such as username, password, friendslist,
 
 #### TrackDB
 
-- _id: String, Database identifier
-- strava: Object
-  - activityId: Number, ID of activity from Strava's API
-- userId: ID of user who created the track
-- points: Object[], Array of objects which represent the latitude and longitude
+- `_id`: String, Database identifier
+- `strava`: Object
+  - `activityId`: Number, ID of activity from Strava's API
+- `userId`: ID of user who created the track
+- `points`: Object[], Array of objects which represent the latitude and longitude
   line the track took.
-- likes: String[], Array of user IDs who liked the track
+- `likes`: String[], Array of user IDs who liked the track
 
 ### URL Routes/Mappings
 **A final up-to-date table of all the URL routes that your application supports and a short description of what those routes are used for. You should also indicate any authentication and permissions on those routes.**
@@ -103,7 +109,7 @@ A database for the user's personal data such as username, password, friendslist,
 | GET `/track/:trackId` | Get track by ID endpoint |
 
 ### Authentication/Authorization
-A final up-to-date description of how users are authenticated and any permissions for specific users (if any) that you used in your application. You should mention how they relate to which UI views are accessible.
+**A final up-to-date description of how users are authenticated and any permissions for specific users (if any) that you used in your application. You should mention how they relate to which UI views are accessible.**
 
 The express server which serves our HTML files makes sure that every request, 
 except for requests to the login page and login endpoint, is authorized. If a 
